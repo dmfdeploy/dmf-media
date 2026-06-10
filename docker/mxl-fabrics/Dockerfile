@@ -9,8 +9,8 @@
 #                                           mxl-gst-sink / mxl-gst-looping-filesrc
 #   - fake-reader.sh                      → the mxl-fake-reader function (pure bash)
 #   - iproute2 in the runtime             → entrypoint detects the eth0 IP for --node
-# Built for ARM64 (the Aliyun media nodes). Build context = the MXL source root
-# (dmfdeploy/mxl or an upstream checkout). See dmf-media/docs/mxl-fabrics-runbook.md.
+# Built for ARM64 media nodes. Build context = the MXL source root
+# (an upstream MXL checkout).
 FROM debian:trixie-slim AS base
 
 RUN apt-get update && apt-get install -y \
