@@ -7,7 +7,7 @@ NetBox media plugin (sender/receiver/flow schema).
 ## Dependencies
 
 - `dmf-infra` — base platform (k3s, networking, storage, observability)
-- `dmf-env` — environment-specific inventory
+- `dmf-env` — generic environment provisioning + bootstrap tooling
 
 ## Structure
 
