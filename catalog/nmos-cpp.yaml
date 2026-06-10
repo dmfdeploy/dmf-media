@@ -1,0 +1,66 @@
+---
+key: nmos-cpp
+display_name: "NMOS Registry"
+summary: |
+  AMWA NMOS IS-04/05 registration & discovery service. Required
+  before any media-function flow can be routed.
+
+# EBU placement (must match ADR-0003 vocabulary)
+ebu:
+  layer: 5
+  vertical: orchestration
+  lifecycle_owner: configure
+
+# Artifacts the Provision stage ensures are present
+provision:
+  namespace: nmos
+  image:
+    repository: registry.dmf.example.com/dmf/nmos-cpp
+    digest: >-
+      sha256:0000000000000000000000000000000000000000000000000000000000000000
+  chart:
+    name: nmos-cpp
+    version: 0.1.0
+    source: oci://registry.dmf.example.com/charts/nmos-cpp
+  netbox_service:
+    name: nmos-cpp
+    protocol: tcp
+    ports: [80]
+    parent_object: load_balancer
+    tags:
+      - "dmf-catalog"
+      - "app:nmos-cpp"
+      - "exposure:private"
+      - "lifecycle:bootstrapped"
+
+# Artifacts the Configure stage applies on launch
+# (Implementation moved to dmf-runbooks per ADR-0014; AWX project =
+#  dmf-runbooks)
+configure:
+  playbook: playbooks/launch-nmos-cpp.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-launch-nmos-cpp
+  on_success_tag: "lifecycle:active"
+  health_probe:
+    kind: http
+    path: /x-nmos/query/v1.3/nodes/
+    expect_status: 200
+
+monitoring:
+  scrape:
+    enabled: false
+  probe:
+    enabled: true
+    probe_module: http_2xx
+  snmp:
+    enabled: false
+
+# Artifacts the Finalise stage applies on teardown
+finalise:
+  playbook: playbooks/teardown-nmos-cpp.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-finalise-nmos-cpp
+  on_success_tag: "lifecycle:bootstrapped"
+
+# Soft dependencies — informational for v1, enforced in v2
+dependencies: []

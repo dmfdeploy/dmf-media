@@ -1,0 +1,34 @@
+# MXL spike — local test node 1: k3s SERVER + Docker builder.
+# Ubuntu 24.04 aarch64 (mirrors the Aliyun media nodes' OS). Lima `shared`
+# network (192.168.105.0/24) gives VM-to-VM connectivity for the k3s join and
+# for the cross-host fabrics tcp path (the local stand-in for the Aliyun eth0
+# VPC plane). k3s itself is installed post-boot via dev/lima/bootstrap-k3s.sh
+# so the agent can join with the discovered server IP + token.
+minimumLimaVersion: 2.0.0
+base:
+- template://ubuntu-24.04
+
+vmType: vz
+cpus: 2
+memory: "4GiB"
+disk: "30GiB"
+
+networks:
+- lima: shared    # adds a lima0 iface on 192.168.105.0/24 (VM-to-VM + NAT out)
+
+# Read-only mount of the spike tree for the image build context (Dockerfile at
+# dmf-media/docker/mxl-fabrics/) and the charts/catalog.
+mounts:
+- location: "~/repos/dmf-mxl-spike"
+  writable: false
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux
+    # Docker, for building the thin overlay image (FROM the published MXL image).
+    if ! command -v docker >/dev/null 2>&1; then
+      curl -fsSL https://get.docker.com | sh
+    fi
+    systemctl enable --now docker

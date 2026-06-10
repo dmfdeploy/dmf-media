@@ -1,0 +1,8 @@
+DMF Platform — dmf-media (media-domain catalog + Layer 5 functions)
+Copyright 2026 DMF Platform contributors
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes no upstream-derived components beyond standard
+Helm/Ansible scaffolding for media-domain functions. The Sony nmos-cpp
+reference implementation is consumed via the dmf-runbooks role
+(separate NOTICE attribution there).

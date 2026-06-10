@@ -1,0 +1,10 @@
+---
+# Layer 4 (Media Exchange) — libfabric / RDMA fabric for shared-memory access.
+# STUB — see EBU white paper §Media Exchange §Shared Access (Figure 11).
+- name: Layer 4 libfabric / RDMA setup (stub)
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Stub
+      ansible.builtin.debug:
+        msg: "STUB: Media Exchange (Layer 4) — libfabric/RoCE v2 setup not yet implemented."

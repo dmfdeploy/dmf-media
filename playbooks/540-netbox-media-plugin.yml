@@ -1,0 +1,8 @@
+---
+# Layer 5 (Media Functions) — NetBox media plugin (sender/receiver/flow schema).
+# STUB — role at roles/netbox-media-plugin exists but is not yet implemented.
+- name: Layer 5 NetBox media plugin (stub)
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - netbox-media-plugin

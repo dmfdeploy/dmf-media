@@ -1,0 +1,54 @@
+key: mxl-videotestsrc
+display_name: "MXL Test-Pattern Source"
+summary: |
+  Media eXchange Layer producer for the cross-host fabrics demo: mxl-gst-testsrc
+  publishes the test-pattern flow, and the MXL initiator sends it over libfabric
+  tcp to the paired receiver on the other MXL media node. This is the source /
+  sender half of the split demo.
+
+ebu:
+  layer: 5
+  vertical: media-functions
+  lifecycle_owner: configure
+
+mxl_flows:
+  produces:
+    - "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
+  consumes: []
+
+provision:
+  namespace: mxl
+  image:
+    repository: ghcr.io/dmfdeploy/mxl-fabrics-demo
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  chart:
+    name: mxl-fabrics-demo
+    version: 0.1.0
+    source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
+  netbox_service:
+    name: mxl-videotestsrc
+    protocol: tcp
+    ports: [1234]
+    parent_object: server
+    tags: ["dmf-catalog", "app:mxl-videotestsrc", "exposure:private", "lifecycle:bootstrapped"]
+
+configure:
+  playbook: playbooks/launch-mxl-fabrics-demo.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-launch-mxl-videotestsrc
+  on_success_tag: "lifecycle:active"
+  health_probe:
+    kind: log
+    container: initiator
+    expect_pattern: "grain"
+
+finalise:
+  playbook: playbooks/teardown-mxl-fabrics-demo.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-finalise-mxl-videotestsrc
+  on_success_tag: "lifecycle:bootstrapped"
+
+# Placement note: role=source, selector dmf.io/mxl-demo-role=source.
+# The chart's node selector/tolerations should keep this on the MXL source node.
+
+dependencies: []

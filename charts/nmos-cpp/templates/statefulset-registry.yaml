@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nmos-cpp-registry
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" . | nindent 4 }}
+    dmf.component: registry
+    app: nmos-cpp-registry
+spec:
+  serviceName: nmos-cpp-registry
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nmos-cpp-registry
+  template:
+    metadata:
+      labels:
+        dmf.function: nmos-cpp
+        dmf.component: registry
+        app: nmos-cpp-registry
+    spec:
+      containers:
+        - name: registry
+          image: "{{ .Values.registry.image.repository }}:{{ .Values.registry.image.tag }}"
+          imagePullPolicy: {{ .Values.registry.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.nmosConfig.httpPort }}
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /config
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /x-nmos/query/v1.3/nodes/
+              port: {{ .Values.nmosConfig.httpPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /x-nmos/query/v1.3/nodes/
+              port: {{ .Values.nmosConfig.httpPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.registry.resources | nindent 12 }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nmos-registry-data
+        - name: config
+          configMap:
+            name: nmos-registry-config

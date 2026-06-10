@@ -1,0 +1,97 @@
+{{- if eq .Values.role "view" }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mxl-view
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-view-handshake
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mxl-view
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-view-handshake
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["mxl-coordinator"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mxl-view
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-view-handshake
+subjects:
+  - kind: ServiceAccount
+    name: mxl-view
+    namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mxl-view
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mxl-fabrics-demo.name" . }}-view-handshake
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-view-handshake
+data:
+  target-wrap.sh: |
+    #!/bin/sh
+    set -eu
+    mkdir -p /shared
+    target_info_file=/shared/target-info
+    epoch_file=/shared/epoch
+    log_file=/shared/target.log
+    target_uid="${TARGET_POD_UID:-unknown}"
+    start_ts="$(date +%s)"
+    printf '%s:%s\n' "$target_uid" "$start_ts" > "$epoch_file"
+    stdbuf -oL -eL mxl-fabrics-demo -d {{ .Values.domainPath }} -f /home/mxl/config/flow.json \
+      -n "$(ip -4 -o addr show {{ .Values.fabrics.interface }} | awk '{print $4}' | cut -d/ -f1)" \
+      --service {{ .Values.fabrics.service }} -p {{ .Values.fabrics.provider }} 2>&1 \
+      | tee "$log_file" &
+    demo_pid=$!
+    while kill -0 "$demo_pid" 2>/dev/null; do
+      if [ -s "$target_info_file" ]; then
+        break
+      fi
+      line="$(grep -m1 'Target info:' "$log_file" 2>/dev/null || true)"
+      if [ -n "$line" ]; then
+        printf '%s\n' "${line#*Target info:  }" > "$target_info_file"
+        break
+      fi
+      sleep 1
+    done
+    wait "$demo_pid"
+  publish-target-info.sh: |
+    #!/bin/sh
+    set -eu
+    target_info_file=/shared/target-info
+    epoch_file=/shared/epoch
+    last_sig=""
+    while true; do
+      if [ -s "$target_info_file" ] && [ -s "$epoch_file" ]; then
+        cur_sig="$(cksum "$target_info_file" "$epoch_file" | awk 'NR==1{info=$1} NR==2{epoch=$1} END{print info ":" epoch}')"
+        if [ "$cur_sig" != "$last_sig" ]; then
+          target_info="$(tr -d '\n' < "$target_info_file")"
+          epoch="$(tr -d '\n' < "$epoch_file")"
+          patch="$(printf '{"data":{"target-info":"%s","epoch":"%s"}}' "$target_info" "$epoch")"
+          kubectl patch configmap mxl-coordinator -n {{ .Values.namespace }} --type merge -p "$patch"
+          last_sig="$cur_sig"
+        fi
+      fi
+      sleep 2
+    done
+{{- end }}

@@ -1,0 +1,38 @@
+namespace: nmos
+createNamespace: true
+
+registry:
+  image:
+    repository: zot.zot.svc.cluster.local:5000/dmf/nmos-cpp-registry
+    tag: "0.1.0"
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+
+node:
+  image:
+    repository: zot.zot.svc.cluster.local:5000/dmf/nmos-cpp-node
+    tag: "0.1.0"
+    pullPolicy: Always
+  count: 2
+  labels:
+    "1": "nmos-mock-node-1"
+    "2": "nmos-mock-node-2"
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "250m"
+
+nmosConfig:
+  httpPort: 80
+  serverAddress: "0.0.0.0"
+  loggingLevel: 0
+  registryAddress: "nmos-cpp-registry.{{ .Values.namespace }}.svc.cluster.local"

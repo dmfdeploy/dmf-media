@@ -1,0 +1,87 @@
+namespace: mxl
+createNamespace: true
+
+image:
+  registry: ghcr.io/dmfdeploy
+  repository: mxl-fabrics-demo
+  tag: v1.0.3-fabrics-dev
+  pullPolicy: IfNotPresent
+
+# Per-container memory caps so the pod is bounded on the single 10 GiB sandbox node.
+# GStreamer (writer) is the heavy one; the rest are tiny.
+resources:
+  writer:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits:   { memory: 512Mi }
+  reader:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits:   { memory: 128Mi }
+  info:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits:   { memory: 128Mi }
+  reaper:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits:   { memory: 128Mi }
+
+flow:
+  id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
+  json: |
+    {
+      "$copyright": "SPDX-FileCopyrightText: 2025 Contributors to the Media eXchange Layer project.",
+      "$license": "SPDX-License-Identifier: Apache-2.0",
+      "description": "MXL Test Flow, 1080p29",
+      "id": "5fbec3b1-1b0f-417d-9059-8b94a47197ed",
+      "tags": {
+        "urn:x-nmos:tag:grouphint/v1.0": [
+          "Media Function XYZ:Video"
+        ]
+      },
+      "format": "urn:x-nmos:format:video",
+      "label": "MXL Test Flow, 1080p29",
+      "parents": [],
+      "media_type": "video/v210",
+      "grain_rate": {
+        "numerator": 30000,
+        "denominator": 1001
+      },
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "interlace_mode": "progressive",
+      "colorspace": "BT709",
+      "components": [
+        {
+          "name": "Y",
+          "width": 1920,
+          "height": 1080,
+          "bit_depth": 10
+        },
+        {
+          "name": "Cb",
+          "width": 960,
+          "height": 1080,
+          "bit_depth": 10
+        },
+        {
+          "name": "Cr",
+          "width": 960,
+          "height": 1080,
+          "bit_depth": 10
+        }
+      ]
+    }
+
+domainPath: /home/mxl/domain
+domainSizeLimit: 256Mi
+
+placement:
+  nodeSelector: {}
+  tolerations: []
+
+# Reaper: an in-pod sidecar that runs `mxl-info -g` on a loop to garbage-collect
+# orphaned flow dirs left by a crashed writer. It must be a sidecar (not a
+# CronJob): the domain is a pod-scoped emptyDir, which a separate pod cannot
+# reach. Its scope is the container-restart-within-a-surviving-pod case — a full
+# pod restart wipes the ephemeral emptyDir, so no orphans survive that path.
+reaper:
+  enabled: true
+  intervalSeconds: 60

@@ -1,0 +1,100 @@
+{{- if eq .Values.role "source" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mxl-fabrics-demo.name" . }}-source-handshake
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-source-handshake
+data:
+  source-supervisor.sh: |
+    #!/bin/sh
+    set -eu
+
+    coord_dir=/coordinator
+    target_info_file="$coord_dir/target-info"
+    epoch_file="$coord_dir/epoch"
+    log_file=/shared/initiator.log
+    flow_def="{{ .Values.domainPath }}/{{ .Values.flow.id }}.mxl-flow/flow_def.json"
+    initiator_pid=""
+    tail_pid=""
+
+    start_initiator() {
+      target_info="$(cat "$target_info_file")"
+      ip="$(ip -4 -o addr show {{ .Values.fabrics.interface }} | awk '{print $4}' | cut -d/ -f1)"
+      echo "[supervisor] launching initiator for epoch=$(cat "$epoch_file")"
+      echo "[supervisor] bind {{ .Values.fabrics.interface }}=$ip"
+      : > "$log_file"
+      stdbuf -oL -eL mxl-fabrics-demo -i -d {{ .Values.domainPath }} -f {{ .Values.flow.id }} \
+        -n "$ip" --service {{ .Values.fabrics.service }} -p {{ .Values.fabrics.provider }} \
+        --target-info "$target_info" > "$log_file" 2>&1 &
+      initiator_pid=$!
+      tail -n +1 -f "$log_file" &
+      tail_pid=$!
+    }
+
+    wait_for_flow() {
+      echo "[supervisor] waiting for producer flow $flow_def ..."
+      until [ -f "$flow_def" ]; do
+        sleep 2
+      done
+      echo "[supervisor] flow present."
+    }
+
+    wait_for_target_info() {
+      echo "[supervisor] waiting for /coordinator/target-info ..."
+      until [ -s "$target_info_file" ] && [ -s "$epoch_file" ]; do
+        sleep 2
+      done
+      echo "[supervisor] coordinator populated."
+    }
+
+    stop_initiator() {
+      if [ -n "${initiator_pid:-}" ] && kill -0 "$initiator_pid" 2>/dev/null; then
+        kill "$initiator_pid" 2>/dev/null || true
+        wait "$initiator_pid" 2>/dev/null || true
+      fi
+      initiator_pid=""
+      if [ -n "${tail_pid:-}" ] && kill -0 "$tail_pid" 2>/dev/null; then
+        kill "$tail_pid" 2>/dev/null || true
+        wait "$tail_pid" 2>/dev/null || true
+      fi
+      tail_pid=""
+    }
+
+    wait_for_flow
+
+    initiator_pid=""
+    last_epoch=""
+    while true; do
+      wait_for_target_info
+      current_epoch="$(cat "$epoch_file")"
+      if [ -z "$last_epoch" ] || [ "$current_epoch" != "$last_epoch" ]; then
+        stop_initiator
+        start_initiator
+        last_epoch="$current_epoch"
+      fi
+
+      while true; do
+        if ! kill -0 "$initiator_pid" 2>/dev/null; then
+          echo "[supervisor] initiator exited; relaunching after refresh"
+          stop_initiator
+          last_epoch=""
+          sleep 5
+          break
+        fi
+        if [ -s "$epoch_file" ]; then
+          current_epoch="$(cat "$epoch_file")"
+          if [ "$current_epoch" != "$last_epoch" ]; then
+            echo "[supervisor] epoch changed: $last_epoch -> $current_epoch"
+            stop_initiator
+            last_epoch="$current_epoch"
+            sleep 5
+            start_initiator
+          fi
+        fi
+        sleep 5
+      done
+    done
+{{- end }}

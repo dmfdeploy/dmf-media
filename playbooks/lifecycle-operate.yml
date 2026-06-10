@@ -1,0 +1,62 @@
+---
+# DMF lifecycle: Operate stage — drift detector (v1)
+#
+# Walks each catalog entry and asserts the invariant:
+#   lifecycle:active  ↔  Helm release exists, health probe returns expected status
+#   lifecycle:bootstrapped  ↔  Helm release does NOT exist
+#
+# Usage (smoke test):
+#   bin/run-playbook.sh hetzner-arm ../dmf-infra/k3s-lab-bootstrap/lifecycle-operate.yml
+#
+# Exit code 0 = all entries pass. Exit code 1 = drift detected (review output).
+
+- name: Drift detector — walk catalog entries
+  hosts: k3s_control[0]
+  become: true
+  gather_facts: false
+  vars:
+    _drift_errors: []
+  tasks:
+    # ── Load catalog entries from source repos ──────────────────────────────
+    - name: Find all catalog YAML entries
+      ansible.builtin.find:
+        paths: "{{ dmf_media_catalog_path | default('/srv/dmf/dmf-media/catalog') }}"
+        patterns: "*.yaml"
+      register: _catalog_files
+      failed_when: false  # Path may differ on control node; use local fallback
+
+    - name: Load catalog entries from local files
+      ansible.builtin.set_fact:
+        _catalog_entries: []
+      when: _catalog_files.matched == 0
+
+    # ── v1: hardcoded entry list (future: loaded from catalog/*.yaml) ──────
+    - name: Set v1 catalog entry list
+      ansible.builtin.set_fact:
+        _catalog_entries:
+          - key: "nmos-cpp"
+            lifecycle_tag: "lifecycle:active"
+            helm_release: "nmos-cpp"
+            helm_namespace: "nmos"
+            health_probe_path: "/x-nmos/query/v1.3/nodes/"
+            health_probe_expect: 200
+
+    # ── Check each entry ────────────────────────────────────────────────────
+    - name: Check drift for each catalog entry
+      ansible.builtin.include_tasks: tasks/drift-check.yml
+      loop: "{{ _catalog_entries }}"
+      loop_control:
+        loop_var: entry
+        label: "{{ entry.key }}"
+
+    # ── Report ──────────────────────────────────────────────────────────────
+    - name: Drift detection summary
+      ansible.builtin.debug:
+        msg: >-
+          {% if _drift_errors | length == 0 %}
+          PASS — all {{ _catalog_entries | length }} catalog entries are consistent.
+          {% else %}
+          FAIL — {{ _drift_errors | length }} drift error(s) detected.
+          Review output above and rerun the appropriate playbook.
+          {% endif %}
+      failed_when: _drift_errors | length > 0

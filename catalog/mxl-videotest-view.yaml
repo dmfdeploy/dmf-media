@@ -1,0 +1,53 @@
+key: mxl-videotest-view
+display_name: "MXL Test-Pattern Viewer"
+summary: |
+  Media eXchange Layer consumer for the cross-host fabrics demo: the receiver
+  target exposes the received flow and preview from the paired source over
+  libfabric tcp. This is the view / receiver half of the split demo.
+
+ebu:
+  layer: 5
+  vertical: media-functions
+  lifecycle_owner: configure
+
+mxl_flows:
+  produces: []
+  consumes:
+    - "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
+
+provision:
+  namespace: mxl
+  image:
+    repository: ghcr.io/dmfdeploy/mxl-fabrics-demo
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  chart:
+    name: mxl-fabrics-demo
+    version: 0.1.0
+    source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
+  netbox_service:
+    name: mxl-videotest-view
+    protocol: tcp
+    ports: [1234]
+    parent_object: server
+    tags: ["dmf-catalog", "app:mxl-videotest-view", "exposure:private", "lifecycle:bootstrapped"]
+
+configure:
+  playbook: playbooks/launch-mxl-fabrics-demo.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-launch-mxl-videotest-view
+  on_success_tag: "lifecycle:active"
+  health_probe:
+    kind: log
+    container: target
+    expect_pattern: "Target info"
+
+finalise:
+  playbook: playbooks/teardown-mxl-fabrics-demo.yml
+  awx_project: dmf-runbooks
+  awx_job_template: media-finalise-mxl-videotest-view
+  on_success_tag: "lifecycle:bootstrapped"
+
+# Placement note: role=view, selector dmf.io/mxl-demo-role=view.
+# The chart's node selector/tolerations should keep this on the MXL view node.
+
+dependencies: []

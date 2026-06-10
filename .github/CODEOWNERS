@@ -1,0 +1,14 @@
+# dmf-media — CODEOWNERS
+# Activates on GitHub once branch protection requires reviews.
+
+# Default
+*                              @dmfdeploy/maintainers
+
+# Catalog manifests — drive what AWX deploys
+/catalog/                      @dmfdeploy/maintainers
+
+# Roles (Layer 4-5 media functions)
+/roles/                        @dmfdeploy/maintainers
+
+# CI / GitHub workflows
+/.github/                      @dmfdeploy/maintainers

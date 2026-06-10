@@ -1,0 +1,19 @@
+# MXL spike — local test node 2: k3s AGENT (joins mxl-dev-1).
+# Ubuntu 24.04 aarch64, Lima `shared` net (192.168.105.0/24). No Docker here —
+# images are built on mxl-dev-1 and imported into k3s on both nodes. k3s agent
+# is installed post-boot via dev/lima/bootstrap-k3s.sh with the server URL+token.
+minimumLimaVersion: 2.0.0
+base:
+- template://ubuntu-24.04
+
+vmType: vz
+cpus: 2
+memory: "4GiB"
+disk: "30GiB"
+
+networks:
+- lima: shared
+
+mounts:
+- location: "~/repos/dmf-mxl-spike"
+  writable: false

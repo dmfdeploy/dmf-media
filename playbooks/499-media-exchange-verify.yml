@@ -1,0 +1,10 @@
+---
+# Layer 4 (Media Exchange) — end-of-layer verify gate.
+# STUB — verifies MXL SDK + libfabric reachability between Hosts in a Cluster.
+- name: Layer 4 Media Exchange verify (stub)
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Stub
+      ansible.builtin.debug:
+        msg: "STUB: Media Exchange (Layer 4) verify not yet implemented."

@@ -1,0 +1,80 @@
+namespace: mxl
+createNamespace: false
+
+# Role for this release:
+#   source -> initiator + writer deployment
+#   view   -> target deployment
+role: source
+
+# One consolidated image carries every demo media function (mxl-fabrics-demo,
+# mxl-gst-testsrc, mxl-gst-sink, mxl-info, fake-reader.sh) — chart containers just
+# pick the binary. v1.0.2 added GStreamer + the gst tools; v1.0.3 adds python3, the
+# status sidecar (mxl-status-server.py), and the env-configurable mxl-gst-sink.
+image:
+  registry: ghcr.io/dmfdeploy        # public package; nodes pull anonymously
+  repository: mxl-fabrics-demo
+  tag: v1.0.3-fabrics-dev
+  pullPolicy: IfNotPresent
+
+# Toggle the demo media functions on each side (all run from the single image above).
+demoFunctions:
+  writer: true        # mxl-gst-testsrc test-pattern producer (initiator/producer side)
+  localReader: true   # fake-reader.sh on the producer side
+  info: true          # mxl-info poller on both sides (prints Format/Head/Active)
+  status: true        # MXL status sidecar (JSON flow stats + JPEG preview) for the dmf-cms "MXL Flows" page
+
+# Demo status sidecar — consumed by dmf-cms over the node tailnet IP (hostNetwork).
+# `provider` is the cloud slug used purely for the UI logo; NO IPs are exposed.
+status:
+  port: 9000
+  provider: aliyun
+
+fabrics:
+  provider: tcp                       # first cross-host test; verbs/efa later
+  service: 1234                       # tcp port; opened node-to-node by the Aliyun VSwitch SG rule
+  interface: eth0                     # Override locally with lima0; Aliyun uses the VPC private NIC (<aliyun-vpc-cidr>) on eth0.
+
+domainPath: /home/mxl/domain      # matches the demo images' workingDir (mxl user $HOME)
+domainSizeLimit: 256Mi
+
+# Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow as mxl-hello.
+flow:
+  id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
+  json: |
+    {
+      "$license": "SPDX-License-Identifier: Apache-2.0",
+      "description": "MXL Fabrics Test Flow, 1080p29",
+      "id": "5fbec3b1-1b0f-417d-9059-8b94a47197ed",
+      "tags": {
+        "urn:x-nmos:tag:grouphint/v1.0": [
+          "Media Function XYZ:Video"
+        ]
+      },
+      "format": "urn:x-nmos:format:video",
+      "label": "MXL Fabrics Test Flow, 1080p29",
+      "parents": [],
+      "media_type": "video/v210",
+      "grain_rate": { "numerator": 30000, "denominator": 1001 },
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "interlace_mode": "progressive",
+      "colorspace": "BT709",
+      "components": [
+        { "name": "Y",  "width": 1920, "height": 1080, "bit_depth": 10 },
+        { "name": "Cb", "width": 960,  "height": 1080, "bit_depth": 10 },
+        { "name": "Cr", "width": 960,  "height": 1080, "bit_depth": 10 }
+      ]
+    }
+
+# MXL-processor placement (mirrors mxl-hello catalog §5) + the network-unavailable
+# toleration the cross-cloud media nodes carry (Hetzner CCM route controller).
+placement:
+  nodeSelector:
+    dmf.io/role: mxl-processor
+  tolerations:
+    - { key: dmf.io/mxl, operator: Equal, value: "true", effect: NoSchedule }
+    - { key: node.kubernetes.io/network-unavailable, operator: Exists, effect: NoSchedule }
+
+# ── Source-side initiator ──────────────────────────────────────────────────────
+initiator:
+  targetInfo: ""      # opaque libfabric target-info string from the target's stdout

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nmos-health-probe
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" . | nindent 4 }}
+    dmf.component: health-probe
+data:
+  path: "/x-nmos/query/v1.3/nodes/"
+  expect_status: "200"
+  kind: "http"

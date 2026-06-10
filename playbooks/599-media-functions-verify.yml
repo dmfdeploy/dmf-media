@@ -1,0 +1,10 @@
+---
+# Layer 5 (Media Functions) — end-of-layer verify gate.
+# STUB — verifies NMOS registry reachable, flow exporters reporting, PTP locked.
+- name: Layer 5 Media Functions verify (stub)
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Stub
+      ansible.builtin.debug:
+        msg: "STUB: Media Functions (Layer 5) verify not yet implemented."

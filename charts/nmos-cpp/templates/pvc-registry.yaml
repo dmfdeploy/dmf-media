@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nmos-registry-data
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" . | nindent 4 }}
+    dmf.component: registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

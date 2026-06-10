@@ -1,0 +1,20 @@
+{{- range $key, $label := .Values.node.labels }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nmos-cpp-node-{{ $key }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" $ | nindent 4 }}
+    dmf.component: node
+spec:
+  type: ClusterIP
+  selector:
+    app: nmos-cpp-node-{{ $key }}
+  ports:
+    - protocol: TCP
+      port: {{ $.Values.nmosConfig.httpPort }}
+      targetPort: {{ $.Values.nmosConfig.httpPort }}
+      name: http
+{{- end }}

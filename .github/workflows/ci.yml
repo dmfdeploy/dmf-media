@@ -1,0 +1,54 @@
+name: ci
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ansible:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install ansible tooling
+        run: |
+          python3 -m pip install --user --upgrade pip
+          python3 -m pip install --user ansible ansible-lint yamllint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814  # v4.2.0
+      - name: Install collections
+        run: ansible-galaxy collection install -r requirements.yml
+      - name: yamllint
+        run: yamllint .
+      - name: ansible-lint
+        run: ansible-lint . -p
+      - name: ansible syntax-check
+        run: |
+          shopt -s nullglob
+          for pb in playbooks/*.yml; do
+            echo "=== syntax-check: $pb ==="
+            ansible-playbook "$pb" --syntax-check
+          done
+      - name: helm-lint charts/
+        run: |
+          set -eu
+          shopt -s nullglob
+          chart_dirs=()
+          while IFS= read -r -d '' chart_yaml; do
+            chart_dirs+=("$(dirname "$chart_yaml")")
+          done < <(find charts -name 'Chart.yaml' -print0 2>/dev/null)
+          if [ ${#chart_dirs[@]} -eq 0 ]; then
+            echo "SKIP: no charts found"
+            exit 0
+          fi
+          for chart_dir in "${chart_dirs[@]}"; do
+            echo "=== helm-lint: $chart_dir ==="
+            helm lint "$chart_dir"
+          done

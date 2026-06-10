@@ -1,0 +1,133 @@
+{{- if eq .Values.role "view" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mxl-fabrics-demo.name" . }}-target
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-fabrics-target
+spec:
+  replicas: 1
+  # Recreate (not RollingUpdate): the pod is hostNetwork and binds host port
+  # {{ .Values.fabrics.service }} on its node — two target pods on one node clash
+  # on that port. Recreate tears the old one down before starting the new one.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ include "mxl-fabrics-demo.name" . }}-target
+  template:
+    metadata:
+      annotations:
+        checksum/status-sidecar: {{ include (print $.Template.BasePath "/status-sidecar.yaml") . | sha256sum }}
+      labels:
+        {{- include "mxl-fabrics-demo.labels" . | nindent 8 }}
+        app: {{ include "mxl-fabrics-demo.name" . }}-target
+    spec:
+      # hostNetwork so the demo binds the node's VPC NIC directly — the fabrics
+      # plane. Bypasses flannel/CoreDNS (Aliyun↔Aliyun).
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: mxl-view
+      nodeSelector:
+        dmf.io/mxl-demo-role: {{ .Values.role }}
+        {{- toYaml .Values.placement.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.placement.tolerations | nindent 8 }}
+      containers:
+        # Receiver: creates the flow (writer) + fabrics target, exposes its memory
+        # regions via target-info, and receives grains from the initiator.
+        - name: target
+          image: {{ include "mxl-fabrics-demo.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "/scripts/target-wrap.sh"]
+          env:
+            - name: TARGET_POD_UID
+              valueFrom: { fieldRef: { fieldPath: metadata.uid } }
+          volumeMounts:
+            - { name: domain, mountPath: {{ .Values.domainPath }} }
+            - { name: flow-config, mountPath: /home/mxl/config }
+            - { name: shared, mountPath: /shared }
+            - { name: view-handshake-scripts, mountPath: /scripts }
+          workingDir: /home/mxl
+        {{- if .Values.demoFunctions.info }}
+        # Observer: polls the RECEIVED flow — Head/Active advancing proves grains
+        # are crossing the host boundary into the target's domain.
+        - name: info
+          image: {{ include "mxl-fabrics-demo.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/bin/dumb-init", "--"]
+          args:
+            - /bin/bash
+            - -c
+            - |
+              trap 'exit 0' SIGINT SIGTERM
+              while true; do
+                mxl-info mxl://{{ .Values.domainPath }}?id={{ .Values.flow.id }} || true
+                echo ----------
+                sleep 5
+              done
+          volumeMounts:
+            - { name: domain, mountPath: {{ .Values.domainPath }} }
+          workingDir: /home/mxl
+        {{- end }}
+        {{- if .Values.demoFunctions.status }}
+        # Status sidecar — serves JSON flow stats (mxl-info) + a live JPEG snapshot of
+        # the RECEIVED flow on :{{ .Values.status.port }} (hostNetwork → node tailnet IP).
+        # dmf-cms polls this for the "MXL Flows" page. PREVIEW=1 (receiver side).
+        - name: status
+          image: {{ include "mxl-fabrics-demo.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/bin/dumb-init", "--", "python3", "/usr/local/bin/mxl-status-server.py"]
+          env:
+            - { name: MXL_DOMAIN, value: {{ .Values.domainPath | quote }} }
+            - { name: MXL_FLOW_ID, value: {{ .Values.flow.id | quote }} }
+            - name: MXL_NODE
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+            - { name: MXL_PROVIDER, value: {{ .Values.status.provider | quote }} }
+            - { name: MXL_ROLE, value: "view" }
+            - { name: MXL_FABRICS_INTERFACE, value: {{ .Values.fabrics.interface | quote }} }
+            - { name: MXL_TRANSPORT_PROVIDER, value: {{ .Values.fabrics.provider | quote }} }
+            - { name: MXL_SERVICE, value: {{ .Values.fabrics.service | quote }} }
+            - { name: STATUS_PORT, value: {{ .Values.status.port | quote }} }
+            - { name: PREVIEW, value: "1" }
+          volumeMounts:
+            - { name: domain, mountPath: {{ .Values.domainPath }} }
+            - { name: host-os-release, mountPath: /host/etc, readOnly: true }
+            - { name: host-os-release-lib, mountPath: /host/usr/lib/os-release, readOnly: true }
+            - { name: status-sidecar-scripts, mountPath: /usr/local/bin/mxl-status-server.py, subPath: mxl-status-server.py }
+          workingDir: /home/mxl
+        {{- end }}
+        - name: target-info-publisher
+          image: alpine/k8s:1.30.6
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "/scripts/publish-target-info.sh"]
+          volumeMounts:
+            - { name: shared, mountPath: /shared }
+            - { name: view-handshake-scripts, mountPath: /scripts }
+      volumes:
+        - name: domain
+          emptyDir: { medium: Memory, sizeLimit: {{ .Values.domainSizeLimit }} }
+        - name: flow-config
+          configMap:
+            name: {{ include "mxl-fabrics-demo.name" . }}-flow
+        - name: shared
+          emptyDir: {}
+        - name: host-os-release
+          hostPath:
+            path: /etc
+            type: Directory
+        - name: host-os-release-lib
+          hostPath:
+            path: /usr/lib/os-release
+            type: File
+        - name: status-sidecar-scripts
+          configMap:
+            name: {{ include "mxl-fabrics-demo.name" . }}-status-sidecar
+            defaultMode: 0555
+        - name: view-handshake-scripts
+          configMap:
+            name: {{ include "mxl-fabrics-demo.name" . }}-view-handshake
+            defaultMode: 0555
+{{- end }}

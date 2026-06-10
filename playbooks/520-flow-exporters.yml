@@ -1,0 +1,8 @@
+---
+# Layer 5 (Media Functions) — flow-level exporters (per-flow telemetry).
+# STUB — role at roles/flow-exporters exists but is not yet implemented.
+- name: Layer 5 Flow exporters (stub)
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - flow-exporters

@@ -1,0 +1,11 @@
+---
+# Layer 4 (Media Exchange) — MXL SDK prerequisites.
+# STUB — implementation lands when MXL hardware is available.
+# See https://github.com/dmf-mxl/mxl
+- name: Layer 4 MXL SDK prerequisites (stub)
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Stub
+      ansible.builtin.debug:
+        msg: "STUB: Media Exchange (Layer 4) — MXL SDK prereqs not yet implemented."

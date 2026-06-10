@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nmos-registry-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" . | nindent 4 }}
+    dmf.component: registry
+data:
+  registry.json: >-
+    {{ dict "http_port" (int .Values.nmosConfig.httpPort) "server_address" .Values.nmosConfig.serverAddress "logging_level" (int .Values.nmosConfig.loggingLevel) | toJson }}

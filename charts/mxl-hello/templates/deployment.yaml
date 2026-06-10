@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mxl-hello.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-hello.labels" . | nindent 4 }}
+    dmf.component: mxl-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "mxl-hello.fullname" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "mxl-hello.podLabels" . | nindent 8 }}
+        app: {{ include "mxl-hello.fullname" . }}
+    spec:
+      {{- with .Values.placement.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        # Writer: generates video grains to the MXL domain
+        - name: writer
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - mxl-gst-testsrc
+            - -d
+            - domain
+            - -v
+            - config/flow.json
+          volumeMounts:
+            - name: domain
+              mountPath: {{ .Values.domainPath }}
+            - name: flow-config
+              mountPath: /home/mxl/config
+          workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.writer | nindent 12 }}
+
+        # Reader: consumes video grains from the MXL domain
+        - name: reader
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - /usr/local/bin/fake-reader.sh
+            - --domain
+            - domain
+            - --video-flow-id
+            - "{{ .Values.flow.id }}"
+            - -i
+            - 2s
+          volumeMounts:
+            - name: domain
+              mountPath: {{ .Values.domainPath }}
+          workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.reader | nindent 12 }}
+
+        # Info: polls flow state, prints Format/Head/Active status
+        - name: info
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/bin/dumb-init
+            - --
+          args:
+            - /bin/bash
+            - -c
+            - |
+              trap 'exit 0' SIGINT SIGTERM
+              while true; do
+                mxl-info mxl:///home/mxl/domain?id={{ .Values.flow.id }}
+                echo ----------
+                sleep 5
+              done
+          volumeMounts:
+            - name: domain
+              mountPath: {{ .Values.domainPath }}
+          workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.info | nindent 12 }}
+
+        {{- if .Values.reaper.enabled }}
+        # Reaper sidecar: GCs orphaned (crashed-writer) flow dirs in the shared
+        # in-pod domain. Sidecar — NOT a CronJob — because the domain is a
+        # pod-scoped emptyDir a separate pod cannot reach. `mxl-info -g` uses
+        # flock(LOCK_NB), so it reaps only unlocked (dead) flows and spares the
+        # live flow the writer holds.
+        - name: reaper
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/bin/dumb-init
+            - --
+          args:
+            - /bin/bash
+            - -c
+            - |
+              trap 'exit 0' SIGINT SIGTERM
+              while true; do
+                mxl-info -g -d {{ .Values.domainPath }} || true
+                sleep {{ .Values.reaper.intervalSeconds }}
+              done
+          volumeMounts:
+            - name: domain
+              mountPath: {{ .Values.domainPath }}
+          workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.reaper | nindent 12 }}
+        {{- end }}
+
+      volumes:
+        - name: domain
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.domainSizeLimit }}
+        - name: flow-config
+          configMap:
+            name: {{ include "mxl-hello.fullname" . }}-flow-config

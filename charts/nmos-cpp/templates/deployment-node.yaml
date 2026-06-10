@@ -1,0 +1,48 @@
+{{- range $key, $label := .Values.node.labels }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nmos-cpp-node-{{ $key }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" $ | nindent 4 }}
+    dmf.component: node
+    app: nmos-cpp-node-{{ $key }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nmos-cpp-node-{{ $key }}
+  template:
+    metadata:
+      labels:
+        dmf.function: nmos-cpp
+        dmf.component: node
+        app: nmos-cpp-node-{{ $key }}
+    spec:
+      containers:
+        - name: node
+          image: "{{ $.Values.node.image.repository }}:{{ $.Values.node.image.tag }}"
+          imagePullPolicy: {{ $.Values.node.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $.Values.nmosConfig.httpPort }}
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ $.Values.nmosConfig.httpPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml $.Values.node.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: nmos-node-config-{{ $key }}
+{{- end }}

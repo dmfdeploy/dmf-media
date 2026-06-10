@@ -1,0 +1,8 @@
+---
+# Layer 5 (Media Functions) — EBU LIST 2110 packet analyser.
+# STUB — role at roles/ebu-list exists but is not yet implemented.
+- name: Layer 5 EBU LIST (stub)
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - ebu-list

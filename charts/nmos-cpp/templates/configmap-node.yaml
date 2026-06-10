@@ -1,0 +1,15 @@
+{{- $registryAddress := tpl .Values.nmosConfig.registryAddress . -}}
+{{- range $key, $label := .Values.node.labels }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nmos-node-config-{{ $key }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "nmos-cpp.nmosLabels" $ | nindent 4 }}
+    dmf.component: node
+data:
+  node.json: >-
+    {{ dict "http_port" (int $.Values.nmosConfig.httpPort) "server_address" $.Values.nmosConfig.serverAddress "registry_address" $registryAddress "registration_port" (int $.Values.nmosConfig.httpPort) "logging_level" (int $.Values.nmosConfig.loggingLevel) "label" $label "description" (printf "NMOS mock node %s (DMF auto-provisioned)" (toString $key)) | toJson }}
+{{- end }}

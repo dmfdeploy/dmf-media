@@ -1,0 +1,47 @@
+---
+# Drift check for a single catalog entry
+# Called from lifecycle-operate.yml via include_tasks
+
+- name: "Check Helm release status for {{ entry.key }}"
+  ansible.builtin.shell: |
+    k3s kubectl get helmrelease {{ entry.helm_release }} -n {{ entry.helm_namespace }} -o json 2>/dev/null
+  register: _helm_check
+  changed_when: false
+  failed_when: false
+
+- name: "Determine expected state for {{ entry.key }}"
+  ansible.builtin.set_fact:
+    _helm_release_exists: "{{ _helm_check.rc == 0 }}"
+
+- name: "Check health probe for {{ entry.key }} (if active)"
+  ansible.builtin.uri:
+    url: "http://nmos-cpp-registry.{{ entry.helm_namespace }}.svc.cluster.local{{ entry.health_probe_path }}"
+    method: GET
+    status_code: "{{ entry.health_probe_expect }}"
+    timeout: 10
+  register: _health_check
+  when: _helm_release_exists | bool
+  failed_when: false
+
+- name: "Assert invariant for {{ entry.key }}"
+  ansible.builtin.assert:
+    that:
+      - _helm_release_exists == true  # v1: nmos-cpp was launched in Gate 2
+    fail_msg: "DRIFT: {{ entry.key }} — expected Helm release to exist but it does not"
+    success_msg: "OK: {{ entry.key }} — Helm release present"
+  when: entry.lifecycle_tag == "lifecycle:active"
+
+- name: "Assert invariant for {{ entry.key }} (bootstrapped)"
+  ansible.builtin.assert:
+    that:
+      - _helm_release_exists == false
+    fail_msg: "DRIFT: {{ entry.key }} — lifecycle:bootstrapped but Helm release exists"
+    success_msg: "OK: {{ entry.key }} — no Helm release (as expected for bootstrapped)"
+  when: entry.lifecycle_tag == "lifecycle:bootstrapped"
+
+- name: "Report health probe result for {{ entry.key }}"
+  ansible.builtin.debug:
+    msg: >-
+      {{ entry.key }}: health probe {{ 'PASS' if _health_check.status | default(0) == entry.health_probe_expect else 'FAIL' }}
+      (HTTP {{ _health_check.status | default('N/A') }})
+  when: _helm_release_exists | bool

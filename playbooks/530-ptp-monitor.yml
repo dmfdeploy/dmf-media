@@ -1,0 +1,8 @@
+---
+# Layer 5 (Media Functions) — PTP topology and offset monitoring.
+# STUB — role at roles/ptp-monitor exists but is not yet implemented.
+- name: Layer 5 PTP monitor (stub)
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - ptp-monitor

@@ -1,0 +1,17 @@
+{{- if .Values.createNamespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+---
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mxl-fabrics-demo.name" . }}-flow
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+data:
+  flow.json: |
+    {{- .Values.flow.json | nindent 4 }}
