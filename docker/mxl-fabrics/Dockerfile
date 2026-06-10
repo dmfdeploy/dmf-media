@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Contributors to the Media eXchange Layer project.
 # SPDX-License-Identifier: Apache-2.0
 #
-# Consolidated MXL demo image (SPIKE). One image, all demo media functions —
+# Consolidated MXL demo image. One image, all demo media functions —
 # entrypoints differ per chart container (the mxl base COPYs every /usr/bin/mxl-*):
 #   - libfabric (build + runtime)         → the OFI fabrics backend (mxl-fabrics-demo)
 #   - -DMXL_ENABLE_FABRICS_OFI=ON         → builds lib/fabrics + tools/mxl-fabrics-demo

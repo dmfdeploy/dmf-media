@@ -1,7 +1,7 @@
 apiVersion: v2
 name: mxl-fabrics-demo
 description: >-
-  MXL Fabrics API cross-host demo (SPIKE) — a target and an initiator running
+  MXL Fabrics API cross-host demo — a target and an initiator running
   mxl-fabrics-demo over the libfabric tcp provider, on two MXL media nodes,
   talking over the node eth1 (VPC private) plane via hostNetwork.
 type: application

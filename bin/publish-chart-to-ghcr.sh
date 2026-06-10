@@ -9,7 +9,7 @@
 #
 #   security find-generic-password -s "ghcr.io" -a "<github-username>" -w \
 #     | GHCR_USER="<github-username>" \
-#       ~/repos/dmfdeploy/dmf-media/bin/publish-chart-to-ghcr.sh
+#       $DMFDEPLOY_UMBRELLA/dmf-media/bin/publish-chart-to-ghcr.sh
 #
 # Env knobs:
 #   GHCR_USER       GitHub username (default: prompt)
