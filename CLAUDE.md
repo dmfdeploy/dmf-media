@@ -58,7 +58,7 @@ See `dmfdeploy/docs/architecture/DMF Platform Plan.md` for strategic context.
 ## Charts directory
 
 > **2026-05-23 — ADR-0025 Lane B landed.** Per
-> [ADR-0025](../docs/decisions/0025-ansible-in-cluster-pods-and-catalog-helm.md),
+> [ADR-0025](https://github.com/dmfdeploy/dmfdeploy/blob/main/docs/decisions/0025-ansible-in-cluster-pods-and-catalog-helm.md),
 > catalog functions (NMOS-cpp first; future EBU LIST, flow-exporters, etc.)
 > deploy as Helm charts hosted in cluster-internal Zot, installed by the
 > AWX EE pod via `kubernetes.core.helm`. The charts live here:
