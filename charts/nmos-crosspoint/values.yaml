@@ -1,0 +1,44 @@
+namespace: nmos
+createNamespace: true
+
+image:
+  repository: zot.zot.svc.cluster.local:5000/dmf/nmos-crosspoint
+  tag: "0.1.0"
+  pullPolicy: Always
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  # Private (Tailscale) lane only — NMOS/crosspoint is never publicly exposed.
+  host: nmos-xp.dmf.example.com
+  ingressClass: traefik-private
+  entryPoint: websecure
+
+# IS-04 registry the crosspoint subscribes to (Query API over WebSocket).
+# `ip` is a BARE hostname — no scheme, no port (port is its own field).
+registry:
+  ip: nmos-cpp-registry.nmos.svc.cluster.local
+  port: 80
+  priority: 10
+  domain: ""
+
+# NMOS API versions the crosspoint negotiates (upstream defaults).
+nmos:
+  registryVersions: ["v1.3", "v1.2"]
+  connectVersions: ["v1.1", "v1.0"]
+
+# Auth (users.json). The admin password SHA256 is injected by the launcher role
+# from OpenBao at deploy time — NEVER commit a real hash. This default is a
+# clearly-fake placeholder so `helm lint`/`helm template` render.
+auth:
+  adminPasswordSha256: "0000000000000000000000000000000000000000000000000000000000000000"
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
