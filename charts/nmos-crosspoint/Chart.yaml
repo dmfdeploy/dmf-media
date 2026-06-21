@@ -1,0 +1,7 @@
+apiVersion: v2
+name: nmos-crosspoint
+description: AMWA NMOS IS-04/05 crosspoint routing UI (3dmedium/nmos_crosspoint) for ADR-0025 Lane B catalog launches
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28.0-0"

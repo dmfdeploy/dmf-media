@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nmos-crosspoint-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-crosspoint.nmosLabels" . | nindent 4 }}
+data:
+  # Upstream reads ./config/settings.json and exits if missing. `ip` under
+  # staticNmosRegistries is a bare hostname (no scheme/port). Non-registry keys
+  # keep upstream config_example defaults — harmless in-cluster.
+  settings.json: |
+    {
+      "staticNmosRegistries": [
+        {
+          "ip": {{ .Values.registry.ip | quote }},
+          "port": {{ .Values.registry.port }},
+          "priority": {{ .Values.registry.priority }},
+          "domain": {{ .Values.registry.domain | quote }}
+        }
+      ],
+      "logFiles": "./log/",
+      "logOutput": false,
+      "server": { "port": {{ .Values.service.port }}, "address": "0.0.0.0" },
+      "nmos": {
+        "registryVersions": {{ .Values.nmos.registryVersions | toJson }},
+        "connectVersions": {{ .Values.nmos.connectVersions | toJson }}
+      },
+      "mdns": { "listen": "0.0.0.0" },
+      "multicastRanges": {
+        "video": { "primary": "239.120.0.0/16", "secondary": "239.120.0.0/16" },
+        "audio": { "primary": "239.130.0.0/16", "secondary": "239.130.0.0/16" },
+        "other": { "primary": "239.140.0.0/16", "secondary": "239.140.0.0/16" },
+        "jxsv": { "primary": "239.122.0.0/16", "secondary": "239.122.0.0/16" },
+        "videoUhd": { "primary": "239.121.0.0/16", "secondary": "239.121.0.0/16" }
+      },
+      "ptp": { "domain": 101, "preferedMasters": [] },
+      "disabledModules": { "mediadevices": ["imagineSnp"], "core": ["topology"] },
+      "reconnectOnSdpChanges": false,
+      "fixSdpBugs": false,
+      "firstDynamicNumber": 1000
+    }

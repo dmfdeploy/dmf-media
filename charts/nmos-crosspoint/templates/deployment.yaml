@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nmos-crosspoint
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nmos-crosspoint.nmosLabels" . | nindent 4 }}
+    app: nmos-crosspoint
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nmos-crosspoint
+  template:
+    metadata:
+      labels:
+        dmf.function: nmos-crosspoint
+        app: nmos-crosspoint
+      annotations:
+        # Roll the pod when the rendered config/auth changes.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/auth: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: crosspoint
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: http
+              protocol: TCP
+          volumeMounts:
+            # settings.json (ConfigMap) + users.json (Secret) merged into one
+            # config dir via a projected volume — the server reads ./config.
+            - name: config
+              mountPath: /app/server/config
+              readOnly: true
+            - name: state
+              mountPath: /app/server/state
+            - name: logs
+              mountPath: /app/server/log
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: nmos-crosspoint-config
+                  items:
+                    - key: settings.json
+                      path: settings.json
+              - secret:
+                  name: nmos-crosspoint-auth
+                  items:
+                    - key: users.json
+                      path: users.json
+        - name: state
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
