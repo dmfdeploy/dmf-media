@@ -2,6 +2,6 @@ apiVersion: v2
 name: nmos-cpp
 description: NMOS IS-04/05 registry and mock nodes for ADR-0025 Lane B catalog launches
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "0.1.0"
 kubeVersion: ">=1.28.0-0"

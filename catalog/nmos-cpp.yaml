@@ -20,7 +20,7 @@ provision:
       sha256:0000000000000000000000000000000000000000000000000000000000000000
   chart:
     name: nmos-cpp
-    version: 0.1.0
+    version: 0.1.2
     source: oci://registry.dmf.example.com/charts/nmos-cpp
   netbox_service:
     name: nmos-cpp

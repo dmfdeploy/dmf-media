@@ -43,6 +43,19 @@ RUN test -f server/src/lib/nmosConnector.ts \
     && sed -i 's/\.ws\.error = ()/.ws.onerror = ()/' server/src/lib/nmosConnector.ts \
     && grep -q '\.ws\.onerror = ()' server/src/lib/nmosConnector.ts
 
+# Build-stage mixed-content patch (dmfdeploy/dmfdeploy#108): the UI picks the
+# WebSocket scheme with `window.location.protocol == 'https'`, but that property
+# is `'https:'` (trailing colon), so the test is ALWAYS false and the client
+# always builds a `ws://` (insecure) URL. Served over HTTPS the browser blocks
+# it as mixed content ("connecting…" forever). Fix the colon for both the scheme
+# and the default-port comparisons. Fail the build if the lines moved.
+RUN test -f ui/src/lib/ServerConnector/ServerConnectorService.ts \
+    && sed -i "s/location.protocol == 'https'/location.protocol == 'https:'/g; s/location.protocol == 'http'/location.protocol == 'http:'/g" ui/src/lib/ServerConnector/ServerConnectorService.ts \
+    && grep -q "location.protocol == 'https:'" ui/src/lib/ServerConnector/ServerConnectorService.ts \
+    && grep -q "location.protocol == 'http:'" ui/src/lib/ServerConnector/ServerConnectorService.ts \
+    && ! grep -q "location.protocol == 'https'" ui/src/lib/ServerConnector/ServerConnectorService.ts \
+    && ! grep -q "location.protocol == 'http'" ui/src/lib/ServerConnector/ServerConnectorService.ts
+
 # UI first — vite build.outDir = ../server/public (emptyOutDir: true).
 # npm install --force per upstream README (peer-dep resolution).
 WORKDIR /src/ui
