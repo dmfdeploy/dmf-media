@@ -15,3 +15,10 @@ spec:
       port: {{ .Values.nmosConfig.httpPort }}
       targetPort: {{ .Values.nmosConfig.httpPort }}
       name: http
+    # nmos-cpp serves the IS-04 Query WebSocket on query_ws_port (= http_port+1).
+    # POST /subscriptions returns ws_href on this port; without it any NMOS Query
+    # subscriber (e.g. nmos-crosspoint) gets an unreachable ws_href and fails.
+    - protocol: TCP
+      port: {{ add (int .Values.nmosConfig.httpPort) 1 }}
+      targetPort: {{ add (int .Values.nmosConfig.httpPort) 1 }}
+      name: query-ws
