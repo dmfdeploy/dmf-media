@@ -21,7 +21,7 @@ provision:
   image:
     repository: registry.dmf.example.com/dmf/nmos-crosspoint
     digest: >-
-      sha256:0000000000000000000000000000000000000000000000000000000000000000
+      sha256:ee462d4fe3ba0420c5d6be30a160c603833fa14e54653e5b21adc0149c3c5b62
   chart:
     name: nmos-crosspoint
     version: 0.1.0
