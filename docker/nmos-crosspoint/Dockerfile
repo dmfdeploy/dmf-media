@@ -33,6 +33,16 @@ RUN test -n "$NMOS_CROSSPOINT_REF" \
     && git checkout "$NMOS_CROSSPOINT_REF" \
     && git rev-parse HEAD > /src/.crosspoint_ref
 
+# Build-stage resilience patch (dmfdeploy/dmfdeploy#108): upstream registers the
+# registry-subscription error handler as `.ws.error = …` — but `ws` has no
+# `error` property, so a failed/unreachable ws_href emits an UNHANDLED 'error'
+# event and crashes Node (CrashLoopBackOff). Rename to the real WebSocket
+# property accessor `.ws.onerror` so the listener is actually registered; the
+# existing onclose handler then reconnects. Fail the build if the line moved.
+RUN test -f server/src/lib/nmosConnector.ts \
+    && sed -i 's/\.ws\.error = ()/.ws.onerror = ()/' server/src/lib/nmosConnector.ts \
+    && grep -q '\.ws\.onerror = ()' server/src/lib/nmosConnector.ts
+
 # UI first — vite build.outDir = ../server/public (emptyOutDir: true).
 # npm install --force per upstream README (peer-dep resolution).
 WORKDIR /src/ui
