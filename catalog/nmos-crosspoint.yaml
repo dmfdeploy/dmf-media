@@ -13,18 +13,19 @@ ebu:
   lifecycle_owner: configure
 
 # Artifacts the Provision stage ensures are present.
-# NOTE: digest is the placeholder until the image is published to GHCR + mirrored
-# to Zot (deferred live phase). Local arm64 build (commit 564ca41) verified;
-# build digest recorded in the tracking issue / plan.
+# Image digest = the published ghcr.io/dmfdeploy/nmos-crosspoint:0.1.1 (built from
+# upstream 564ca41 + our build-stage patches: ws.onerror crash + wss mixed-content
+# fix). Informational/verification metadata — 630 mirrors the image by tag, not
+# by this digest (matches the nmos-cpp image pattern; charts are digest-pinned).
 provision:
   namespace: nmos
   image:
     repository: registry.dmf.example.com/dmf/nmos-crosspoint
     digest: >-
-      sha256:ee462d4fe3ba0420c5d6be30a160c603833fa14e54653e5b21adc0149c3c5b62
+      sha256:dac1841885bd606d2643ef58ed70ea896326e9d92fd5947c83372b94ab435f38
   chart:
     name: nmos-crosspoint
-    version: 0.1.0
+    version: 0.1.1
     source: oci://registry.dmf.example.com/charts/nmos-crosspoint
   netbox_service:
     name: nmos-crosspoint
