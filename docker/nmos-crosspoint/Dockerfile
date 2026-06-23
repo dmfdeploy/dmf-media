@@ -49,6 +49,15 @@ RUN test -f server/src/lib/nmosConnector.ts \
 # always builds a `ws://` (insecure) URL. Served over HTTPS the browser blocks
 # it as mixed content ("connecting…" forever). Fix the colon for both the scheme
 # and the default-port comparisons. Fail the build if the lines moved.
+#
+# RETIRE THIS BLOCK once NMOS_CROSSPOINT_REF is bumped to a commit that includes
+# the upstream fix (3dmedium/nmos_crosspoint#15, "Fix WebSocket scheme detection
+# for HTTPS deployments"). That PR rewrites the scheme logic to
+# `window.location.protocol === 'https:'` + `window.location.host`, so the sed
+# below finds nothing to patch AND the positive grep guards fail (=== vs ==, and
+# the `http` branch is removed) — the fail-closed guards will break the build by
+# design, signalling "upstream fixed it, delete this RUN block."
+# Tracked: dmfdeploy/dmfdeploy#129.
 RUN test -f ui/src/lib/ServerConnector/ServerConnectorService.ts \
     && sed -i "s/location.protocol == 'https'/location.protocol == 'https:'/g; s/location.protocol == 'http'/location.protocol == 'http:'/g" ui/src/lib/ServerConnector/ServerConnectorService.ts \
     && grep -q "location.protocol == 'https:'" ui/src/lib/ServerConnector/ServerConnectorService.ts \
