@@ -11,6 +11,7 @@ Env:
   MXL_NODE       node name (downward API spec.nodeName)
   MXL_PROVIDER   cloud provider slug for the UI logo (e.g. aliyun) — NO IPs
   MXL_ROLE       producer | receiver
+  MXL_FABRICS_INTERFACE fabrics NIC name (e.g. eth0 or lima0)
   MXL_TRANSPORT_PROVIDER  libfabric provider (default tcp)
   MXL_SERVICE    fabrics service/port (default 1234)
   STATUS_PORT    HTTP port (default 9000)
@@ -24,6 +25,9 @@ import os
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.request
+import ssl
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DOMAIN = os.environ.get("MXL_DOMAIN", "/home/mxl/domain")
@@ -41,6 +45,9 @@ HOST_OS_RELEASE = os.environ.get(
     "MXL_HOST_OS_RELEASE",
     "/host/etc/os-release:/host/usr/lib/os-release",
 )
+K8S_API = "https://kubernetes.default.svc"
+K8S_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+K8S_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 _state_lock = threading.Lock()
 _flow_state: dict = {}
@@ -78,11 +85,37 @@ def _host_hostinfo() -> dict:
 
 
 def _mxl_version() -> str | None:
-    for cmd in (["mxl-info", "--version"], ["mxl-fabrics-demo", "--version"]):
-        out = _run_capture(cmd, timeout=5)
+    for cmd in (("mxl-info", "--version"), ("mxl-fabrics-demo", "--version")):
+        out = _run_capture(list(cmd), timeout=5)
         if out:
             return out.splitlines()[0].strip() or None
     return None
+
+
+def _k8s_node_info() -> dict:
+    if not NODE:
+        return {}
+    try:
+        with open(K8S_TOKEN_PATH, "r", encoding="utf-8") as fh:
+            token = fh.read().strip()
+        context = ssl.create_default_context(cafile=K8S_CA_PATH)
+        req = urllib.request.Request(
+            f"{K8S_API}/api/v1/nodes/{NODE}",
+            headers={"Authorization": f"Bearer {token}"},
+            method="GET",
+        )
+        with urllib.request.urlopen(req, context=context, timeout=3) as resp:
+            payload = json.loads(resp.read() or b"{}")
+        return {
+            "container": {
+                "k8s_version": payload.get("status", {}).get("nodeInfo", {}).get("kubeletVersion"),
+            },
+            "infra": {
+                "zone": payload.get("metadata", {}).get("labels", {}).get("topology.kubernetes.io/zone"),
+            },
+        }
+    except (OSError, urllib.error.URLError, urllib.error.HTTPError, ValueError, ssl.SSLError):
+        return {}
 
 
 def _parse_mxl_info(text: str) -> dict:
@@ -169,6 +202,13 @@ def _preview_loop() -> None:
 
 
 class Handler(BaseHTTPRequestHandler):
+    # HTTP/1.1, not the BaseHTTPRequestHandler default HTTP/1.0: the blackbox
+    # http_2xx module rejects HTTP/1.0 outright ("Invalid HTTP version
+    # number"), which zeroed probe_success for the stamped /status lane
+    # (dmfdeploy/dmfdeploy#17 live verify). Safe because every response path
+    # below sends an explicit Content-Length.
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, *args):  # quiet
         pass
 
@@ -183,6 +223,10 @@ class Handler(BaseHTTPRequestHandler):
                 "node": NODE,
                 "provider": PROVIDER,
                 "role": ROLE,
+                "interface": INTERFACE,
+                "host": _host_hostinfo(),
+                "mxl_version": _mxl_version(),
+                **_k8s_node_info(),
                 "transport": {
                     "library": "libfabric",
                     "provider": TRANSPORT_PROVIDER,
@@ -190,9 +234,6 @@ class Handler(BaseHTTPRequestHandler):
                     "interface": INTERFACE,
                 },
                 "flow": {"id": FLOW_ID, **flow},
-                "interface": INTERFACE,
-                "host": _host_hostinfo(),
-                "mxl_version": _mxl_version(),
                 "preview": PREVIEW,
                 "ts": time.time(),
             }).encode()
@@ -210,6 +251,7 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 self.send_response(404)
                 self._cors()
+                self.send_header("Content-Length", "0")
                 self.end_headers()
                 return
             self.send_response(200)
@@ -222,6 +264,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_response(404)
         self._cors()
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
 
