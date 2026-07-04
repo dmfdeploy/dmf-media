@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# publish-chart-to-ghcr.sh - publish the dmf-media NMOS chart to GHCR.
+# publish-chart-to-ghcr.sh - publish a dmf-media chart to GHCR.
 #
 # Thin wrapper around the umbrella's bin/publish-chart-to-ghcr.sh. The umbrella
 # script handles secrets (token via stdin, isolated HELM_REGISTRY_CONFIG with
@@ -9,13 +9,16 @@
 #
 #   security find-generic-password -s "ghcr.io" -a "<github-username>" -w \
 #     | GHCR_USER="<github-username>" \
-#       $DMFDEPLOY_UMBRELLA/dmf-media/bin/publish-chart-to-ghcr.sh
+#       $DMFDEPLOY_UMBRELLA/dmf-media/bin/publish-chart-to-ghcr.sh [<chart-name>]
+#
+#   <chart-name>  directory name under charts/ (default: nmos-cpp).
+#                 e.g. mxl-hello, mxl-fabrics-demo
 #
 # Env knobs:
 #   GHCR_USER       GitHub username (default: prompt)
 #   GHCR_NAMESPACE  GHCR namespace (default: dmfdeploy)
 #   CHART_REF       Final GHCR chart ref without version
-#                   (default: ghcr.io/<namespace>/charts/nmos-cpp)
+#                   (default: ghcr.io/<namespace>/charts/<chart-name>)
 
 set -euo pipefail
 
@@ -23,9 +26,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 UMBRELLA_DIR="$(cd "${REPO_ROOT}/.." && pwd)"
 
+CHART_NAME="${1:-nmos-cpp}"
+if [[ ! -d "${REPO_ROOT}/charts/${CHART_NAME}" ]]; then
+  echo "error: no such chart: charts/${CHART_NAME}" >&2
+  exit 1
+fi
+
 GHCR_NAMESPACE="${GHCR_NAMESPACE:-dmfdeploy}"
-CHART_REF="${CHART_REF:-ghcr.io/${GHCR_NAMESPACE}/charts/nmos-cpp}"
+CHART_REF="${CHART_REF:-ghcr.io/${GHCR_NAMESPACE}/charts/${CHART_NAME}}"
 
 exec "${UMBRELLA_DIR}/bin/publish-chart-to-ghcr.sh" \
-  "${REPO_ROOT}/charts/nmos-cpp" \
+  "${REPO_ROOT}/charts/${CHART_NAME}" \
   "${CHART_REF}"

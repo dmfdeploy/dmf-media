@@ -23,10 +23,19 @@ spec:
         {{- include "mxl-fabrics-demo.labels" . | nindent 8 }}
         app: {{ include "mxl-fabrics-demo.name" . }}-initiator
     spec:
+      {{- if eq .Values.placementMode "split-node" }}
+      # split-node: bind the node's VPC NIC directly (cross-host fabrics plane).
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      # single-node drops hostNetwork (pod network): the fabric runs intra-node
+      # pod-to-pod and the status sidecars no longer collide on one host port.
       nodeSelector:
+        {{- if eq .Values.placementMode "split-node" }}
+        # Per-role node pinning only exists in split-node — one node cannot
+        # carry both values of dmf.io/mxl-demo-role.
         dmf.io/mxl-demo-role: {{ .Values.role }}
+        {{- end }}
         {{- toYaml .Values.placement.nodeSelector | nindent 8 }}
       tolerations:
         {{- toYaml .Values.placement.tolerations | nindent 8 }}

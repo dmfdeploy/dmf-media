@@ -1,0 +1,25 @@
+{{- if .Values.demoFunctions.status }}
+# Per-release Service exposing the status sidecar (JSON /status + /preview.jpg).
+# This is the ADR-0038 Amendment-A probe surface: launchers stamp
+# cluster_service=<this name>, cluster_namespace, cluster_port into NetBox so
+# dmf-promsd probes it — and the console live-view panel consumes it. Selects
+# pod-template labels (app: <release>-initiator|target); dmf.component only
+# exists on Deployment metadata and would match nothing.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mxl-fabrics-demo.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
+    dmf.component: mxl-status-sidecar
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ include "mxl-fabrics-demo.name" . }}-{{ if eq .Values.role "source" }}initiator{{ else }}target{{ end }}
+  ports:
+    - name: status
+      port: {{ .Values.status.port }}
+      targetPort: {{ .Values.status.port }}
+      protocol: TCP
+{{- end }}

@@ -1,9 +1,10 @@
 apiVersion: v2
 name: mxl-fabrics-demo
 description: >-
-  MXL Fabrics API cross-host demo — a target and an initiator running
-  mxl-fabrics-demo over the libfabric tcp provider, on two MXL media nodes,
-  talking over the node eth1 (VPC private) plane via hostNetwork.
+  MXL Fabrics API demo — a target and an initiator running mxl-fabrics-demo
+  over the libfabric tcp provider. placementMode selects the shape:
+  split-node (two media nodes, hostNetwork over the VPC private plane) or
+  single-node (colocated on one node over the pod network).
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "1.0.3"

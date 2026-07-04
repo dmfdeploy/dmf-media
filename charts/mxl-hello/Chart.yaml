@@ -2,6 +2,6 @@ apiVersion: v2
 name: mxl-hello
 description: MXL single-node demo — gst-testsrc writer + fake-reader + info sharing an in-memory domain
 type: application
-version: 0.1.0
-appVersion: "v1.0.1"
+version: 0.1.1
+appVersion: "v1.0.3"
 kubeVersion: ">=1.28.0-0"
