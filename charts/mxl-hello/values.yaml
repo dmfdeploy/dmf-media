@@ -2,8 +2,10 @@ namespace: mxl
 createNamespace: true
 
 image:
-  registry: ghcr.io/dmfdeploy
-  repository: mxl-fabrics-demo
+  # In-cluster Zot (catalog-chart pattern, ADR-0025): 630 seeds the image from
+  # GHCR. Override registry back to ghcr.io/dmfdeploy for out-of-cluster dev.
+  registry: zot.zot.svc.cluster.local:5000
+  repository: dmf/mxl-fabrics-demo
   tag: v1.0.3
   pullPolicy: IfNotPresent
 

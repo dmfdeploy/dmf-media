@@ -25,13 +25,21 @@ spec:
         {{- include "mxl-fabrics-demo.labels" . | nindent 8 }}
         app: {{ include "mxl-fabrics-demo.name" . }}-target
     spec:
-      # hostNetwork so the demo binds the node's VPC NIC directly — the fabrics
-      # plane. Bypasses flannel/CoreDNS (Aliyun↔Aliyun).
+      {{- if eq .Values.placementMode "split-node" }}
+      # split-node: hostNetwork so the demo binds the node's VPC NIC directly —
+      # the fabrics plane. Bypasses flannel/CoreDNS (Aliyun↔Aliyun).
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      # single-node drops hostNetwork (pod network): the target binds :{{ .Values.fabrics.service }}
+      # in its own netns and the target-info blob carries the pod eth0 IP.
       serviceAccountName: mxl-view
       nodeSelector:
+        {{- if eq .Values.placementMode "split-node" }}
+        # Per-role node pinning only exists in split-node — one node cannot
+        # carry both values of dmf.io/mxl-demo-role.
         dmf.io/mxl-demo-role: {{ .Values.role }}
+        {{- end }}
         {{- toYaml .Values.placement.nodeSelector | nindent 8 }}
       tolerations:
         {{- toYaml .Values.placement.tolerations | nindent 8 }}

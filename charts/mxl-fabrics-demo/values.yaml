@@ -11,10 +11,28 @@ role: source
 # pick the binary. v1.0.2 added GStreamer + the gst tools; v1.0.3 adds python3, the
 # status sidecar (mxl-status-server.py), and the env-configurable mxl-gst-sink.
 image:
-  registry: ghcr.io/dmfdeploy        # public package; nodes pull anonymously
-  repository: mxl-fabrics-demo
+  # In-cluster Zot (catalog-chart pattern, ADR-0025): 630 seeds the image from
+  # GHCR; containerd resolves the service-DNS host via the 300-k3s hosts.toml.
+  # Override registry back to ghcr.io/dmfdeploy for out-of-cluster dev pulls.
+  registry: zot.zot.svc.cluster.local:5000
+  repository: dmf/mxl-fabrics-demo
   tag: v1.0.3
   pullPolicy: IfNotPresent
+
+# Placement mode for the source/view pair (dmfdeploy/dmfdeploy#17):
+#   split-node  — today's cross-host shape: hostNetwork + per-role
+#                 dmf.io/mxl-demo-role node pinning (one role per node).
+#   single-node — colocated demo on one node: pod network (no hostNetwork,
+#                 no status-port collision) and no per-role selector; both
+#                 releases schedule by placement.nodeSelector alone.
+placementMode: split-node
+
+# The status sidecar's node-reader ClusterRole/ClusterRoleBinding are
+# cluster-scoped: a namespaced catalog launcher cannot create them. Platform
+# bootstrap (dmf-infra awx-integration) pre-creates an equivalent and launches
+# with create=false; standalone helm installs keep the default.
+nodeAccess:
+  create: true
 
 # Toggle the demo media functions on each side (all run from the single image above).
 demoFunctions:

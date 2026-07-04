@@ -1,3 +1,4 @@
+{{- if .Values.nodeAccess.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -28,3 +29,4 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ include "mxl-fabrics-demo.name" . }}-node-reader
+{{- end }}
