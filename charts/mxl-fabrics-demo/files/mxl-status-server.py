@@ -202,6 +202,13 @@ def _preview_loop() -> None:
 
 
 class Handler(BaseHTTPRequestHandler):
+    # HTTP/1.1, not the BaseHTTPRequestHandler default HTTP/1.0: the blackbox
+    # http_2xx module rejects HTTP/1.0 outright ("Invalid HTTP version
+    # number"), which zeroed probe_success for the stamped /status lane
+    # (dmfdeploy/dmfdeploy#17 live verify). Safe because every response path
+    # below sends an explicit Content-Length.
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, *args):  # quiet
         pass
 
@@ -244,6 +251,7 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 self.send_response(404)
                 self._cors()
+                self.send_header("Content-Length", "0")
                 self.end_headers()
                 return
             self.send_response(200)
@@ -256,6 +264,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_response(404)
         self._cors()
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
 
