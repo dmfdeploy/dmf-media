@@ -31,7 +31,8 @@ kubectl get nodes -o wide
 ```
 
 ## Image (thin overlay, no from-source rebuild)
-The full `mxl-fabrics-demo:v1.0.3-fabrics-dev` is on GHCR. M1.1 only adds the source
+The full `mxl-fabrics-demo:v1.0.3` (release retag of `v1.0.3-fabrics-dev`, same
+digest) is on GHCR. M1.1 only adds the source
 supervisor + status-on-both-roles, so we build a thin overlay `FROM` it on `mxl-dev-1`
 and import into k3s on both nodes (`k3s ctr images import`). See `build-image.sh` (TBD).
 

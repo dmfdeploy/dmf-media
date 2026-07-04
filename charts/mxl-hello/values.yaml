@@ -4,7 +4,7 @@ createNamespace: true
 image:
   registry: ghcr.io/dmfdeploy
   repository: mxl-fabrics-demo
-  tag: v1.0.3-fabrics-dev
+  tag: v1.0.3
   pullPolicy: IfNotPresent
 
 # Per-container memory caps so the pod is bounded on the single 10 GiB sandbox node.
