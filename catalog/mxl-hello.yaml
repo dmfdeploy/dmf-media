@@ -31,7 +31,10 @@ provision:
   netbox_service:
     name: mxl-hello
     protocol: tcp
-    ports: []
+    # NetBox rejects an empty ports list on ipam.Service; the record carries
+    # the conventional MXL status port as intent metadata (mxl-hello runs no
+    # listener and carries no monitoring:probe tag, so nothing probes it).
+    ports: [9000]
     parent_object: server
     tags: ["dmf-catalog", "app:mxl-hello", "exposure:private", "lifecycle:bootstrapped"]
 
