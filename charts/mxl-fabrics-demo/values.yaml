@@ -13,7 +13,7 @@ role: source
 image:
   registry: ghcr.io/dmfdeploy        # public package; nodes pull anonymously
   repository: mxl-fabrics-demo
-  tag: v1.0.3-fabrics-dev
+  tag: v1.0.3
   pullPolicy: IfNotPresent
 
 # Toggle the demo media functions on each side (all run from the single image above).

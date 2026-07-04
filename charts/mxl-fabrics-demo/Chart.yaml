@@ -6,4 +6,4 @@ description: >-
   talking over the node eth1 (VPC private) plane via hostNetwork.
 type: application
 version: 0.1.0
-appVersion: "1.0.1-fabrics-dev"
+appVersion: "1.0.3"

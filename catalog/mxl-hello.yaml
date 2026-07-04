@@ -22,7 +22,7 @@ provision:
   namespace: mxl
   image:
     repository: ghcr.io/dmfdeploy/mxl-fabrics-demo
-    tag: v1.0.3-fabrics-dev
+    tag: v1.0.3
     digest: "sha256:84980dc0c3e1de0a8f3ce12ce4d5149229c73a44b140c15ed77b8e84fb2108b1"
   chart:
     name: mxl-hello
