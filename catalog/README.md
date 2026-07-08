@@ -26,7 +26,7 @@ button IDs.
 | `display_name` | string | Operator-visible name in dmf-cms |
 | `summary` | string | 1–2 sentence description (block scalar `|` preferred) |
 | `ebu.layer` | int | EBU layer number (typically 4, 5, or 6) |
-| `ebu.vertical` | string | One of: `orchestration`, `control`, `monitoring`, `security` |
+| `ebu.vertical` \| `ebu.media_function_type` | string | **Exactly one of** (see fail-closed rule below). `vertical` ∈ {`orchestration`, `control`, `monitoring`, `security`} for support/control functions; `media_function_type` ∈ {`source`, `view`, `processor`, `mixer`, `output`, `render`, `gfx`, `multiviewer`} for media-processing functions (ADR-0046) |
 | `ebu.lifecycle_owner` | string | Which wrapper drives launch: `provision` or `configure` |
 | `provision.namespace` | string | Kubernetes namespace where the workload's Helm release is deployed. Source of truth for drift detection (catalog-drift-check) and any operator that needs to locate the workload. Added 2026-05-12 per decision `catalog-namespace-source-of-truth` (Option A). |
 | `provision.image.repository` | string | Container image registry path |
@@ -50,6 +50,21 @@ button IDs.
 | `finalise.awx_job_template` | string | AWX job template name for teardown |
 | `finalise.on_success_tag` | string | NetBox tag to flip on successful teardown |
 | `dependencies` | list[str] | List of keys this function depends on (informational v1) |
+
+## Classification fail-closed rule (ADR-0046 decision 6)
+
+Exactly **one** of `ebu.vertical` or `ebu.media_function_type` must be
+present per catalog entry — neither-both-nor-neither. Each value must
+fall within its enum:
+
+- `ebu.vertical` ∈ {`orchestration`, `control`, `monitoring`, `security`}
+- `ebu.media_function_type` ∈ {`source`, `view`, `processor`, `mixer`,
+  `output`, `render`, `gfx`, `multiviewer`}
+
+A *media-processing* function sets `media_function_type`; a
+*support/control* function sets `vertical`. The console's catalog
+loader (dmf-cms) enforces this fail-closed: entries violating the rule
+are rejected with an error-level log and excluded from the API response.
 
 ## Monitoring extension (ADR-0038)
 
