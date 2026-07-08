@@ -8,7 +8,7 @@ summary: |
 
 ebu:
   layer: 5
-  vertical: media-functions
+  media_function_type: source
   lifecycle_owner: configure
 
 mxl_flows:
