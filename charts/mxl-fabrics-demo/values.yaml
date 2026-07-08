@@ -55,7 +55,7 @@ fabrics:
 domainPath: /home/mxl/domain      # matches the demo images' workingDir (mxl user $HOME)
 domainSizeLimit: 256Mi
 
-# Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow as mxl-hello.
+# Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow.
 flow:
   id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
   json: |
@@ -84,7 +84,7 @@ flow:
       ]
     }
 
-# MXL-processor placement (mirrors mxl-hello catalog §5) + the network-unavailable
+# MXL-processor placement + the network-unavailable
 # toleration the cross-cloud media nodes carry (Hetzner CCM route controller).
 placement:
   nodeSelector:

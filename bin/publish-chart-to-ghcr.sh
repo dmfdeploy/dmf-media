@@ -12,7 +12,7 @@
 #       $DMFDEPLOY_UMBRELLA/dmf-media/bin/publish-chart-to-ghcr.sh [<chart-name>]
 #
 #   <chart-name>  directory name under charts/ (default: nmos-cpp).
-#                 e.g. mxl-hello, mxl-fabrics-demo
+#                 e.g. mxl-fabrics-demo
 #
 # Env knobs:
 #   GHCR_USER       GitHub username (default: prompt)
