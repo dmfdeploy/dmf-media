@@ -52,6 +52,10 @@ jobs:
             echo "=== helm-lint: $chart_dir ==="
             helm lint "$chart_dir"
           done
+      - name: catalog demand equality (L3 WP0)
+        run: |
+          python3 -m pip install --user pyyaml
+          python3 bin/check-catalog-demand.py
 
   working-model:
     # Working-model block sync (umbrella issue dmfdeploy/dmfdeploy#32): the

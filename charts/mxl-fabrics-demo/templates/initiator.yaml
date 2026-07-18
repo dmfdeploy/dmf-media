@@ -51,6 +51,8 @@ spec:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
             - { name: flow-config, mountPath: /home/mxl/config }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.writer | nindent 12 }}
         {{- end }}
         # Sender: waits for the producer to create the flow, then reads it and
         # transfers grains over the fabric to the target (the receiver).
@@ -64,6 +66,8 @@ spec:
             - { name: source-handshake-scripts, mountPath: /scripts }
             - { name: coordinator, mountPath: /coordinator, readOnly: true }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.initiator | nindent 12 }}
         {{- if .Values.demoFunctions.localReader }}
         # Local consumer (sanity): reads the producer's flow on this node.
         - name: reader
@@ -73,6 +77,8 @@ spec:
           volumeMounts:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.reader | nindent 12 }}
         {{- end }}
         {{- if .Values.demoFunctions.info }}
         # Observer: polls the producer flow's state on this node.
@@ -93,6 +99,8 @@ spec:
           volumeMounts:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.info | nindent 12 }}
         {{- end }}
         {{- if .Values.demoFunctions.status }}
         # Status sidecar (source side) — JSON flow stats on :{{ .Values.status.port }}.
@@ -119,6 +127,8 @@ spec:
             - { name: host-os-release-lib, mountPath: /host/usr/lib/os-release, readOnly: true }
             - { name: status-sidecar-scripts, mountPath: /usr/local/bin/mxl-status-server.py, subPath: mxl-status-server.py }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.status | nindent 12 }}
         {{- end }}
       volumes:
         - name: domain
