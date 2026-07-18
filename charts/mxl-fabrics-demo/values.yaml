@@ -96,3 +96,51 @@ placement:
 # ── Source-side initiator ──────────────────────────────────────────────────────
 initiator:
   targetInfo: ""      # opaque libfabric target-info string from the target's stdout
+
+# Per-container resource REQUESTS (scheduling claims, not perf caps).
+# Consumed by the L3 capacity preflight (dmfdeploy/dmfdeploy#202 WP0) to
+# budget CPU/memory across media nodes. NO limits declared deliberately:
+# CPU limits would throttle the media path and introduce latency spikes
+# in the grain-forwarding hot loop.
+#
+# LEAN PLACEHOLDERS: these reduce the over-book relative to the original
+# (450m-class) first cut, but they do NOT establish that the incremental
+# (source+view) journey fits the platform's ~2.4-CPU request baseline on the
+# ~3-CPU node — the 2026-07-18 codex round-2 review proved the incremental
+# demand still exceeds available headroom. No honest sizing currently fits
+# the documented node state. These are deliberately below worst-case burst
+# (bursting is allowed since no limits are set); live scheduling proof +
+# a platform-request audit is tracked in umbrella dmfdeploy/dmfdeploy#258,
+# which is the authority on fit and gates publish/J1.
+# The Memory-medium domain emptyDir (sizeLimit 256Mi) charges its fill to
+# container memory — these placeholders do NOT fully cover that headroom;
+# calibration owns closing that gap too.
+resources:
+  writer:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  initiator:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  reader:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+  info:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+  status:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  target:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  targetInfoPublisher:
+    requests:
+      cpu: 25m
+      memory: 32Mi

@@ -59,6 +59,8 @@ spec:
             - { name: shared, mountPath: /shared }
             - { name: view-handshake-scripts, mountPath: /scripts }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.target | nindent 12 }}
         {{- if .Values.demoFunctions.info }}
         # Observer: polls the RECEIVED flow — Head/Active advancing proves grains
         # are crossing the host boundary into the target's domain.
@@ -79,6 +81,8 @@ spec:
           volumeMounts:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.info | nindent 12 }}
         {{- end }}
         {{- if .Values.demoFunctions.status }}
         # Status sidecar — serves JSON flow stats (mxl-info) + a live JPEG snapshot of
@@ -106,6 +110,8 @@ spec:
             - { name: host-os-release-lib, mountPath: /host/usr/lib/os-release, readOnly: true }
             - { name: status-sidecar-scripts, mountPath: /usr/local/bin/mxl-status-server.py, subPath: mxl-status-server.py }
           workingDir: /home/mxl
+          resources:
+            {{- toYaml .Values.resources.status | nindent 12 }}
         {{- end }}
         - name: target-info-publisher
           image: alpine/k8s:1.30.6
@@ -114,6 +120,8 @@ spec:
           volumeMounts:
             - { name: shared, mountPath: /shared }
             - { name: view-handshake-scripts, mountPath: /scripts }
+          resources:
+            {{- toYaml .Values.resources.targetInfoPublisher | nindent 12 }}
       volumes:
         - name: domain
           emptyDir: { medium: Memory, sizeLimit: {{ .Values.domainSizeLimit }} }

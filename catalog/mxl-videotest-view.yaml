@@ -23,8 +23,15 @@ provision:
     digest: "sha256:84980dc0c3e1de0a8f3ce12ce4d5149229c73a44b140c15ed77b8e84fb2108b1"
   chart:
     name: mxl-fabrics-demo
-    version: 0.2.1
+    version: 0.3.0
     source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
+  resources:
+    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0): sum of the
+    # rendered <role>-role pod's container requests. MUST equal the chart
+    # render — bin/check-catalog-demand.py gates equality in CI.
+    requests:
+      cpu: 175m      # videotest-view (view): 100+25+25+25
+      memory: 256Mi  # 128+32+64+32
   netbox_service:
     name: mxl-videotest-view
     protocol: tcp
