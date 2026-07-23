@@ -24,6 +24,14 @@ provision:
     source: oci://registry.dmf.example.com/charts/nmos-cpp
   netbox_service:
     name: nmos-cpp
+    # The launcher's Helm release/Service name diverges from the NetBox
+    # record name for this entry (roles/nmos-cpp/defaults/main.yml in
+    # dmf-runbooks hardcodes "nmos-cpp-registry"). Declared here so the
+    # console's L3 drain verification (umbrella #202 WP4) derives the real
+    # in-cluster host for a run-created record after rollback has deleted
+    # it — without this the name-based §4.4 convention (release name ==
+    # cluster_service) would compose a host that never existed.
+    cluster_service: nmos-cpp-registry
     protocol: tcp
     ports: [80]
     parent_object: load_balancer
