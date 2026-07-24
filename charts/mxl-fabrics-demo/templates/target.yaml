@@ -82,7 +82,7 @@ spec:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
           workingDir: /home/mxl
           resources:
-            {{- toYaml .Values.resources.info | nindent 12 }}
+            {{- include "mxl-fabrics-demo.resourcesFor" (dict "root" $ "name" "info") | nindent 12 }}
         {{- end }}
         {{- if .Values.demoFunctions.status }}
         # Status sidecar — serves JSON flow stats (mxl-info) + a live JPEG snapshot of
@@ -111,7 +111,7 @@ spec:
             - { name: status-sidecar-scripts, mountPath: /usr/local/bin/mxl-status-server.py, subPath: mxl-status-server.py }
           workingDir: /home/mxl
           resources:
-            {{- toYaml .Values.resources.status | nindent 12 }}
+            {{- include "mxl-fabrics-demo.resourcesFor" (dict "root" $ "name" "status") | nindent 12 }}
         {{- end }}
         - name: target-info-publisher
           image: alpine/k8s:1.30.6

@@ -23,15 +23,23 @@ provision:
     digest: "sha256:84980dc0c3e1de0a8f3ce12ce4d5149229c73a44b140c15ed77b8e84fb2108b1"
   chart:
     name: mxl-fabrics-demo
-    version: 0.3.0
+    version: 0.3.1
     source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
   resources:
-    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0): sum of the
-    # rendered <role>-role pod's container requests. MUST equal the chart
-    # render — bin/check-catalog-demand.py gates equality in CI.
+    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0, recalibrated
+    # from measured usage in umbrella dmfdeploy/dmfdeploy#258, chart 0.3.1):
+    # sum of the rendered <role>-role pod's container requests. MUST equal
+    # the chart render — bin/check-catalog-demand.py gates equality in CI.
+    # Chart values.yaml's own resources block has the full measured
+    # rationale (unconsumed-vs-consumed CPU doubling, per-container
+    # measured table, domain-fill note). Role REQUEST totals are unchanged
+    # across #258 round 2 (codex GATE:FAIL fix — per-container limits
+    # only); the per-container split below shifted from round 1 — status
+    # in particular is now the biggest single share (it runs a continuous
+    # GStreamer/JPEG preview pipeline, not a poller — codex P2).
     requests:
-      cpu: 175m      # videotest-view (view): 100+25+25+25
-      memory: 256Mi  # 128+32+64+32
+      cpu: 225m      # videotest-view (view): 160(status)+45(target)+15(targetInfoPublisher)+5(info)
+      memory: 128Mi  # 56(status)+56(target)+8(info)+8(targetInfoPublisher)
   netbox_service:
     name: mxl-videotest-view
     protocol: tcp
