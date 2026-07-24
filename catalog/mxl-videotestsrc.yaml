@@ -24,15 +24,21 @@ provision:
     digest: "sha256:84980dc0c3e1de0a8f3ce12ce4d5149229c73a44b140c15ed77b8e84fb2108b1"
   chart:
     name: mxl-fabrics-demo
-    version: 0.3.0
+    version: 0.3.1
     source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
   resources:
-    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0): sum of the
-    # rendered <role>-role pod's container requests. MUST equal the chart
-    # render — bin/check-catalog-demand.py gates equality in CI.
+    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0, recalibrated
+    # from measured usage in umbrella dmfdeploy/dmfdeploy#258, chart 0.3.1):
+    # sum of the rendered <role>-role pod's container requests. MUST equal
+    # the chart render — bin/check-catalog-demand.py gates equality in CI.
+    # Chart values.yaml's own resources block has the full measured
+    # rationale (unconsumed-vs-consumed CPU doubling, per-container
+    # measured table, domain-fill note). Role REQUEST totals are unchanged
+    # across #258 round 2 (codex GATE:FAIL fix — per-container limits
+    # only); the per-container split below shifted from round 1.
     requests:
-      cpu: 225m      # videotestsrc (source): 100+50+25+25+25
-      memory: 320Mi  # 128+64+32+32+64
+      cpu: 450m      # videotestsrc (source): 370(writer)+55(initiator)+10(reader)+5(info)+10(status)
+      memory: 160Mi  # 96(writer)+24(initiator)+8(reader)+8(info)+24(status)
   netbox_service:
     name: mxl-videotestsrc
     protocol: tcp

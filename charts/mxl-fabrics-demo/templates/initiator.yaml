@@ -100,7 +100,7 @@ spec:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
           workingDir: /home/mxl
           resources:
-            {{- toYaml .Values.resources.info | nindent 12 }}
+            {{- include "mxl-fabrics-demo.resourcesFor" (dict "root" $ "name" "info") | nindent 12 }}
         {{- end }}
         {{- if .Values.demoFunctions.status }}
         # Status sidecar (source side) — JSON flow stats on :{{ .Values.status.port }}.
@@ -128,7 +128,7 @@ spec:
             - { name: status-sidecar-scripts, mountPath: /usr/local/bin/mxl-status-server.py, subPath: mxl-status-server.py }
           workingDir: /home/mxl
           resources:
-            {{- toYaml .Values.resources.status | nindent 12 }}
+            {{- include "mxl-fabrics-demo.resourcesFor" (dict "root" $ "name" "status") | nindent 12 }}
         {{- end }}
       volumes:
         - name: domain
