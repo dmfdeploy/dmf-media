@@ -1,0 +1,47 @@
+# J1 two-source topology instance — umbrella dmfdeploy/dmfdeploy#201 WP1.
+#
+# A concrete `topology_params` object satisfying
+# catalog/topology-params.schema.yaml (schema_version 1): J1's build target
+# per spec §4 — 2 × mxl-videotestsrc (distinct flow ids and test patterns,
+# so the switch is visually unambiguous) + 1 × mxl-videotest-view, on the
+# standing single-node lane. Doc/schema only (WP1) — WP2/WP3/WP3a wire the
+# actual chart parameterisation, playbook projection, and console launch
+# seam this instance is the frozen input for.
+
+topology_params:
+  schema_version: 1
+
+  # ILLUSTRATIVE — never a literal env slug in git. Per this schema's
+  # target_facility.resolution: the console launch seam (WP3a) resolves the
+  # current env's NetBox site slug at launch time and injects the real
+  # value; the launcher (WP3) validates it against that env's own site.
+  # This placeholder exists only so the instance is a complete, well-formed
+  # example of the shape WP3/WP3a project against.
+  target_facility: dmf-example-site
+
+  sources:
+    # Source 1: keeps the flow id shared by both catalog entries in the
+    # shipped F1/F2 baseline (catalog/mxl-videotestsrc.yaml,
+    # catalog/mxl-videotest-view.yaml `mxl_flows`) — continuity with today,
+    # no artificial churn of an id nothing else forced to change.
+    - id: source-a
+      flow_id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
+      # Standard GStreamer videotestsrc named pattern (mxl-gst-testsrc is a
+      # GStreamer component) — no pattern enum exists yet anywhere in this
+      # repo (WP2 introduces per-source patterns for the first time); smpte
+      # (colour bars) and ball (the second source's pattern, below) are
+      # maximally visually distinct, satisfying §4's "visually unambiguous"
+      # requirement.
+      pattern: smpte
+    # Source 2: fresh flow id — J1 doubles the source count from today's
+    # single shared UUID baseline.
+    - id: source-b
+      flow_id: "b0ae9cba-a989-4568-ac96-8bd19272c966"
+      pattern: ball
+
+  viewer:
+    id: viewer-a
+    # Initial launch selection — source-a is active at launch. The switch
+    # (WP4/WP5, §5-6) re-sets this same field at reconfigure time; it is
+    # not re-authored per layer, it rides unchanged from the catalog value.
+    source_selection: source-a
