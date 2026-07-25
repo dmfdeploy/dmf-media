@@ -5,6 +5,15 @@ summary: |
   target exposes the received flow and preview from the paired source over
   libfabric tcp. This is the view / receiver half of the split demo.
 
+# umbrella #201 WP2 (association decision, issue #201 comment): this entry
+# deploys a topology instance defined by the named topology_params contract
+# (catalog/topology-params.schema.yaml, WP1) — a filename in this same
+# catalog dir. dmf-cms's launch seam (WP3a) resolves+validates it and
+# injects the object into the AWX launch extra_vars; the dmf-runbooks
+# playbook (WP3) projects viewer.source_selection to this chart's
+# coordinator active-source + the viewer's own flow.id.
+topology_ref: topology-params.j1.yaml
+
 ebu:
   layer: 5
   media_function_type: view
@@ -23,7 +32,7 @@ provision:
     digest: "sha256:84980dc0c3e1de0a8f3ce12ce4d5149229c73a44b140c15ed77b8e84fb2108b1"
   chart:
     name: mxl-fabrics-demo
-    version: 0.3.1
+    version: 0.4.0
     source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
   resources:
     # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0, recalibrated
