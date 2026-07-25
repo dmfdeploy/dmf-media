@@ -14,4 +14,4 @@ metadata:
     {{- include "mxl-fabrics-demo.labels" . | nindent 4 }}
 data:
   flow.json: |
-    {{- .Values.flow.json | nindent 4 }}
+    {{- tpl .Values.flow.json . | nindent 4 }}

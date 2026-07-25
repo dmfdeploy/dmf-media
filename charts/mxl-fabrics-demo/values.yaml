@@ -55,14 +55,23 @@ fabrics:
 domainPath: /home/mxl/domain      # matches the demo images' workingDir (mxl user $HOME)
 domainSizeLimit: 256Mi
 
-# Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow.
+# Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow
+# shape; flow.id is now a per-release value (umbrella #201 WP2, spec §3/§4) —
+# each Helm release (one per topology_params.sources[] entry, plus the
+# viewer's own release) sets its own flow.id via --set, replacing F1's single
+# fixed UUID shared by both catalog entries. flow.json's own "id" field is a
+# LITERAL Helm template expression (rendered via the `tpl` function in
+# configmap.yaml, not plain string interpolation) so it always tracks
+# flow.id — a stale/mismatched embedded id would desync the descriptor
+# published to /home/mxl/config/flow.json from the actual flow.id every
+# other consumer (initiator, reader, info, status) uses.
 flow:
   id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
   json: |
     {
       "$license": "SPDX-License-Identifier: Apache-2.0",
       "description": "MXL Fabrics Test Flow, 1080p29",
-      "id": "5fbec3b1-1b0f-417d-9059-8b94a47197ed",
+      "id": "{{ .Values.flow.id }}",
       "tags": {
         "urn:x-nmos:tag:grouphint/v1.0": [
           "Media Function XYZ:Video"
@@ -83,6 +92,30 @@ flow:
         { "name": "Cr", "width": 960,  "height": 1080, "bit_depth": 10 }
       ]
     }
+
+# Test pattern for the source-role writer (mxl-gst-testsrc, a GStreamer
+# element wrapper — umbrella #201 WP2, spec §4: "distinct test pattern, so
+# the switch is visually unambiguous"). Standard GStreamer videotestsrc
+# named patterns (e.g. smpte, ball); J1's two catalog sources use smpte and
+# ball respectively (dmf-media catalog/topology-params.j1.yaml). Meaningless
+# for role=view releases — only threaded to the writer container below.
+# ASSUMPTION (flag exactly right, unverified against the real binary): the
+# writer args below pass this as `--pattern <value>`; mxl-gst-testsrc is
+# built from an upstream MXL checkout not vendored in this repo (see
+# docker/mxl-fabrics/Dockerfile), so its actual CLI surface for pattern
+# selection could not be confirmed from source here. Flagged in the WO2
+# report for verification before any live run (already gated behind #202).
+pattern: smpte
+
+# This release's own source identity slug (umbrella #201 WP2, spec §4.1) —
+# the source-supervisor compares this against the coordinator's
+# active-source field (data.active-source, keyed by sources[].id) to decide
+# whether THIS release's initiator should run. Matches
+# topology_params.sources[].id for this release; meaningless for role=view.
+# Empty default is deliberately fail-closed: an unset sourceId can never
+# equal a real active-source value, so a misconfigured source release parks
+# forever rather than ever transmitting.
+sourceId: ""
 
 # MXL-processor placement + the network-unavailable
 # toleration the cross-cloud media nodes carry (Hetzner CCM route controller).
