@@ -49,12 +49,32 @@ provision:
     requests:
       cpu: 225m      # videotest-view (view): 160(status)+45(target)+15(targetInfoPublisher)+5(info)
       memory: 128Mi  # 56(status)+56(target)+8(info)+8(targetInfoPublisher)
+  # umbrella #201 naming contract (dmf-runbooks
+  # roles/l3_run_guard/filter_plugins/l3_topology.py's
+  # l3_topology_release_group, WP3 fix-round D5): a topology launch is
+  # N+1 releases — the viewer's own service (unchanged) plus one per
+  # topology_params.sources[] item, named "{{ l3_release }}-{{ source.id }}".
+  # For J1 (catalog/topology-params.j1.yaml, sources source-a/source-b)
+  # this is exactly the two entries below. The source-* records are NOT
+  # standing services like the viewer's own: they are created by the
+  # viewer JT's own release-group loop only while a topology launch is
+  # live, and removed by its teardown/rollback.
   netbox_service:
-    name: mxl-videotest-view
-    protocol: tcp
-    ports: [1234]
-    parent_object: server
-    tags: ["dmf-catalog", "app:mxl-videotest-view", "exposure:private", "lifecycle:bootstrapped"]
+    - name: mxl-videotest-view
+      protocol: tcp
+      ports: [1234]
+      parent_object: server
+      tags: ["dmf-catalog", "app:mxl-videotest-view", "exposure:private", "lifecycle:bootstrapped"]
+    - name: mxl-videotest-view-source-a
+      protocol: tcp
+      ports: [1234]
+      parent_object: server
+      tags: ["dmf-catalog", "app:mxl-videotest-view-source-a", "exposure:private", "lifecycle:bootstrapped"]
+    - name: mxl-videotest-view-source-b
+      protocol: tcp
+      ports: [1234]
+      parent_object: server
+      tags: ["dmf-catalog", "app:mxl-videotest-view-source-b", "exposure:private", "lifecycle:bootstrapped"]
 
 configure:
   playbook: playbooks/launch-mxl-fabrics-demo.yml
