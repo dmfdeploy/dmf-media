@@ -15,8 +15,10 @@ data:
     coord_dir=/coordinator
     target_info_file="$coord_dir/target-info"
     epoch_file="$coord_dir/epoch"
+    active_source_file="$coord_dir/active-source"
     log_file=/shared/initiator.log
     flow_def="{{ .Values.domainPath }}/{{ .Values.flow.id }}.mxl-flow/flow_def.json"
+    own_id={{ .Values.sourceId | quote }}
     initiator_pid=""
     tail_pid=""
 
@@ -42,12 +44,36 @@ data:
       echo "[supervisor] flow present."
     }
 
-    wait_for_target_info() {
-      echo "[supervisor] waiting for /coordinator/target-info ..."
-      until [ -s "$target_info_file" ] && [ -s "$epoch_file" ]; do
+    # Selection predicate (umbrella #201 WP2, spec §4.1) — true iff
+    # active-source names THIS source. A missing/empty coordinator key
+    # is NOT selected: fail-closed default, never transmit without an
+    # explicit selection naming this source.
+    is_selected() {
+      [ -s "$active_source_file" ] && [ "$(cat "$active_source_file")" = "$own_id" ]
+    }
+
+    # The FULL §4.1 entry/continuous-re-check predicate — is_selected AND
+    # target-info AND epoch present. Fix round 2 (codex P1): the earlier
+    # cut only re-checked is_selected in the running loop, so clearing
+    # target-info/epoch (the §6.2 quiesce step's secondary newcomer-block)
+    # with selection still intact left a RUNNING initiator running — the
+    # spec says "continuously re-checks THAT predicate" (the whole
+    # conjunction), not just the selection half of it.
+    predicate_holds() {
+      is_selected && [ -s "$target_info_file" ] && [ -s "$epoch_file" ]
+    }
+
+    # Entry gate (§4.1 "start ONLY when active-source == own id AND
+    # target-info/epoch present") — the shipped wait_for_target_info
+    # presence-gate is now folded into predicate_holds() itself; a
+    # not-yet-selected or not-yet-started source blocks here, transmitting
+    # nothing.
+    wait_for_selection_and_target_info() {
+      echo "[supervisor] waiting for active-source=$own_id and /coordinator/target-info ..."
+      until predicate_holds; do
         sleep 2
       done
-      echo "[supervisor] coordinator populated."
+      echo "[supervisor] selected and coordinator populated."
     }
 
     stop_initiator() {
@@ -68,7 +94,7 @@ data:
     initiator_pid=""
     last_epoch=""
     while true; do
-      wait_for_target_info
+      wait_for_selection_and_target_info
       current_epoch="$(cat "$epoch_file")"
       if [ -z "$last_epoch" ] || [ "$current_epoch" != "$last_epoch" ]; then
         stop_initiator
@@ -76,23 +102,53 @@ data:
         last_epoch="$current_epoch"
       fi
 
+      # Continuous re-check while the initiator runs (§4.1 "stopping the
+      # initiator and parking on mismatch or empty"). Fix round 2 (codex
+      # P1, the hard one): the epoch-restart check runs FIRST as its own
+      # independent statement, re-evaluating is_selected fresh at its own
+      # decision point — NOT nested behind (reliant on) the predicate
+      # re-check below having already fired first. The earlier cut checked
+      # de-selection before the epoch branch every iteration, so a stop
+      # always "won" the race by construction and the epoch-restart's OWN
+      # `&& is_selected` guard was never the thing standing between a
+      # correct and an incorrect outcome — a mutant removing it produced
+      # IDENTICAL observable behaviour, because that branch was simply
+      # unreachable whenever de-selection had already been noticed. With
+      # this ordering, a mutant is observable: if de-select and an epoch
+      # bump land together (see tests/harness/run-demo.sh phase 6, which
+      # freezes the process to construct this deterministically), the
+      # mutant fires an illegitimate extra start (stopped a moment later
+      # by the predicate re-check below) that the guarded version never
+      # produces.
       while true; do
+        if [ -s "$epoch_file" ]; then
+          current_epoch="$(cat "$epoch_file")"
+          if [ "$current_epoch" != "$last_epoch" ] && is_selected; then
+            echo "[supervisor] epoch changed: $last_epoch -> $current_epoch (still selected)"
+            stop_initiator
+            last_epoch="$current_epoch"
+            sleep 5
+            start_initiator
+          fi
+        fi
+        if ! predicate_holds; then
+          if ! is_selected; then
+            echo "[supervisor] de-selected (active-source != $own_id); stopping and parking"
+          elif [ ! -s "$target_info_file" ]; then
+            echo "[supervisor] target-info cleared while selected; stopping and parking"
+          else
+            echo "[supervisor] epoch cleared while selected; stopping and parking"
+          fi
+          stop_initiator
+          last_epoch=""
+          break
+        fi
         if ! kill -0 "$initiator_pid" 2>/dev/null; then
           echo "[supervisor] initiator exited; relaunching after refresh"
           stop_initiator
           last_epoch=""
           sleep 5
           break
-        fi
-        if [ -s "$epoch_file" ]; then
-          current_epoch="$(cat "$epoch_file")"
-          if [ "$current_epoch" != "$last_epoch" ]; then
-            echo "[supervisor] epoch changed: $last_epoch -> $current_epoch"
-            stop_initiator
-            last_epoch="$current_epoch"
-            sleep 5
-            start_initiator
-          fi
         fi
         sleep 5
       done
