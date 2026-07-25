@@ -41,12 +41,13 @@ spec:
         {{- toYaml .Values.placement.tolerations | nindent 8 }}
       containers:
         {{- if .Values.demoFunctions.writer }}
-        # Producer: mxl-gst-testsrc generates a test-pattern video flow ({{ .Values.flow.id }})
-        # into the shared domain — this is the source of grains the fabric forwards.
+        # Producer: mxl-gst-testsrc generates a test-pattern ({{ .Values.pattern }}) video
+        # flow ({{ .Values.flow.id }}) into the shared domain — this is the source of
+        # grains the fabric forwards.
         - name: writer
           image: {{ include "mxl-fabrics-demo.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args: ["mxl-gst-testsrc", "-d", {{ .Values.domainPath | quote }}, "-v", "config/flow.json"]
+          args: ["mxl-gst-testsrc", "-d", {{ .Values.domainPath | quote }}, "-v", "config/flow.json", "--pattern", {{ .Values.pattern | quote }}]
           volumeMounts:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
             - { name: flow-config, mountPath: /home/mxl/config }
