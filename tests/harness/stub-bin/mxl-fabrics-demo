@@ -1,0 +1,32 @@
+#!/bin/sh
+# Stub for the real mxl-fabrics-demo binary (umbrella #201 WP2 acceptance
+# harness). Only implements the ONE invocation shape source-supervisor.sh
+# actually issues: `mxl-fabrics-demo -i -d <domain> -f <flow_id> -n <ip>
+# --service <port> -p <provider> --target-info <info>`.
+#
+# Behavior: records the exact argv it was called with (so the harness can
+# assert start_initiator ran with the expected flow_id/epoch context), then
+# runs indefinitely until killed — mirroring the real initiator's
+# long-running foreground process, which is exactly what stop_initiator's
+# `kill -0 $pid` / `kill $pid` logic depends on being able to observe.
+set -eu
+
+: "${HARNESS_EVIDENCE_DIR:?HARNESS_EVIDENCE_DIR must be set}"
+
+seq_file="$HARNESS_EVIDENCE_DIR/initiator-start-seq"
+n=0
+[ -f "$seq_file" ] && n="$(cat "$seq_file")"
+n=$((n + 1))
+echo "$n" > "$seq_file"
+
+{
+  echo "start #$n pid=$$ args: $*"
+} >> "$HARNESS_EVIDENCE_DIR/initiator-invocations.log"
+
+echo "$$" > "$HARNESS_EVIDENCE_DIR/initiator-$n.pid"
+
+trap 'echo "stop #'"$n"' pid=$$" >> "$HARNESS_EVIDENCE_DIR/initiator-invocations.log"; exit 0' TERM INT
+
+while true; do
+  sleep 1
+done
