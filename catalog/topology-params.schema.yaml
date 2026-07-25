@@ -1,0 +1,151 @@
+# Topology Parameter Set — schema_version 1
+#
+# umbrella dmfdeploy/dmfdeploy#201 (v0.2b multi-source switch, §3): the named,
+# versioned contract for how many sources a topology has, who they are, which
+# one the viewer consumes, and which facility it runs in. Authored ONCE here
+# in the git catalog (ADR-0037: the git catalog is the definition store); the
+# object rides AWX launch `extra_vars` unchanged and the playbook projects it
+# to chart values — see docs/topology-params-seam.md for that projection.
+#
+# This file is the CONTRACT (field names, types, constraints). A concrete
+# instance that satisfies it — e.g. the J1 two-source topology — is authored
+# as its own catalog/*.yaml file (see catalog/topology-params.j1.yaml) and
+# references this schema_version. This repo's catalog has no JSON-Schema
+# validator; the convention (matching catalog/README.md's own function-schema
+# doc) is a normative field table + a worked illustrative example, checked by
+# review/codex-gate rather than machine validation. If that changes, this is
+# the file a future JSON-Schema/CI check would be generated from.
+#
+# Survives the actuator upgrade unchanged (§3.3): this set describes
+# topology INTENT (who the sources are, which one the viewer consumes) —
+# never HOW the switch is actuated. Swapping the coarse `reconnect` actuator
+# for `nmos-is05` must not touch this schema.
+#
+# Design-surface input (§3.3, flagged — normative home for this
+# declaration): topology_params is the declared, named future input of
+# "Design beat v1 — template instantiation" (umbrella issue #231), a thin
+# console form that will drive exactly these parameters and post them over
+# the seam in §3.2. #231 authors INSTANCES of this contract (the way
+# catalog/topology-params.j1.yaml does for J1) — it does not define a new
+# schema. J1 stays honest for that future only if this set is exposed
+# cleanly now, which is why WP1 (this file) exists ahead of any Design
+# surface being built.
+
+schema_version: 1
+
+fields:
+  schema_version:
+    type: int
+    required: true
+    constraint: "must equal 1 for this version of the contract"
+
+  target_facility:
+    type: string
+    required: true
+    constraint: >-
+      a NetBox site slug (the platform's facility identity, minted per-env
+      by dmf-infra's dmf-born-inventory role). J1 has exactly one legal
+      value (the standing single-node lane's sole NetBox site); the
+      launcher (WP3) validates this end-to-end and REJECTS an unknown value
+      fail-closed rather than defaulting or silently ignoring it (§3.4).
+      Maps to: k3s namespace + placement the chart deploys into; the L3
+      (#202) capacity-preflight scope. It does NOT select the AWX job's
+      inventory/limit in J1 — see the AWX-inventory-timing note below.
+    resolution: >-
+      env-rotating BY DESIGN — a catalog instance does NOT pin an env's
+      site slug (the platform's public catalog must never hardcode env
+      material). The console launch seam (WP3a) resolves the current env's
+      NetBox site slug at launch time (exactly one site in the J1 lane) and
+      injects it into the extra_vars payload; the launcher (WP3) then
+      validates the received slug against the env's own NetBox site slug,
+      rejecting any other value. A catalog-authored instance's
+      target_facility value (see catalog/topology-params.j1.yaml) is
+      therefore illustrative only, never a literal env slug.
+    awx_inventory_timing: >-
+      DECISION, not a WP3 free choice: in J1 the AWX job template's scope
+      is PREBOUND — catalog JTs are created by awx-integration against the
+      NetBox-driven inventory, which in the J1 lane covers exactly the
+      single facility. target_facility does NOT select inventory or limit
+      at launch time. The launcher (WP3) instead validates AGREEMENT: the
+      received target_facility slug must match the NetBox site slug
+      backing the JT's already-prebound inventory scope, or the run is
+      refused fail-closed. Launch-time inventory/limit selection FROM
+      target_facility is explicitly deferred to the #231 / multi-facility
+      follow-on — it is out of scope for this contract's J1 semantics.
+
+  sources:
+    type: list
+    required: true
+    constraint: >-
+      a LIST, never source_a/source_b fields — every layer iterates over it
+      (one Helm release per source, §3.3). Source count is len(sources),
+      never a literal constant. Going from 2 to N sources costs a longer
+      list, not new code paths or new catalog/AWX-job-template entries.
+      Must be non-empty; each entry's id must be unique within the list.
+    items:
+      id:
+        type: string
+        required: true
+        constraint: "stable per-source identity slug, unique within sources[]"
+      flow_id:
+        type: string (uuid)
+        required: true
+        constraint: "per-source NMOS/MXL flow id, unique within sources[]"
+      pattern:
+        type: string
+        required: true
+        constraint: >-
+          per-source test pattern name, DISTINCT within sources[] — the
+          switch must be visually unambiguous (§4). No fixed enum is
+          defined by this contract; values must be patterns the deployed
+          test-source component actually supports.
+
+  viewer:
+    type: object
+    required: true
+    constraint: >-
+      the viewer endpoint stays single (one viewer, never keyed per
+      source) — this object is not a list.
+    fields:
+      id:
+        type: string
+        required: true
+        constraint: "viewer-instance identity slug"
+      source_selection:
+        type: string
+        required: true
+        constraint: >-
+          must equal one of sources[].id — the source currently activated
+          to transmit toward the viewer (the coordinator's active-source,
+          §4.1). A first-class parameter at both initial launch and
+          reconfigure (the switch, §5) — the same field, re-set by the
+          switch actuator.
+        projection: >-
+          the playbook (WP3, §3.2/§5) projects this field to TWO chart
+          values, not one: (a) the coordinator's active-source selector,
+          set to this field's value verbatim; and (b) the viewer's own
+          received flow.id, looked up as
+          sources[<this field's value>].flow_id — because each source
+          produces a distinct flow_id (§4.1's epoch/restart handling), the
+          viewer must be pointed at the SELECTED source's flow, not left on
+          whichever source's flow it happened to start with. An
+          implementation that sets active-source alone, without also
+          re-deriving the viewer's flow.id from this lookup, leaves the
+          viewer receiving the wrong (baseline) flow after a switch.
+
+# Worked example (illustrative shape only — not a real instance; see
+# catalog/topology-params.j1.yaml for J1's actual authored values):
+#
+# topology_params:
+#   schema_version: 1
+#   target_facility: <facility-slug>
+#   sources:
+#     - id: <source-instance-slug>
+#       flow_id: <uuid>
+#       pattern: <test-pattern-name>
+#     - id: <source-instance-slug>
+#       flow_id: <uuid>
+#       pattern: <test-pattern-name>
+#   viewer:
+#     id: <viewer-instance-slug>
+#     source_selection: <source-instance-slug>
