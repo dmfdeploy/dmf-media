@@ -1,0 +1,6 @@
+#!/bin/sh
+# Stub for Linux iproute2's `ip` (umbrella #201 WP2 acceptance harness) —
+# not present on the macOS harness-runner. Only implements the one call
+# start_initiator issues: `ip -4 -o addr show <iface>`, whose output the
+# script parses as `awk '{print $4}' | cut -d/ -f1` to extract an address.
+echo "1: eth0    inet 192.0.2.1/24 brd 192.0.2.255 scope global eth0"

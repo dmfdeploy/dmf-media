@@ -6,6 +6,8 @@ extends: relaxed
 ignore: |
   **/templates/**
   **/charts/**/templates/**
+  tests/harness/evidence/**
+  tests/harness/render-matrix/**
 rules:
   line-length: disable
   comments: disable

@@ -1,6 +1,12 @@
 # === DMF Platform .gitignore ===
 # Repo-specific rules go above the baseline block at the bottom.
 
+# umbrella #201 WP2 acceptance-gate demo harness — evidence/render output is
+# regenerated per run (tests/harness/run-demo.sh, render-matrix.sh), never
+# committed.
+tests/harness/evidence/
+tests/harness/render-matrix/
+
 # macOS metadata
 .DS_Store
 .DS_Store?
