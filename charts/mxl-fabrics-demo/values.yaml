@@ -223,27 +223,61 @@ initiator:
 # source/view sub-keys below are NOT independently tunable duplicates of
 # the same cost, they are two DIFFERENT measured costs for two different
 # runtime behaviors (PREVIEW=0 poller vs PREVIEW=1 continuous encoder).
+# CPU LIMITS REMOVED FROM EVERY MEDIA-PATH CONTAINER BELOW (2026-07-29, live
+# env v5on-r8aw, umbrella #301). Live evidence: the `status` view container
+# was CFS-throttled pinned at its (then) 250m limit — 10.00 throttle
+# periods/s — while `writer` was pinned at 949.7m against its 950m limit,
+# ALSO 10.00 periods/s, on a node sitting at only 68% CPU. Both are
+# constant-rate media processes, not bursty services (writer measured
+# p50 408m / p95 409m / max 411m across 412 samples — dead flat), so
+# CFS-quota throttling on a frame-cadence pipeline is a MISSED-DEADLINE
+# condition, not an efficiency saving: the view pod's status container was
+# SIGKILLed (exit 137) with its GStreamer preview log showing "Failed to get
+# grain ... TOO EARLY / TOO LATE" and monotonically climbing "Video latency
+# increase detected", and the console showed no preview video at all.
+# Raising the limits live fixed the preview immediately, and counter-
+# intuitively DROPPED total node CPU from 2049m to 1622m — a throttled
+# real-time pipeline burns extra CPU on retries, PTS re-adjustment and
+# dropped-grain handling, so unclamping it does the real work for LESS.
+# Residual sub-period-burst throttling still persisted even at the raised
+# limits (view status 1.16/s, readers ~1.1/s), which is why the decision is
+# to remove the CPU limits rather than raise them again.
+#
+# requests are now the ONLY contention protection for these containers, and
+# they currently UNDERSTATE measured consumption (e.g. writer requests 370m
+# while measuring 414-624m) — that gap is umbrella dmfdeploy/dmfdeploy#302's
+# call, not this change's; no requests value below is touched here.
+#
+# limits.memory is untouched (byte-for-byte) — memory is not compressible:
+# dropping a memory limit turns a leak into a node-down event instead of one
+# dead container (umbrella #258 NetBox OOM lesson). This change is CPU-limits-
+# only.
 resources:
   writer:
     requests:
       cpu: 370m
       memory: 96Mi
     limits:
-      cpu: 950m
+      # cpu limit removed 2026-07-29 (umbrella #301): observed pinned at
+      # 949.7m against its 950m limit, 10.00 throttle periods/s, while
+      # measuring a dead-flat p50 408m / p95 409m / max 411m — see the
+      # resources-block-level comment above for the full rationale.
       memory: 384Mi
   initiator:
     requests:
       cpu: 55m
       memory: 24Mi
     limits:
-      cpu: 100m
+      # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+      # process; see the resources-block-level comment above.
       memory: 40Mi
   reader:
     requests:
       cpu: 10m
       memory: 8Mi
     limits:
-      cpu: 50m
+      # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+      # process; see the resources-block-level comment above.
       memory: 32Mi
   info:
     source:
@@ -251,14 +285,16 @@ resources:
         cpu: 5m
         memory: 8Mi
       limits:
-        cpu: 50m
+        # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+        # process; see the resources-block-level comment above.
         memory: 32Mi
     view:
       requests:
         cpu: 5m
         memory: 8Mi
       limits:
-        cpu: 50m
+        # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+        # process; see the resources-block-level comment above.
         memory: 32Mi
   status:
     source:
@@ -266,26 +302,35 @@ resources:
         cpu: 10m
         memory: 24Mi
       limits:
-        cpu: 50m
+        # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+        # process; see the resources-block-level comment above.
         memory: 40Mi
     view:
       requests:
         cpu: 160m
         memory: 56Mi
       limits:
-        cpu: 250m
+        # cpu limit removed 2026-07-29 (umbrella #301): this is the
+        # container that surfaced the whole problem — the 5fps GStreamer/JPEG
+        # preview encoder was observed pinned at its 250m limit wanting 333m,
+        # SIGKILLed (exit 137) with a real-time pipeline losing the deadline
+        # race ("Failed to get grain ... TOO EARLY / TOO LATE", monotonically
+        # climbing "Video latency increase detected"); see the
+        # resources-block-level comment above for the full rationale.
         memory: 128Mi
   target:
     requests:
       cpu: 45m
       memory: 56Mi
     limits:
-      cpu: 100m
+      # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+      # process; see the resources-block-level comment above.
       memory: 128Mi
   targetInfoPublisher:
     requests:
       cpu: 15m
       memory: 8Mi
     limits:
-      cpu: 50m
+      # cpu limit removed 2026-07-29 (umbrella #301) — constant-rate media
+      # process; see the resources-block-level comment above.
       memory: 32Mi
