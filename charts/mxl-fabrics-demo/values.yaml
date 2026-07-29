@@ -46,6 +46,16 @@ demoFunctions:
 status:
   port: 9000
   provider: aliyun
+  # umbrella #308: mxl-gst-sink busy-wait/log-flood pacing knobs. Plumbed ONLY
+  # into the view-side status container's env (charts/mxl-fabrics-demo/templates/
+  # target.yaml, PREVIEW=1) — that is the only status container that ever spawns
+  # mxl-gst-sink (mxl-status-server.py only starts its preview child when
+  # PREVIEW=1); the source-side status container (initiator.yaml, PREVIEW=0)
+  # never runs mxl-gst-sink at all, so these would be inert there.
+  preview:
+    tooEarlyRetryNs: ""    # empty -> the binary's own default (one grain period for the flow rate)
+    logRateLimitSeconds: 10
+    logLevel: INFO
 
 fabrics:
   provider: tcp                       # first cross-host test; verbs/efa later

@@ -52,4 +52,33 @@ echo "=== diff: view-a vs view-b ==="
 diff -u "$OUT_DIR/view-a.yaml" "$OUT_DIR/view-b.yaml" | tee "$OUT_DIR/diff-view-a-vs-view-b.diff" || true
 
 echo
+echo "=== assert: umbrella #308 mxl-gst-sink pacing env vars appear ONLY on the view-side status container ==="
+fail() {
+  echo "FAIL: $1" >&2
+  exit 1
+}
+
+# view-a/view-b render target.yaml's status container (PREVIEW=1) — the only
+# status container that ever spawns mxl-gst-sink (mxl-status-server.py only
+# starts its preview child when PREVIEW=1). All three #308 env vars, and
+# PREVIEW=1 itself, must be present.
+for f in "$OUT_DIR/view-a.yaml" "$OUT_DIR/view-b.yaml"; do
+  grep -q '{ name: MXL_GST_TOO_EARLY_RETRY_NS,' "$f" || fail "MXL_GST_TOO_EARLY_RETRY_NS missing from $f (view status container)"
+  grep -q '{ name: MXL_GST_LOG_RATE_LIMIT_SECONDS,' "$f" || fail "MXL_GST_LOG_RATE_LIMIT_SECONDS missing from $f (view status container)"
+  grep -q '{ name: MXL_GST_LOG_LEVEL,' "$f" || fail "MXL_GST_LOG_LEVEL missing from $f (view status container)"
+  grep -q '{ name: PREVIEW, value: "1" }' "$f" || fail "PREVIEW=1 missing from $f (view status sidecar)"
+done
+
+# default/source-a/source-b render initiator.yaml's status container
+# (PREVIEW=0) — it never spawns mxl-gst-sink, so the #308 env vars must be
+# ABSENT there (inert env plumbing is scope creep this harness should catch).
+for f in "$OUT_DIR/default.yaml" "$OUT_DIR/source-a.yaml" "$OUT_DIR/source-b.yaml"; do
+  grep -qE 'MXL_GST_TOO_EARLY_RETRY_NS|MXL_GST_LOG_RATE_LIMIT_SECONDS|MXL_GST_LOG_LEVEL' "$f" \
+    && fail "umbrella #308 pacing env vars found on $f — source-side status container never spawns mxl-gst-sink"
+  grep -q '{ name: PREVIEW, value: "0" }' "$f" || fail "PREVIEW=0 missing from $f (source status sidecar)"
+done
+
+echo "OK: #308 pacing env vars present only on view-side (PREVIEW=1) status containers; PREVIEW=1/0 intact on both sides"
+
+echo
 echo "Render matrix + diffs written to $OUT_DIR"

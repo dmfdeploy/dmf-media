@@ -56,9 +56,15 @@ COPY utils mxl/utils
 # status sidecar can emit headless JPEG snapshots of the received flow. Patch is
 # applied to the build context only; the upstream clone is untouched.
 COPY patch-sink.py /tmp/patch-sink.py
+# Pace mxl-gst-sink's past-deadline retry + rate-limit its repeat-state logging
+# (umbrella #308: unpaced TOO_EARLY retries busy-waited at microsecond cadence,
+# ~40k log lines/min). Applied AFTER patch-sink.py, same build-context-only
+# mechanism — see the script's own header for the full rationale.
+COPY patch-sink-too-early-pacing.py /tmp/patch-sink-too-early-pacing.py
 # COPY'd sources are root-owned; patch as root then drop back to the build user.
 USER 0:0
 RUN python3 /tmp/patch-sink.py
+RUN python3 /tmp/patch-sink-too-early-pacing.py
 USER mxl
 
 # Fabrics opt-in + GStreamer present → tools/mxl-gst builds (mxl-gst-testsrc/sink/
