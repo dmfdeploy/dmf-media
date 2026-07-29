@@ -138,7 +138,10 @@ initiator:
 # catalog/mxl-videotest-view.yaml) — bin/check-catalog-demand.py gates the
 # two staying in lock-step with this chart's rendered REQUESTS (limits are
 # NOT gated — they don't enter the L3 request budget, so they may be set
-# generously for burst safety without moving the fit arithmetic).
+# generously for burst safety without moving the fit arithmetic). This
+# rationale is why memory limits were sized generously below; CPU limits
+# were REMOVED entirely on 2026-07-29 for a different reason (see the "CPU
+# LIMITS REMOVED" block further down) — the two are independent decisions.
 #
 # ROUND 2 (codex GATE:FAIL on the round-1 cut, both findings fixed here):
 #   P1 — round 1 set every memory LIMIT to the old WP0-era REQUEST value,
@@ -190,25 +193,32 @@ initiator:
 # holding those pages (it's the flow producer). No separate pod-level
 # domain add-on is needed anywhere else; do not double-count it.
 #
-# Per-container split (CPU requests sum to EXACTLY 450m/225m; limits are
-# per-container-measurement-derived, not total-constrained):
+# Per-container split (CPU requests sum to EXACTLY 450m/225m; memory limits
+#   are per-container-measurement-derived, not total-constrained — see
+#   below. The CPU limits recorded next are HISTORY, not current state —
+#   they were REMOVED 2026-07-29 per umbrella #301, see the "CPU LIMITS
+#   REMOVED" block further down; only memory limits remain on any
+#   container today):
 #   source requests: writer 370 (sustained-unconsumed ≈ pod 428m minus
 #     measured sidecar sum ≈ 364m, +margin), initiator 55, reader 10,
 #     info(source) 5, status(source) 10 = 450
 #   view requests: status(view) 160 (the real per-role cost — this is the
 #     container codex flagged), target 45, target-info-publisher 15,
 #     info(view) 5 = 225
-#   CPU limits: writer 950m (measured 810 consumed +margin); initiator
-#     100m; status(view) 250m (measured 157 sustained, headroom for scene
-#     complexity); target 100m; true-idle sidecars (reader, info(source),
-#     info(view), status(source), targetInfoPublisher) 50m — genuine burst
-#     room now (not request==limit), cheap insurance per codex, even though
-#     none of them is remotely close to it.
+#   CPU limits (HISTORICAL, round-2 calibration — REMOVED 2026-07-29, see
+#     below): writer had 950m (measured 810 consumed +margin); initiator
+#     had 100m; status(view) had 250m (measured 157 sustained, headroom for
+#     scene complexity); target had 100m; true-idle sidecars (reader,
+#     info(source), info(view), status(source), targetInfoPublisher) had
+#     50m — genuine burst room at the time (not request==limit), cheap
+#     insurance per codex, even though none of them was remotely close to
+#     it.
 #   Memory requests (role totals still 160Mi/128Mi, redistributed per the
 #     measured values): source — writer 96, initiator 24, reader 8,
 #     info(source) 8, status(source) 24 = 160; view — target 56,
 #     status(view) 56, info(view) 8, target-info-publisher 8 = 128.
-#   Memory limits (per-container, NOT total-constrained): writer 384Mi (see
+#   Memory limits (per-container, NOT total-constrained, CURRENT — unlike
+#     the CPU limits above, these were not removed): writer 384Mi (see
 #     domain-fill note above); status(view) 128Mi (GStreamer pipeline,
 #     measured 56Mi — >2x margin for scene-dependent variance); target
 #     128Mi (measured 44Mi); everything else = max(2x its own measured
