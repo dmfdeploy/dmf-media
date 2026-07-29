@@ -104,6 +104,12 @@ spec:
             - { name: MXL_SERVICE, value: {{ .Values.fabrics.service | quote }} }
             - { name: STATUS_PORT, value: {{ .Values.status.port | quote }} }
             - { name: PREVIEW, value: "1" }
+            # umbrella #308: mxl-gst-sink busy-wait/log-flood pacing — only
+            # meaningful here (PREVIEW=1 is the only status container that
+            # spawns mxl-gst-sink at all; see the status.preview values comment).
+            - { name: MXL_GST_TOO_EARLY_RETRY_NS, value: {{ .Values.status.preview.tooEarlyRetryNs | quote }} }
+            - { name: MXL_GST_LOG_RATE_LIMIT_SECONDS, value: {{ .Values.status.preview.logRateLimitSeconds | quote }} }
+            - { name: MXL_GST_LOG_LEVEL, value: {{ .Values.status.preview.logLevel | quote }} }
           volumeMounts:
             - { name: domain, mountPath: {{ .Values.domainPath }} }
             - { name: host-os-release, mountPath: /host/etc, readOnly: true }
