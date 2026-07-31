@@ -18,7 +18,9 @@ catalog/        — Function-catalog entries (YAML) + topology-params schema/ins
 charts/         — Helm charts: mxl-fabrics-demo, nmos-cpp, nmos-crosspoint
 docker/         — Dockerfiles: the compiled upstream MXL image (mxl-fabrics), nmos-crosspoint
 bin/            — CI gates + publish scripts (catalog-demand check, GHCR chart/image publish)
-tests/          — Render-matrix harness with golden manifests (tests/harness/)
+tests/          — Harness scripts (tests/harness/): the acceptance-gate proof
+                  (run-demo.sh) and the render matrix (render-matrix.sh), plus
+                  their PATH stubs; both write generated, untracked output
 playbooks/      — lifecycle-operate.yml (catalog drift detector); the eight numbered
                   EBU playbooks (400-599) are stubs
 roles/          — Media-domain Ansible roles (all stubs until Phase 3)
@@ -69,9 +71,12 @@ J1 instance), the three Helm charts (`charts/`), the compiled-from-source
 upstream MXL image (`docker/mxl-fabrics/`, SHA-pinned via
 `docker/mxl-fabrics/MXL_UPSTREAM_SHA` and verified fail-closed by
 `mxl_build_prep.py` before any patch script touches a source file), and the
-catalog drift detector (`playbooks/lifecycle-operate.yml`), which checks that
-a catalog entry's declared `lifecycle:active`/`lifecycle:bootstrapped` state
-matches what is actually deployed.
+catalog drift detector (`playbooks/lifecycle-operate.yml`), which asserts that
+a declared `lifecycle:active`/`lifecycle:bootstrapped` state matches what is
+actually deployed. In v1 that detector checks exactly one entry — `nmos-cpp`,
+hardcoded in the playbook's `_catalog_entries` — and loading the declarations
+from `catalog/*.yaml` is explicitly deferred (the playbook says so in its own
+comment), so the other catalog entries are not yet covered.
 
 **Media roles are stubs.** All five `roles/*/tasks/main.yml` entries
 (`ebu-list`, `flow-exporters`, `ptp-monitor`, `netbox-media-plugin`,
