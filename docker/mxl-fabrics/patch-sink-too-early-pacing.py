@@ -59,6 +59,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mxl_build_prep import verify_upstream_sha
+
 SINK_PATH = "mxl/tools/mxl-gst/sink.cpp"
 UTILS_PATH = "mxl/tools/mxl-gst/utils.hpp"
 
@@ -897,6 +900,12 @@ def build_sink_steps():
 
 
 def main():
+    # umbrella #315: verify the checkout under build matches the pinned
+    # upstream SHA before check_state() reads a single source file — the
+    # anchor checks below only catch content drift, not "wrong commit
+    # entirely".
+    verify_upstream_sha()
+
     all_steps = build_utils_steps() + build_sink_steps()
 
     state, detail = check_state(all_steps)

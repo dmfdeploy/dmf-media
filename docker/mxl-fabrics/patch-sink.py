@@ -6,7 +6,16 @@ status sidecar needs a headless JPEG sink, so we let `MXL_GST_VIDEO_SINK` overri
 the sink tail (default unchanged → autovideosink). Applied to the build context so
 the upstream clone stays pristine. Run from the MXL source root.
 """
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mxl_build_prep import verify_upstream_sha
+
+# umbrella #315: verify the checkout under build matches the pinned upstream
+# SHA before touching any source file — the anchor checks below only catch
+# content drift, not "wrong commit entirely".
+verify_upstream_sha()
 
 PATH = "mxl/tools/mxl-gst/sink.cpp"
 

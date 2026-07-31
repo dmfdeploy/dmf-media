@@ -11,6 +11,19 @@
 #   - iproute2 in the runtime             → entrypoint detects the eth0 IP for --node
 # Built for ARM64 media nodes. Build context = the MXL source root
 # (an upstream MXL checkout).
+#
+# Reproducibility (umbrella dmfdeploy/dmfdeploy#315): the expected upstream
+# MXL SHA is recorded in docker/mxl-fabrics/MXL_UPSTREAM_SHA (this dmf-media
+# repo, sibling of this Dockerfile — not the MXL checkout). Build MUST be
+# invoked with:
+#   --build-arg MXL_SOURCE_SHA=$(git -C <mxl-checkout> rev-parse HEAD)
+# mxl_build_prep.py's verify_upstream_sha() compares that build-arg against
+# MXL_UPSTREAM_SHA before either patch script (below) touches a source file,
+# and fails loudly on mismatch. Bump procedure for a deliberate upstream
+# move: update docker/mxl-fabrics/MXL_UPSTREAM_SHA to the new SHA, then
+# rebuild — patch-sink.py / patch-sink-too-early-pacing.py fail on their own
+# anchors if upstream moved the code they patch, which is the content-drift
+# guard; the SHA check above only guards which commit was built.
 FROM debian:trixie-slim AS base
 
 RUN apt-get update && apt-get install -y \
@@ -26,6 +39,14 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m mxl
 
 FROM base AS builder
+
+# The actual SHA of the source checkout being built (umbrella #315) — no
+# default, so a build that omits the build-arg falls through to
+# mxl_build_prep.py's git-checkout fallback and fails loudly if that isn't
+# usable either. ENV (not just ARG) so it's visible to the patch RUN steps
+# below, which run in a later layer than this declaration.
+ARG MXL_SOURCE_SHA
+ENV MXL_SOURCE_SHA=${MXL_SOURCE_SHA}
 
 RUN apt-get update && apt-get install -y \
       build-essential bison flex \
@@ -52,6 +73,13 @@ COPY cmake mxl/cmake
 COPY tools mxl/tools
 COPY utils mxl/utils
 
+# Expected upstream SHA + the shared verify_upstream_sha() helper (umbrella
+# #315). Both dmf-media files, staged into the operator's MXL build context
+# the same way patch-sink.py below is — none of these three files are part
+# of the upstream MXL checkout itself. Must land before the patch RUN steps:
+# verify_upstream_sha() is each patch script's first executable action.
+COPY MXL_UPSTREAM_SHA /tmp/MXL_UPSTREAM_SHA
+COPY mxl_build_prep.py /tmp/mxl_build_prep.py
 # Make mxl-gst-sink's video sink env-configurable (MXL_GST_VIDEO_SINK) so the demo
 # status sidecar can emit headless JPEG snapshots of the received flow. Patch is
 # applied to the build context only; the upstream clone is untouched.
