@@ -2,7 +2,9 @@
 
 Media-domain modules for the DMF Platform — NMOS IS-04/05 discovery, AMWA BCP compliance,
 EBU LIST 2110 packet analysis, PTP topology monitoring, flow-level exporters, and the
-NetBox media plugin (sender/receiver/flow schema).
+NetBox media plugin (sender/receiver/flow schema). That list is this repo's full reserved
+scope, not a status report — most of it is still unimplemented. See
+[Status](#status) below for what actually runs today.
 
 ## Dependencies
 
@@ -12,9 +14,14 @@ NetBox media plugin (sender/receiver/flow schema).
 ## Structure
 
 ```
+catalog/        — Function-catalog entries (YAML) + topology-params schema/instance
+charts/         — Helm charts: mxl-fabrics-demo, nmos-cpp, nmos-crosspoint
+docker/         — Dockerfiles: the compiled upstream MXL image (mxl-fabrics), nmos-crosspoint
+bin/            — CI gates + publish scripts (catalog-demand check, GHCR chart/image publish)
+tests/          — Render-matrix harness with golden manifests (tests/harness/)
+playbooks/      — lifecycle-operate.yml (catalog drift detector); the eight numbered
+                  EBU playbooks (400-599) are stubs
 roles/          — Media-domain Ansible roles (all stubs until Phase 3)
-charts/         — Helm charts for media components
-playbooks/      — Media deployment playbooks
 docs/           — Design docs and runbooks
 ```
 
@@ -56,7 +63,33 @@ guard; the SHA check only guards which commit was built.
 
 ## Status
 
-Scaffold only. Media roles are stubs. Content lands in Phase 3 of the DMF Platform Plan.
+This is not a scaffold-only repo. Real work lives here: the function catalog
+(`catalog/` — four entries plus the `topology_params` schema and a concrete
+J1 instance), the three Helm charts (`charts/`), the compiled-from-source
+upstream MXL image (`docker/mxl-fabrics/`, SHA-pinned via
+`docker/mxl-fabrics/MXL_UPSTREAM_SHA` and verified fail-closed by
+`mxl_build_prep.py` before any patch script touches a source file), and the
+catalog drift detector (`playbooks/lifecycle-operate.yml`), which checks that
+a catalog entry's declared `lifecycle:active`/`lifecycle:bootstrapped` state
+matches what is actually deployed.
+
+**Media roles are stubs.** All five `roles/*/tasks/main.yml` entries
+(`ebu-list`, `flow-exporters`, `ptp-monitor`, `netbox-media-plugin`,
+`media-controllers`) are 3-line TODO placeholders, and the eight numbered EBU
+playbooks (`400-mxl-prereq.yml` through `599-media-functions-verify.yml`) are
+each explicitly self-labelled `STUB`. That reserved Layer 4/5 skeleton
+targets DMF Platform Plan Phase 3 and is not implemented yet.
+
+The real media-domain capability runs through a different surface than that
+reserved skeleton: this repo's catalog, charts, and MXL image feed the
+launch/switch/teardown playbooks that live in `dmf-runbooks`, not here. On
+2026-07-30, the operator console drove a live source switch (source-a →
+source-b) through `dmf-runbooks` 0.4.3's `switch-mxl-fabrics-demo.yml` on the
+deployed `mxl-fabrics-demo` chart — two sources, one viewer, on a single ARM
+node (the standing single-node lane); the Helm release advanced cleanly to
+revision 2 with the target pod running and no restarts. That is the current
+proven scale; nothing broader (multi-node or cross-host) has been
+demonstrated.
 
 ## License
 
