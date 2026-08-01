@@ -36,19 +36,28 @@ topology_params:
     # Source 2: fresh flow id — J1 doubles the source count from today's
     # single shared UUID baseline.
     #
-    # Pattern MUST be a STATIC videotestsrc pattern, not an animated one
-    # (umbrella #335). This was `ball` until 2026-08-01, and ball is animated:
-    # upstream videotestsrc's gst_video_test_src_is_static_pattern() excludes
-    # BALL, so every frame is re-rendered instead of served from the cached
-    # buffer. Measured on the CAX21-class demo node, 1920x1080 v210 @30000/1001:
-    # ball delivered 29.513 fps against a 29.970 target while burning 1.55
-    # cores (request 370m), and the flow fell behind real time without bound —
-    # 122s of accumulated lag, growing 4.5s every 5 minutes. smpte on the
-    # identical spec delivered 29.971 fps at 0.45 cores. A source that cannot
-    # meet its grain deadline is not a usable live source: with clockoverlay in
-    # the pipeline, switching to it shows a visibly stale clock.
-    # checkers-8 (enum 10) is static/cacheable, is in mxl-gst-testsrc's
-    # pattern_map, and stays visually unambiguous against smpte.
+    # Pattern must be AFFORDABLE at this flow's format on the target node —
+    # the test is whether the writer holds the grain rate, not whether the
+    # pattern is static (umbrella #335; the chart's own `pattern` comment in
+    # charts/mxl-fabrics-demo/values.yaml carries the full static/non-static
+    # taxonomy and its source citation).
+    #
+    # This was `ball` until 2026-08-01. Measured on the CAX21-class demo node
+    # at 1920x1080 v210 @30000/1001, request 370m:
+    #   ball        1.55 cores  -> 29.513 fps against a 29.970 target; the flow
+    #                              fell behind real time WITHOUT BOUND — 122s of
+    #                              accumulated lag, growing 4.5s per 5 minutes
+    #   smpte       0.41-0.45   -> 29.971 fps, latency flat (source-a, above)
+    #   checkers-8  0.11        -> 29.969 fps, latency flat (this source, after)
+    # A source that cannot meet its grain deadline is not a usable live source:
+    # with clockoverlay in the pipeline, switching to it shows a visibly stale
+    # clock, so the switch "works" and still looks broken.
+    #
+    # checkers-8 was chosen because it is affordable with the widest margin —
+    # it is one of the static/cached patterns, so it is cheaper even than
+    # smpte — while staying visually unambiguous against smpte (§4) and being
+    # present in mxl-gst-testsrc's pattern_map (enum 10; an absent name throws
+    # out of pattern_map.at() and takes the writer down).
     - id: source-b
       flow_id: "b0ae9cba-a989-4568-ac96-8bd19272c966"
       pattern: checkers-8
