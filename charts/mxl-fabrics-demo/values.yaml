@@ -118,9 +118,31 @@ flow:
 # tools/mxl-gst/testsrc.cpp of the pinned MXL checkout. Two consequences worth
 # keeping: an unknown name hits pattern_map.at() and THROWS, so a typo takes
 # the writer down rather than falling back to a default; and the value must be
-# a STATIC pattern — animated ones (ball, snow, blink) are re-rendered every
-# frame and cannot hold 1080p v210 @29.97 on a CAX21-class node (see the
-# measurements in catalog/topology-params.j1.yaml).
+# AFFORDABLE at the flow's format on the target node — see below.
+#
+# The rule is affordability, NOT staticness. videotestsrc splits patterns in
+# gst_video_test_src_is_static_pattern() (gst-plugins-base 1.26.2-1+deb13u1,
+# the Debian trixie package this image installs — see docker/mxl-fabrics/
+# Dockerfile):
+#   static      — rendered ONCE and served from the cached buffer; cheapest.
+#                 checkers-1/2/4/8, solid colours. (Static only while
+#                 horizontal-speed is unset; mxl-gst-testsrc never sets it —
+#                 testsrc.cpp:345-353 at the pinned SHA builds the pipeline
+#                 without that property.)
+#   non-static  — re-rendered EVERY frame: SMPTE, SNOW, BLINK, BALL.
+# Non-static does not mean unusable. Measured at 1080p v210 @30000/1001 on the
+# CAX21-class demo node (umbrella #335):
+#   checkers-8  ~0.11 cores  static, cached          — ships as source-b
+#   smpte       ~0.41-0.45   NON-static, affordable  — ships as source-a
+#   ball        ~1.55        NON-static, ~3.4x smpte — could not hold real
+#                            time: 29.513 fps against a 29.970 target, lag
+#                            growing without bound. This was the #335 defect.
+# So our own default (smpte) is a non-static pattern we run happily because it
+# fits; ball is excluded because it does not. snow and blink are also
+# non-static and UNMEASURED — measure before shipping either.
+# Acceptance test for any new pattern: the writer must hold the flow's grain
+# rate with latency flat (not merely "look fine") — a source that misses its
+# deadline drifts silently behind real time.
 pattern: smpte
 
 # This release's own source identity slug (umbrella #201 WP2, spec §4.1) —
