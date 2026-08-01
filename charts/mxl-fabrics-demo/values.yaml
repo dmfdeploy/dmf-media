@@ -106,15 +106,21 @@ flow:
 # Test pattern for the source-role writer (mxl-gst-testsrc, a GStreamer
 # element wrapper — umbrella #201 WP2, spec §4: "distinct test pattern, so
 # the switch is visually unambiguous"). Standard GStreamer videotestsrc
-# named patterns (e.g. smpte, ball); J1's two catalog sources use smpte and
-# ball respectively (dmf-media catalog/topology-params.j1.yaml). Meaningless
-# for role=view releases — only threaded to the writer container below.
-# ASSUMPTION (flag exactly right, unverified against the real binary): the
-# writer args below pass this as `--pattern <value>`; mxl-gst-testsrc is
-# built from an upstream MXL checkout not vendored in this repo (see
-# docker/mxl-fabrics/Dockerfile), so its actual CLI surface for pattern
-# selection could not be confirmed from source here. Flagged in the WO2
-# report for verification before any live run (already gated behind #202).
+# named patterns (e.g. smpte, checkers-8); J1's two catalog sources use smpte
+# and checkers-8 respectively (dmf-media catalog/topology-params.j1.yaml).
+# Meaningless for role=view releases — only threaded to the writer container
+# below.
+# VERIFIED 2026-08-01 against the real binary in the deployed image
+# (umbrella #335; this comment previously carried an unverified ASSUMPTION):
+# `mxl-gst-testsrc --help` reports "-p, --pattern TEXT [smpte]", and the
+# writer logs confirm the name is mapped to the GStreamer enum by the tool's
+# own pattern_map (smpte -> pattern=0, checkers-8 -> 10, ball -> 18) in
+# tools/mxl-gst/testsrc.cpp of the pinned MXL checkout. Two consequences worth
+# keeping: an unknown name hits pattern_map.at() and THROWS, so a typo takes
+# the writer down rather than falling back to a default; and the value must be
+# a STATIC pattern — animated ones (ball, snow, blink) are re-rendered every
+# frame and cannot hold 1080p v210 @29.97 on a CAX21-class node (see the
+# measurements in catalog/topology-params.j1.yaml).
 pattern: smpte
 
 # This release's own source identity slug (umbrella #201 WP2, spec §4.1) —

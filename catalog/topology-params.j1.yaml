@@ -29,15 +29,29 @@ topology_params:
       # Standard GStreamer videotestsrc named pattern (mxl-gst-testsrc is a
       # GStreamer component) — no pattern enum exists yet anywhere in this
       # repo (WP2 introduces per-source patterns for the first time); smpte
-      # (colour bars) and ball (the second source's pattern, below) are
+      # (colour bars) and checkers-8 (the second source's pattern, below) are
       # maximally visually distinct, satisfying §4's "visually unambiguous"
       # requirement.
       pattern: smpte
     # Source 2: fresh flow id — J1 doubles the source count from today's
     # single shared UUID baseline.
+    #
+    # Pattern MUST be a STATIC videotestsrc pattern, not an animated one
+    # (umbrella #335). This was `ball` until 2026-08-01, and ball is animated:
+    # upstream videotestsrc's gst_video_test_src_is_static_pattern() excludes
+    # BALL, so every frame is re-rendered instead of served from the cached
+    # buffer. Measured on the CAX21-class demo node, 1920x1080 v210 @30000/1001:
+    # ball delivered 29.513 fps against a 29.970 target while burning 1.55
+    # cores (request 370m), and the flow fell behind real time without bound —
+    # 122s of accumulated lag, growing 4.5s every 5 minutes. smpte on the
+    # identical spec delivered 29.971 fps at 0.45 cores. A source that cannot
+    # meet its grain deadline is not a usable live source: with clockoverlay in
+    # the pipeline, switching to it shows a visibly stale clock.
+    # checkers-8 (enum 10) is static/cacheable, is in mxl-gst-testsrc's
+    # pattern_map, and stays visually unambiguous against smpte.
     - id: source-b
       flow_id: "b0ae9cba-a989-4568-ac96-8bd19272c966"
-      pattern: ball
+      pattern: checkers-8
 
   viewer:
     id: viewer-a
