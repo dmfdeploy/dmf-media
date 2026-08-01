@@ -26,7 +26,7 @@ OUT_DIR="$HARNESS_DIR/render-matrix"
 SOURCE_A_FLOW="5fbec3b1-1b0f-417d-9059-8b94a47197ed"
 SOURCE_A_PATTERN="smpte"
 SOURCE_B_FLOW="b0ae9cba-a989-4568-ac96-8bd19272c966"
-SOURCE_B_PATTERN="ball"
+SOURCE_B_PATTERN="checkers-8"
 
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
