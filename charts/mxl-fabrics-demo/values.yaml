@@ -172,11 +172,15 @@ initiator:
 # measured calibration (2026-07-24, chart 0.3.1), replacing the WP0-era
 # request-only placeholders above. Consumed by the L3 capacity preflight
 # (dmfdeploy/dmfdeploy#202 WP0) to budget CPU/memory across media nodes, and
-# by the catalog demand profiles (catalog/mxl-videotestsrc.yaml,
-# catalog/mxl-videotest-view.yaml) — bin/check-catalog-demand.py gates the
-# two staying in lock-step with this chart's rendered REQUESTS (limits are
-# NOT gated — they don't enter the L3 request budget, so they may be set
-# generously for burst safety without moving the fit arithmetic). This
+# by the catalog demand profiles — catalog/mxl-videotest-view.yaml's own
+# provision.resources.requests (role=view) plus the topology-owned
+# topology_params.source_profile in catalog/topology-params.j1.yaml
+# (role=source; the standalone catalog/mxl-videotestsrc.yaml entry this
+# figure used to live in was deleted, umbrella dmfdeploy/dmfdeploy#347) —
+# bin/check-catalog-demand.py gates both staying in lock-step with this
+# chart's rendered REQUESTS (limits are NOT gated — they don't enter the L3
+# request budget, so they may be set generously for burst safety without
+# moving the fit arithmetic). This
 # rationale is why memory limits were sized generously below; CPU limits
 # were REMOVED entirely on 2026-07-29 for a different reason (see the "CPU
 # LIMITS REMOVED" block further down) — the two are independent decisions.

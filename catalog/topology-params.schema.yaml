@@ -100,6 +100,39 @@ fields:
           defined by this contract; values must be patterns the deployed
           test-source component actually supports.
 
+  source_profile:
+    type: object
+    required: true
+    constraint: >-
+      additive, chart-specific extension (umbrella dmfdeploy/dmfdeploy#347) —
+      NOT part of the original WP1 cut of this contract, added when the
+      standing per-source catalog entry (catalog/mxl-videotestsrc.yaml) was
+      deleted and its demand contract had nowhere else to live. ONE shared
+      profile applies identically to every sources[] release (N copies, not
+      N distinct profiles — consistent with sources[] itself never being
+      per-source catalog entries, §3.3). Does not bump schema_version: this
+      is a new object nothing existing reads, not a change to any field's
+      meaning; the hard-coded v1 validators in dmf-cms
+      (src/dmf_cms/catalog.py) and dmf-runbooks
+      (filter_plugins/l3_topology.py) are unaffected.
+    fields:
+      resources:
+        type: object
+        required: true
+        fields:
+          requests:
+            type: object
+            required: true
+            constraint: >-
+              same declared-demand grammar as a catalog entry's own
+              provision.resources.requests (catalog/README.md's field
+              table): cpu must be explicit whole millicores with the 'm'
+              suffix ('450m'); memory must be whole binary Ki/Mi/Gi
+              ('160Mi'). Equality-gated against one rendered role=source
+              release-group in CI by bin/check-catalog-demand.py, exactly
+              as a standing entry's own declared demand is gated against
+              its own role render.
+
   viewer:
     type: object
     required: true
@@ -139,6 +172,11 @@ fields:
 # topology_params:
 #   schema_version: 1
 #   target_facility: <facility-slug>
+#   source_profile:
+#     resources:
+#       requests:
+#         cpu: <millicores-with-m-suffix>
+#         memory: <whole-binary-Ki-Mi-Gi>
 #   sources:
 #     - id: <source-instance-slug>
 #       flow_id: <uuid>

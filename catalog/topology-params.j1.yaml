@@ -11,6 +11,22 @@
 topology_params:
   schema_version: 1
 
+  # Shared per-source demand profile (umbrella dmfdeploy/dmfdeploy#347) —
+  # applies IDENTICALLY to every sources[] release (N copies, not N distinct
+  # profiles: §3.3's no-per-source-catalog-entries rule extends to demand,
+  # not just identity). Carries forward the exact numbers previously
+  # authored standalone in the now-deleted catalog/mxl-videotestsrc.yaml,
+  # recalibrated from measured usage in umbrella dmfdeploy/dmfdeploy#258
+  # (chart 0.3.1) — this is a relocation of that contract onto the topology
+  # object, not a new measurement. bin/check-catalog-demand.py validates
+  # this against one rendered role=source release-group and reports the
+  # full J1 aggregate (2 x this + the viewer's own provision.resources).
+  source_profile:
+    resources:
+      requests:
+        cpu: 450m      # videotestsrc (source): 370(writer)+55(initiator)+10(reader)+5(info)+10(status)
+        memory: 160Mi  # 96(writer)+24(initiator)+8(reader)+8(info)+24(status)
+
   # ILLUSTRATIVE — never a literal env slug in git. Per this schema's
   # target_facility.resolution: the console launch seam (WP3a) resolves the
   # current env's NetBox site slug at launch time and injects the real

@@ -50,6 +50,19 @@ chart-name typo, a deleted profile), extras, or duplicates (e.g. a standing
 source entry alongside topology-derived source coverage) are a hard
 failure — there is no silent-success path when nothing matches.
 
+Topology-derived source coverage is not just a role-count claim (umbrella
+#347): the topology instance's own topology_params.source_profile — ONE
+demand profile shared by every sources[] release, authored once in the
+referenced topology_ref file (dmf-media catalog/topology-params.j1.yaml) —
+is validated against a real rendered role=source release-group, exactly as
+a standing entry's own declared demand is validated against its own role
+render. A topology-carrying 'view' entry's full reported demand is its own
+declared profile PLUS len(sources[]) copies of source_profile — never the
+viewer profile alone, and never the viewer profile scaled by N (that would
+silently drop the source releases' own, different, cost from the number
+this gate certifies). Missing, malformed, or drifted source_profile is a
+hard failure, same as any other quantity mismatch this gate catches.
+
 Usage: bin/check-catalog-demand.py   (run from the dmf-media repo root)
 """
 
@@ -213,7 +226,18 @@ def _validate_topology_ref_path(ref, origin):
     CATALOG_DIR — no path separators, parent traversal, or absolute paths,
     checked twice (pre-I/O basename shape, then resolved-path containment)
     for the same defense-in-depth reason that function documents.
+
+    Type-checked before any of the path calls below (umbrella #347 gate
+    fix): a truthy non-string YAML value (an int, a mapping, a list) or an
+    explicit null previously reached ``os.path.isabs``/``os.sep in ref``
+    unchecked and raised a bare ``TypeError`` that escaped this module's
+    ``QuantityError`` handling in ``main()`` entirely. Both invalid-type and
+    empty-string are refused here, fail-closed, as a named gate failure.
     """
+    if not isinstance(ref, str):
+        raise QuantityError(f"{origin}: topology_ref type invalid: expected string, got {type(ref).__name__}")
+    if not ref:
+        raise QuantityError(f"{origin}: topology_ref type invalid: expected a non-empty string, got ''")
     if (
         os.path.isabs(ref)
         or os.sep in ref
@@ -233,17 +257,19 @@ def _validate_topology_ref_path(ref, origin):
     return path
 
 
-def _topology_ref_sources(key, topology_ref):
-    """Load a topology_ref target and return its sources[] list.
+def _load_topology_object(key, topology_ref):
+    """Load a topology_ref target and return its topology_params object.
 
     Validates just enough of the umbrella #201 WP1 topology_params contract
-    for role-coverage purposes: the target file must exist, parse as a
-    mapping, carry a top-level topology_params object with a non-empty
-    sources[] list and a viewer mapping. Full contract validation (schema
-    version, flow_id uniqueness, viewer.source_selection, ...) is
-    dmf_cms.catalog.load_topology_instance's job at launch time, not this
-    gate's — this only needs to know the target names real sources so a
-    viewer entry can claim 'source' role coverage on their behalf.
+    for role-coverage and demand-validation purposes: the target file must
+    exist, parse as a mapping, carry a top-level topology_params object with
+    a non-empty sources[] list and a viewer mapping. Full contract
+    validation (schema version, flow_id uniqueness, viewer.source_selection,
+    ...) is dmf_cms.catalog.load_topology_instance's job at launch time, not
+    this gate's — this only needs to know the target names real sources (so
+    a viewer entry can claim 'source' role coverage on their behalf) and, as
+    of umbrella #347, carries the shared source_profile demand contract
+    validated separately by _validate_source_profile.
     """
     origin = f"{key} topology_ref"
     path = _validate_topology_ref_path(topology_ref, origin)
@@ -263,11 +289,59 @@ def _topology_ref_sources(key, topology_ref):
         raise QuantityError(f"{origin} '{topology_ref}': sources must be a non-empty list")
     if not isinstance(tp.get("viewer"), dict):
         raise QuantityError(f"{origin} '{topology_ref}': viewer must be a mapping")
-    return sources
+    return tp
+
+
+def _validate_source_profile(key, topology_ref, tp):
+    """Validate the topology's shared source_profile against a real render.
+
+    umbrella #347: every sources[] release shares ONE demand profile,
+    authored once as topology_params.source_profile — never a per-source
+    catalog entry (§3.3's no-per-source-entries rule extends to demand).
+    Uses the same catalog-strict quantity grammar as a standing entry's own
+    provision.resources.requests (cpu_to_millicores_declared/memory_to_bytes)
+    and the same rendered-role comparison as the per-entry demand loop
+    below, just against role=source instead of the caller entry's own role.
+    Fails closed if the profile is missing, malformed, or does not equal the
+    rendered role=source chart demand.
+    """
+    origin = f"{key} topology_ref '{topology_ref}' source_profile"
+    profile = tp.get("source_profile")
+    if not isinstance(profile, dict):
+        raise QuantityError(f"{origin} is missing or not a mapping")
+    resources = profile.get("resources")
+    declared = resources.get("requests") if isinstance(resources, dict) else None
+    if not declared or "cpu" not in declared or "memory" not in declared:
+        raise QuantityError(f"{origin}: missing resources.requests.cpu/memory demand profile")
+
+    declared_cpu_m = cpu_to_millicores_declared(declared["cpu"], f"{origin}.resources.requests.cpu")
+    declared_mem_b = memory_to_bytes(declared["memory"], f"{origin}.resources.requests.memory")
+    rendered = rendered_role_demand("source")
+
+    if rendered["cpu_m"] != declared_cpu_m or rendered["mem_b"] != declared_mem_b:
+        raise QuantityError(
+            f"{origin}: demand mismatch — declared cpu={declared['cpu']} "
+            f"({declared_cpu_m}m) memory={declared['memory']} ({declared_mem_b}B), "
+            f"rendered (role=source, {rendered['containers']} containers) "
+            f"cpu={rendered['cpu_m']}m memory={rendered['mem_b']}B"
+        )
+    return declared_cpu_m, declared_mem_b, rendered["containers"]
+
+
+def _fmt_cpu_m(n):
+    return f"{n}m"
+
+
+def _fmt_mem_b(n):
+    if n % (1024**2) == 0:
+        return f"{n // (1024**2)}Mi"
+    if n % 1024 == 0:
+        return f"{n // 1024}Ki"
+    return f"{n}B"
 
 
 def _covered_roles(entry_path, entry):
-    """Return the set of chart roles one catalog entry provides coverage for.
+    """Return (covered_roles, topology_object_or_None) for one catalog entry.
 
     An entry always covers its own ebu.media_function_type. A 'view' entry
     may additionally carry a topology_ref (umbrella #201 WP3a) naming a
@@ -282,22 +356,39 @@ def _covered_roles(entry_path, entry):
     'source' coverage claim, so the exact-one-provider check below stays
     meaningful. A topology_ref on any entry whose own role isn't 'view'
     fails closed — the runbook makes topology explicitly viewer-owned.
+
+    ``topology_ref`` is looked up by KEY PRESENCE, not truthiness (umbrella
+    #347 gate fix): an entry that never authors the field stays plain
+    'absent' (no source coverage, no failure) — but a present value that
+    isn't a non-empty string (an int, a mapping, a list, or an explicit
+    ``null``) is a named gate failure, not a silent fall-through to
+    'absent'. Truthiness alone previously let ``topology_ref: null`` slip
+    past unchecked (None is falsy) straight into "no coverage claimed",
+    the same class of miss as the unguarded TypeError this fix also closes
+    one level down in _validate_topology_ref_path.
     """
     key = entry.get("key", entry_path.name)
     role = entry.get("ebu", {}).get("media_function_type")
-    topology_ref = entry.get("topology_ref")
 
-    if topology_ref and role != "view":
+    if "topology_ref" not in entry:
+        return {role}, None
+
+    topology_ref = entry["topology_ref"]
+    if not isinstance(topology_ref, str) or not topology_ref:
+        raise QuantityError(
+            f"{key}: topology_ref type invalid: expected string, got {type(topology_ref).__name__}"
+            if not isinstance(topology_ref, str)
+            else f"{key}: topology_ref type invalid: expected a non-empty string, got ''"
+        )
+
+    if role != "view":
         raise QuantityError(
             f"{key}: topology_ref is set but ebu.media_function_type is "
             f"{role!r}, not 'view' — topology instances are viewer-owned"
         )
 
-    covered = {role}
-    if topology_ref:
-        _topology_ref_sources(key, topology_ref)
-        covered.add("source")
-    return covered
+    tp = _load_topology_object(key, topology_ref)
+    return {role, "source"}, tp
 
 
 def main():
@@ -311,15 +402,18 @@ def main():
             entries.append((entry_path, entry))
 
     role_counts = {}
+    topology_by_key = {}
     for entry_path, entry in entries:
         key = entry.get("key", entry_path.name)
         try:
-            covered = _covered_roles(entry_path, entry)
+            covered, tp = _covered_roles(entry_path, entry)
         except QuantityError as e:
             failures.append(str(e))
             continue
         for covered_role in covered:
             role_counts.setdefault(covered_role, []).append(key)
+        if tp is not None:
+            topology_by_key[key] = tp
 
     if set(role_counts.keys()) != EXPECTED_ROLES or any(
         len(keys) != 1 for keys in role_counts.values()
@@ -369,6 +463,33 @@ def main():
             f"(cpu={declared['cpu']}, memory={declared['memory']}, "
             f"{rendered['containers']} containers)"
         )
+
+        if "topology_ref" in entry:
+            tp = topology_by_key.get(key)
+            if tp is None:
+                # Already recorded as a failure in the coverage pass above
+                # (bad type, wrong role, unparseable target, ...) — do not
+                # double-report it here.
+                continue
+            topology_ref = entry["topology_ref"]
+            try:
+                source_cpu_m, source_mem_b, source_containers = _validate_source_profile(key, topology_ref, tp)
+            except QuantityError as e:
+                failures.append(f"{key}: {e}")
+                continue
+            n = len(tp["sources"])
+            print(
+                f"PASS: {key} topology_ref '{topology_ref}' source_profile "
+                f"(role=source) declared == rendered (cpu={_fmt_cpu_m(source_cpu_m)}, "
+                f"memory={_fmt_mem_b(source_mem_b)}, {source_containers} containers)"
+            )
+            agg_cpu_m = declared_cpu_m + n * source_cpu_m
+            agg_mem_b = declared_mem_b + n * source_mem_b
+            print(
+                f"J1 aggregate for {key}: {n} x {_fmt_cpu_m(source_cpu_m)}/{_fmt_mem_b(source_mem_b)} "
+                f"+ {_fmt_cpu_m(declared_cpu_m)}/{_fmt_mem_b(declared_mem_b)} = "
+                f"{_fmt_cpu_m(agg_cpu_m)}/{_fmt_mem_b(agg_mem_b)}"
+            )
 
     if failures:
         print(f"\nFAIL: {len(failures)} catalog demand check(s) failed:", file=sys.stderr)
