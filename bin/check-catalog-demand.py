@@ -308,10 +308,14 @@ def _validate_source_profile(key, topology_ref, tp):
     origin = f"{key} topology_ref '{topology_ref}' source_profile"
     profile = tp.get("source_profile")
     if not isinstance(profile, dict):
-        raise QuantityError(f"{origin} is missing or not a mapping")
+        raise QuantityError(f"{origin} type invalid: expected mapping, got {type(profile).__name__}")
     resources = profile.get("resources")
-    declared = resources.get("requests") if isinstance(resources, dict) else None
-    if not declared or "cpu" not in declared or "memory" not in declared:
+    if not isinstance(resources, dict):
+        raise QuantityError(f"{origin}.resources type invalid: expected mapping, got {type(resources).__name__}")
+    declared = resources.get("requests")
+    if not isinstance(declared, dict):
+        raise QuantityError(f"{origin}.resources.requests type invalid: expected mapping, got {type(declared).__name__}")
+    if "cpu" not in declared or "memory" not in declared:
         raise QuantityError(f"{origin}: missing resources.requests.cpu/memory demand profile")
 
     declared_cpu_m = cpu_to_millicores_declared(declared["cpu"], f"{origin}.resources.requests.cpu")
