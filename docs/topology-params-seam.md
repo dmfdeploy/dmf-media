@@ -43,13 +43,28 @@ k3s runtime (reconciled)
 
 1. **Catalog (this repo, authoritative).** `topology_params` is authored once
    as its own catalog entry — see `catalog/topology-params.j1.yaml` for J1's
-   concrete two-source instance. It is *not* split across the existing
-   per-function entries (`catalog/mxl-videotestsrc.yaml`,
-   `catalog/mxl-videotest-view.yaml`); those describe the deployable function
-   *types* (image, chart, health probe) and are unchanged by this contract —
-   §3.3's N-source-shaped constraint explicitly forbids per-source catalog
-   entries (no `source_a`/`source_b`, no new catalog/job-template entries to
-   go from 2 sources to N).
+   concrete two-source instance. It is *not* split across per-source catalog
+   entries — §3.3's N-source-shaped constraint explicitly forbids per-source
+   catalog entries (no `source_a`/`source_b`, no new catalog/job-template
+   entries to go from 2 sources to N). This now extends to demand as well as
+   identity (umbrella dmfdeploy/dmfdeploy#347): `topology_params.source_profile`
+   is ONE shared demand profile — `resources.requests.cpu`/`memory`, same
+   declared-demand grammar as a catalog entry's own
+   `provision.resources.requests` — carried unchanged through the AWX launch
+   seam alongside `sources[]`/`viewer`, never projected into Helm values (the
+   chart's own per-role `values.yaml` resources block is the actuator-side
+   source of truth for what the pod actually requests; `source_profile` is
+   the catalog-side declared contract that must equal it). Consumed by
+   `bin/check-catalog-demand.py` (validates it against a real rendered
+   `role=source` release-group, then reports the full topology-carrying
+   entry's aggregate as `viewer_profile + len(sources[]) x source_profile`)
+   and by dmf-cms's L3 capacity preflight (same formula, live at deploy
+   time). This absorbed the demand contract previously authored standalone
+   in `catalog/mxl-videotestsrc.yaml`, deleted when the catalog was reduced
+   to the single viewer composite (umbrella dmfdeploy/dmfdeploy#335)  — that
+   entry's own function-type description (image, chart, health probe) had
+   no other surviving home, but its *demand* contract needed one, since the
+   viewer-owned topology launch still provisions real source-role pods.
 
 2. **AWX launch `extra_vars` (dmf-cms → AWX, WP3a).** The console's launch
    call threads the `topology_params` object unchanged as `extra_vars` on the
@@ -107,6 +122,7 @@ k3s runtime (reconciled)
 
 | `topology_params` field | J1 value (see `catalog/topology-params.j1.yaml`) | Chart projection |
 |---|---|---|
+| `source_profile.resources.requests` | `cpu: 450m`, `memory: 160Mi` — shared by every sources[] release | NOT projected to Helm values — the chart's own `values.yaml` resources block is the actuator-side truth; this is the catalog-side declared contract equality-gated against it (`bin/check-catalog-demand.py`) and consumed live by dmf-cms's L3 capacity preflight (`viewer_profile + len(sources[]) x source_profile`) |
 | `sources[0].id` / `.flow_id` / `.pattern` | first source instance | `helm --set role=source --set flow.id=<flow_id> --set pattern=<pattern>` → one Helm release |
 | `sources[1].id` / `.flow_id` / `.pattern` | second source instance | second, independent Helm release, same chart |
 | `viewer.id` | the viewer instance | `helm --set role=view` → the viewer's Helm release |
