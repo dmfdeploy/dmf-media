@@ -41,13 +41,19 @@ can never be a real workload demand and matching zeros would mask the parse
 actually having failed.
 
 The catalog is also checked for coverage: exactly one entry per expected role
-({source, view}) must reference this chart. Fewer (a chart-name typo, a
-deleted profile), extras, or duplicates are a hard failure — there is no
-silent-success path when nothing matches.
+({source, view}) must cover this chart. Coverage is usually the entry's own
+ebu.media_function_type, but umbrella #201's topology-launch model lets a
+'view' entry (via topology_ref) also cover 'source' role on behalf of the
+per-launch sources[] its own release-group loop provisions — N
+topology-listed sources still count once. Fewer roles covered (a
+chart-name typo, a deleted profile), extras, or duplicates (e.g. a standing
+source entry alongside topology-derived source coverage) are a hard
+failure — there is no silent-success path when nothing matches.
 
 Usage: bin/check-catalog-demand.py   (run from the dmf-media repo root)
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -199,6 +205,101 @@ def rendered_role_demand(role):
     return {"cpu_m": total_cpu_m, "mem_b": total_mem_b, "containers": total_containers}
 
 
+def _validate_topology_ref_path(ref, origin):
+    """Fail-closed basename/containment check for a topology_ref value.
+
+    Mirrors dmf_cms.catalog.load_topology_instance's own guard (dmf-cms
+    src/dmf_cms/catalog.py): topology_ref must be a plain filename inside
+    CATALOG_DIR — no path separators, parent traversal, or absolute paths,
+    checked twice (pre-I/O basename shape, then resolved-path containment)
+    for the same defense-in-depth reason that function documents.
+    """
+    if (
+        os.path.isabs(ref)
+        or os.sep in ref
+        or (os.altsep and os.altsep in ref)
+        or Path(ref).name != ref
+        or ".." in Path(ref).parts
+    ):
+        raise QuantityError(
+            f"{origin}: topology_ref {ref!r} must be a plain filename within "
+            "the catalog directory — no path separators, parent traversal, "
+            "or absolute paths"
+        )
+    catalog_root = CATALOG_DIR.resolve()
+    path = (catalog_root / ref).resolve()
+    if path != catalog_root and catalog_root not in path.parents:
+        raise QuantityError(f"{origin}: topology_ref {ref!r} resolves outside the catalog directory")
+    return path
+
+
+def _topology_ref_sources(key, topology_ref):
+    """Load a topology_ref target and return its sources[] list.
+
+    Validates just enough of the umbrella #201 WP1 topology_params contract
+    for role-coverage purposes: the target file must exist, parse as a
+    mapping, carry a top-level topology_params object with a non-empty
+    sources[] list and a viewer mapping. Full contract validation (schema
+    version, flow_id uniqueness, viewer.source_selection, ...) is
+    dmf_cms.catalog.load_topology_instance's job at launch time, not this
+    gate's — this only needs to know the target names real sources so a
+    viewer entry can claim 'source' role coverage on their behalf.
+    """
+    origin = f"{key} topology_ref"
+    path = _validate_topology_ref_path(topology_ref, origin)
+    if not path.is_file():
+        raise QuantityError(f"{origin} '{topology_ref}' not found in catalog")
+    try:
+        raw = yaml.safe_load(path.read_text())
+    except Exception as exc:
+        raise QuantityError(f"{origin} '{topology_ref}' failed to parse: {exc}")
+    if not isinstance(raw, dict):
+        raise QuantityError(f"{origin} '{topology_ref}' did not yield a mapping")
+    tp = raw.get("topology_params")
+    if not isinstance(tp, dict):
+        raise QuantityError(f"{origin} '{topology_ref}' has no top-level topology_params object")
+    sources = tp.get("sources")
+    if not isinstance(sources, list) or not sources:
+        raise QuantityError(f"{origin} '{topology_ref}': sources must be a non-empty list")
+    if not isinstance(tp.get("viewer"), dict):
+        raise QuantityError(f"{origin} '{topology_ref}': viewer must be a mapping")
+    return sources
+
+
+def _covered_roles(entry_path, entry):
+    """Return the set of chart roles one catalog entry provides coverage for.
+
+    An entry always covers its own ebu.media_function_type. A 'view' entry
+    may additionally carry a topology_ref (umbrella #201 WP3a) naming a
+    topology_params instance in this same catalog dir; per
+    mxl-videotest-view.yaml's own netbox_service comment ("the source-*
+    records ... are created by the viewer JT's own release-group loop only
+    while a topology launch is live"), the source role it names is
+    provisioned per-launch by the viewer, not by a standing catalog entry —
+    so a topology_ref with a real sources[] ALSO counts as 'source'
+    coverage. Source ids (source-a, source-b, ...) are launch-time
+    identities, not roles: N sources still collapse to exactly one
+    'source' coverage claim, so the exact-one-provider check below stays
+    meaningful. A topology_ref on any entry whose own role isn't 'view'
+    fails closed — the runbook makes topology explicitly viewer-owned.
+    """
+    key = entry.get("key", entry_path.name)
+    role = entry.get("ebu", {}).get("media_function_type")
+    topology_ref = entry.get("topology_ref")
+
+    if topology_ref and role != "view":
+        raise QuantityError(
+            f"{key}: topology_ref is set but ebu.media_function_type is "
+            f"{role!r}, not 'view' — topology instances are viewer-owned"
+        )
+
+    covered = {role}
+    if topology_ref:
+        _topology_ref_sources(key, topology_ref)
+        covered.add("source")
+    return covered
+
+
 def main():
     failures = []
 
@@ -212,8 +313,13 @@ def main():
     role_counts = {}
     for entry_path, entry in entries:
         key = entry.get("key", entry_path.name)
-        role = entry.get("ebu", {}).get("media_function_type")
-        role_counts.setdefault(role, []).append(key)
+        try:
+            covered = _covered_roles(entry_path, entry)
+        except QuantityError as e:
+            failures.append(str(e))
+            continue
+        for covered_role in covered:
+            role_counts.setdefault(covered_role, []).append(key)
 
     if set(role_counts.keys()) != EXPECTED_ROLES or any(
         len(keys) != 1 for keys in role_counts.values()
