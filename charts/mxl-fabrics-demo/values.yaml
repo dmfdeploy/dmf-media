@@ -276,7 +276,7 @@ initiator:
 # the same cost, they are two DIFFERENT measured costs for two different
 # runtime behaviors (PREVIEW=0 poller vs PREVIEW=1 continuous encoder).
 # CPU LIMITS REMOVED FROM EVERY MEDIA-PATH CONTAINER BELOW (2026-07-29, live
-# env v5on-r8aw, umbrella #301). Live evidence: the `status` view container
+# env <env>, umbrella #301). Live evidence: the `status` view container
 # was CFS-throttled pinned at its (then) 250m limit — 10.00 throttle
 # periods/s — while `writer` was pinned at 949.7m against its 950m limit,
 # ALSO 10.00 periods/s, on a node sitting at only 68% CPU. Both are
