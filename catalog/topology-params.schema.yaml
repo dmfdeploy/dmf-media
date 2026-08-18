@@ -133,6 +133,37 @@ fields:
               as a standing entry's own declared demand is gated against
               its own role render.
 
+  source_noun:
+    type: string
+    required: false
+    constraint: >-
+      additive, non-normative display field (umbrella dmfdeploy/dmfdeploy#401)
+      — NOT part of the original WP1 cut of this contract, added for
+      exactly the reason source_profile was: sources[] deliberately has no
+      per-source catalog entry (§3.3's no-per-source-catalog-entries rule),
+      so a source's human-readable name has nowhere else to live. ONE
+      shared noun applies identically to every sources[] release (N
+      copies, not N distinct — the same "N copies, not N distinct" rule
+      source_profile itself follows, applied to identity instead of
+      demand). Does not bump schema_version: this is a new field nothing
+      existing reads, no change to any field's meaning — the hard-coded v1
+      validators in dmf-cms (src/dmf_cms/catalog.py
+      load_topology_instance) and dmf-runbooks
+      (filter_plugins/l3_topology.py's l3_validate_topology_params) are
+      unaffected, verified by running both against this file's own
+      extended instance. Optional: absent is a legitimate value (a
+      topology instance authored before this field existed, or one that
+      simply omits it) — a consumer must degrade to the raw source
+      identity it already has (e.g. the declared sources[].id, or the
+      instance's own function_key) rather than treat absence as an error
+      or invent a name.
+    resolution: >-
+      consumed by dmf-cms only, for display — rendered as
+      "<source_noun> · <sources[].id>" (dmfdeploy/dmfdeploy#401). Read
+      directly from the topology instance a catalog entry's topology_ref
+      names; never hardcoded per-function in the console, and never
+      derived by parsing an instance name.
+
   viewer:
     type: object
     required: true
@@ -177,6 +208,7 @@ fields:
 #       requests:
 #         cpu: <millicores-with-m-suffix>
 #         memory: <whole-binary-Ki-Mi-Gi>
+#   source_noun: <shared-display-noun>  # optional
 #   sources:
 #     - id: <source-instance-slug>
 #       flow_id: <uuid>

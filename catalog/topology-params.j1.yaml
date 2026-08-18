@@ -27,6 +27,20 @@ topology_params:
         cpu: 450m      # videotestsrc (source): 370(writer)+55(initiator)+10(reader)+5(info)+10(status)
         memory: 160Mi  # 96(writer)+24(initiator)+8(reader)+8(info)+24(status)
 
+  # Shared per-source display noun (umbrella dmfdeploy/dmfdeploy#401) — the
+  # SAME "N copies, not N distinct" rule that makes source_profile one
+  # shared profile rather than one per source, applied to identity instead
+  # of demand: sources[] deliberately has no per-source catalog entry
+  # (§3.3), so a source's human name belongs here, once, not on an entry
+  # that doesn't exist. This is the identity remainder of the now-deleted
+  # catalog/mxl-videotestsrc.yaml — its demand contract already relocated
+  # onto source_profile above; this is the name that entry carried,
+  # relocated the same way. dmf-cms reads it (never hardcodes it) to render
+  # a topology-spawned source as "<source_noun> · <source.id>", falling
+  # back to the raw function_key when this field is absent — never to a
+  # baked-in string.
+  source_noun: "MXL Test-Pattern Source"
+
   # ILLUSTRATIVE — never a literal env slug in git. Per this schema's
   # target_facility.resolution: the console launch seam (WP3a) resolves the
   # current env's NetBox site slug at launch time and injects the real
