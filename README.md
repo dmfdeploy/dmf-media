@@ -1,5 +1,7 @@
 # dmf-media
 
+[![CI](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml/badge.svg)](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml)
+
 Media-domain modules for the DMF Platform — NMOS IS-04/05 discovery, AMWA BCP compliance,
 EBU LIST 2110 packet analysis, PTP topology monitoring, flow-level exporters, and the
 NetBox media plugin (sender/receiver/flow schema). That list is this repo's full reserved
