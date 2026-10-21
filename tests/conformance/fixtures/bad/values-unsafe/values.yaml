@@ -1,0 +1,5 @@
+replicas: 1
+image:
+  repository: registry.example.com/media/example-sender
+  tag: latest
+hostNetwork: true

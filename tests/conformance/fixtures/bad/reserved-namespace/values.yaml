@@ -1,0 +1,4 @@
+replicas: 1
+image:
+  repository: registry.example.com/media/dmf-example
+  tag: 1.2.0
