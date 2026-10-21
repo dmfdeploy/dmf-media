@@ -93,7 +93,14 @@ crosspoint controller's own connection call. The driver never sends a PATCH.
 ```sh
 SWITCH_VIA=crosspoint tests/is05-ab-fixture/run.sh [OUT_DIR]
 SWITCH_VIA=crosspoint CONTROLLER_LINE=qvest tests/is05-ab-fixture/run.sh [OUT_DIR]
+SWITCH_VIA=crosspoint CONTROLLER_FROM_CHART=1 tests/is05-ab-fixture/run.sh [OUT_DIR]
 ```
+
+With `CONTROLLER_FROM_CHART=1` (needs `helm`), the slice deploys the controller
+by rendering [`charts/nmos-crosspoint`](../../charts/nmos-crosspoint) as it
+ships: its digest, paths, user, init container and port. Only the repository
+is pointed at the line's public source, because the fixture has no Zot
+mirror. The run fails if the chart's digest is not the line's.
 
 [`crosspoint/lines.json`](crosspoint/lines.json) pins each controller line by
 source commit and image digest. The slice adds these pods:
@@ -126,10 +133,13 @@ On top of the seven items, the slice checks two things:
 With nmos-testing on, the slice also runs BCP-007-03-01 against `sender-a`.
 
 To move the controller to another line, commit or image, change
-`lines.json`, run the slice for that line, and commit its observations as
-`reference/crosspoint-<line>/`. [`crosspoint/check_pins.py`](crosspoint/check_pins.py)
-fails until the recorded run used the same commit and image and passed. The
-fixture workflow runs the pin check and the slice for every line.
+`lines.json` and the chart's `image.digest` and `image.commit`, run the slice
+for that line and from the chart, and commit the observations as
+`reference/crosspoint-<line>/` and `reference/crosspoint-chart/`. [`crosspoint/check_pins.py`](crosspoint/check_pins.py)
+fails until the recorded runs used the same commit and image and passed, for
+every line and for the chart. The fixture workflow runs the pin check, the
+slice for every line, and the slice from the chart; a change under
+`charts/nmos-crosspoint` triggers it too.
 
 ## Reference observations
 
@@ -140,7 +150,9 @@ from the negative case.
 
 [`reference/crosspoint-gemini/`](reference/crosspoint-gemini/) and
 [`reference/crosspoint-qvest/`](reference/crosspoint-qvest/) hold the slice's
-recorded runs for each controller line: `observations.json`, the PATCHes the
+recorded runs for each controller line, and
+[`reference/crosspoint-chart/`](reference/crosspoint-chart/) the run from the
+chart: `observations.json`, the PATCHes the
 viewer's node received (`captured-patches.json`, pod addresses replaced by
 names), the nmos-testing results for the viewer and `sender-a`, and preview
 frames. `check_pins.py` compares `lines.json` against these files.

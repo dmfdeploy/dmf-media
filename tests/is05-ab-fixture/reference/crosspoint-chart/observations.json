@@ -1,0 +1,1991 @@
+{
+  "started_at": "2026-10-21T18:40:46Z",
+  "cluster": [
+    {
+      "arch": "arm64",
+      "kubelet": "v1.37.0",
+      "os": "Debian GNU/Linux 13 (trixie)",
+      "kernel": "6.8.0-100-generic"
+    }
+  ],
+  "switch_via": "crosspoint",
+  "controller_line": {
+    "name": "gemini",
+    "role": "pin",
+    "source": "https://github.com/Gemini2350/nmos-crosspoint_v3",
+    "commit": "fa31061c04a7a74773cd8c859850d05ff2b056ec",
+    "published_tag": "docker.io/gemini2350/nmos-crosspoint_v3:master-fa31061",
+    "image": "docker.io/gemini2350/nmos-crosspoint_v3@sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3",
+    "arm64_manifest": "sha256:27d9dfbbee3a9f4f492076a30403f7cb789320aee55be6db912f5f8f0565fcea"
+  },
+  "controller": {
+    "senders": {
+      "A": {
+        "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+        "is04_flows": [
+          "74228f56-069f-5651-9a42-b64bfc10d6c4"
+        ],
+        "is04_sender_flow_id": [
+          "74228f56-069f-5651-9a42-b64bfc10d6c4"
+        ],
+        "transport": [
+          "urn:x-nmos:transport:mxl"
+        ],
+        "active": {
+          "master_enable": true,
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4"
+        },
+        "pass": true
+      },
+      "B": {
+        "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+        "is04_flows": [
+          "a6405f34-eb84-5d00-82a1-62c84c702f62"
+        ],
+        "is04_sender_flow_id": [
+          "a6405f34-eb84-5d00-82a1-62c84c702f62"
+        ],
+        "transport": [
+          "urn:x-nmos:transport:mxl"
+        ],
+        "active": {
+          "master_enable": true,
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62"
+        },
+        "pass": true
+      }
+    },
+    "from_chart": "charts/nmos-crosspoint",
+    "rendered_image": "docker.io/gemini2350/nmos-crosspoint_v3@sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3",
+    "controller_image": "docker.io/gemini2350/nmos-crosspoint_v3@sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3",
+    "controller_image_id": "docker.io/gemini2350/nmos-crosspoint_v3@sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3",
+    "controller_uid": "1000",
+    "pass": true,
+    "memory_peak_bytes": 47063040
+  },
+  "main": {
+    "switch_via": "crosspoint",
+    "receiver_id": "3305b7d7-393a-57f1-bb48-c0964ceb653e",
+    "node_id": "1bbfc70c-f2ac-567c-9b5f-be2966a70974",
+    "flows_readable": {
+      "listing": [
+        "mxl-gst-testsrc-group: mxl:///home/mxl/domain?id=a6405f34-eb84-5d00-82a1-62c84c702f62&id=74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "\tvideo : a6405f34-eb84-5d00-82a1-62c84c702f62 - fixture source b",
+        "\tvideo : 74228f56-069f-5651-9a42-b64bfc10d6c4 - fixture source a"
+      ],
+      "head_index": {
+        "A": {
+          "t0": 53724526070,
+          "t1": 53724526102,
+          "advanced": true
+        },
+        "B": {
+          "t0": 53724526069,
+          "t1": 53724526102,
+          "advanced": true
+        }
+      },
+      "concurrent_read_labels": {
+        "A": "A",
+        "B": "B"
+      },
+      "pass": true
+    },
+    "patch_a": {
+      "staged": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4"
+      },
+      "active": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4"
+      },
+      "pass": true,
+      "http_status": 200
+    },
+    "patch_b": {
+      "staged": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62"
+      },
+      "active": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62"
+      },
+      "pass": true,
+      "http_status": 200
+    },
+    "heartbeat": {
+      "polls": 33,
+      "window_s": 32.4,
+      "non_200": 0,
+      "pass": true
+    },
+    "non_root": {
+      "nmos_node_uid": "1000",
+      "supervisor_uid": "1000",
+      "preview_child_uids": [
+        "1000"
+      ],
+      "pod_security_context": {
+        "runAsGroup": 1000,
+        "runAsNonRoot": true,
+        "runAsUser": 1000,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "pass": true
+    },
+    "supervisor_events": [
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608358.747219,
+        "from_flow": null,
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": null,
+        "stopped_at": 1792608358.74722,
+        "new_pid": 98,
+        "started_at": 1792608358.7477064
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608360.9601333,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 98,
+        "stopped_at": 1792608360.9924908,
+        "new_pid": 109,
+        "started_at": 1792608360.9929717
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608363.218246,
+        "from_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": 109,
+        "stopped_at": 1792608363.2544973,
+        "new_pid": 121,
+        "started_at": 1792608363.2553232
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608365.4726856,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 121,
+        "stopped_at": 1792608365.488238,
+        "new_pid": 132,
+        "started_at": 1792608365.4886415
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608367.7129805,
+        "from_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": 132,
+        "stopped_at": 1792608367.7209058,
+        "new_pid": 142,
+        "started_at": 1792608367.7215152
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608369.9546828,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 142,
+        "stopped_at": 1792608370.020019,
+        "new_pid": 154,
+        "started_at": 1792608370.0205355
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608372.243691,
+        "from_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": 154,
+        "stopped_at": 1792608372.2597125,
+        "new_pid": 165,
+        "started_at": 1792608372.260559
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608374.4944942,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 165,
+        "stopped_at": 1792608374.5290673,
+        "new_pid": 176,
+        "started_at": 1792608374.529943
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608376.7532585,
+        "from_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": 176,
+        "stopped_at": 1792608376.7690895,
+        "new_pid": 187,
+        "started_at": 1792608376.7696679
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608378.9944115,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 187,
+        "stopped_at": 1792608378.9976895,
+        "new_pid": 197,
+        "started_at": 1792608378.9981627
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608381.2235603,
+        "from_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "to_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "old_pid": 197,
+        "stopped_at": 1792608381.2394123,
+        "new_pid": 209,
+        "started_at": 1792608381.240229
+      },
+      {
+        "reason": "active-changed",
+        "observed_at": 1792608383.4690797,
+        "from_flow": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+        "to_flow": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+        "old_pid": 209,
+        "stopped_at": 1792608383.5344262,
+        "new_pid": 221,
+        "started_at": 1792608383.5351844
+      }
+    ],
+    "pod_identity": {
+      "before": {
+        "uid": "7e856698-1f40-4572-b9f6-5e41535472b6",
+        "restarts": {
+          "nmos-node": 0,
+          "supervisor": 0
+        },
+        "started": {
+          "nmos-node": "2026-10-21T18:45:40Z",
+          "supervisor": "2026-10-21T18:45:40Z"
+        }
+      },
+      "after": {
+        "uid": "7e856698-1f40-4572-b9f6-5e41535472b6",
+        "restarts": {
+          "nmos-node": 0,
+          "supervisor": 0
+        },
+        "started": {
+          "nmos-node": "2026-10-21T18:45:40Z",
+          "supervisor": "2026-10-21T18:45:40Z"
+        }
+      },
+      "supervisor_pid": [
+        1,
+        1
+      ],
+      "supervisor_started_at": [
+        1792608340.4213703,
+        1792608340.4213703
+      ],
+      "preview_child_pids": [
+        98,
+        109,
+        121,
+        132,
+        142,
+        154,
+        165,
+        176,
+        187,
+        197,
+        209,
+        221
+      ],
+      "other_child_exits": [],
+      "pass": true
+    },
+    "switches": [
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.126,
+        "interruption_s": null,
+        "supervisor_observed_after_patch_s": 0.034,
+        "child_stop_s": 0.0,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "38"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.224,
+        "interruption_s": 0.104,
+        "supervisor_observed_after_patch_s": 0.115,
+        "child_stop_s": 0.032,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "40"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.261,
+        "interruption_s": 0.121,
+        "supervisor_observed_after_patch_s": 0.139,
+        "child_stop_s": 0.036,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "42"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.225,
+        "interruption_s": 0.105,
+        "supervisor_observed_after_patch_s": 0.123,
+        "child_stop_s": 0.016,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "44"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.25,
+        "interruption_s": 0.223,
+        "supervisor_observed_after_patch_s": 0.124,
+        "child_stop_s": 0.008,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "46"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.243,
+        "interruption_s": 0.114,
+        "supervisor_observed_after_patch_s": 0.106,
+        "child_stop_s": 0.065,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "48"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.247,
+        "interruption_s": 0.118,
+        "supervisor_observed_after_patch_s": 0.14,
+        "child_stop_s": 0.016,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "50"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.263,
+        "interruption_s": 0.107,
+        "supervisor_observed_after_patch_s": 0.128,
+        "child_stop_s": 0.035,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "52"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.25,
+        "interruption_s": 0.114,
+        "supervisor_observed_after_patch_s": 0.118,
+        "child_stop_s": 0.016,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "54"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.23,
+        "interruption_s": 0.217,
+        "supervisor_observed_after_patch_s": 0.095,
+        "child_stop_s": 0.003,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "56"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "A",
+        "shown_after_patch_s": 0.148,
+        "interruption_s": 0.111,
+        "supervisor_observed_after_patch_s": 0.078,
+        "child_stop_s": 0.016,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "58"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "to": "B",
+        "shown_after_patch_s": 0.342,
+        "interruption_s": 0.11,
+        "supervisor_observed_after_patch_s": 0.171,
+        "child_stop_s": 0.065,
+        "selection_pass": true,
+        "controller": {
+          "status": 200,
+          "message": 200,
+          "connections": [
+            {
+              "status": "ok",
+              "detail": {
+                "message": "Success",
+                "log": "60"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "switch": {
+      "bound_s": 10.0,
+      "count": 12,
+      "sample_period_s": 0.1,
+      "shown_after_patch_s": {
+        "min": 0.126,
+        "median": 0.247,
+        "max": 0.342
+      },
+      "interruption_s": {
+        "min": 0.104,
+        "median": 0.114,
+        "max": 0.223
+      },
+      "pass": true
+    }
+  },
+  "negative": {
+    "static_preview_showed_a": true,
+    "patch_a_http_status": 200,
+    "active_after_patch_b": {
+      "staged": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62"
+      },
+      "active": {
+        "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001",
+        "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62"
+      },
+      "pass": true
+    },
+    "preview_reached_b": false,
+    "preview_labels_seen": [
+      "A"
+    ],
+    "pass": true
+  },
+  "captured_patch": {
+    "patches_to_receiver": 14,
+    "controller_calls": 14,
+    "first_patch_as_received": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+    "rows": [
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "A",
+        "expected_flow": "A",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      },
+      {
+        "from_controller": true,
+        "flow": "B",
+        "expected_flow": "B",
+        "sender_id_matches": true,
+        "one_leg_mxl_only": true,
+        "domain": "d0d0d0d0-0000-4000-8000-000000000001",
+        "master_enable": true,
+        "activation_mode": "activate_immediate",
+        "no_transport_file": true,
+        "no_sdp": true,
+        "pass": true
+      }
+    ],
+    "pass": true
+  },
+  "nmos_testing": {
+    "image": "docker.io/amwa/nmos-testing@sha256:cbff9e48e5c7888384dfe4f9793b0f7989dd17fa10a8f144d77c261116aada1f",
+    "suites": {
+      "IS-05-01": {
+        "counts": {
+          "Not Applicable": 12,
+          "Pass": 33,
+          "Could Not Test": 29,
+          "Test Disabled": 7
+        },
+        "cases": [
+          {
+            "name": "__init__",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "set_up_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_1",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_2",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_3",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_4",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_5",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_6",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_7",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_8",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_9",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_13",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_15",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_16",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_17",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_18",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_19",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_20",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_21",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_22",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_23",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_24",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_25",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_26",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_27",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_28",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_29",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "test_01",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_02",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_03",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_04",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_05",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_06",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_07",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_08",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_09",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_09_01",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_11",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_11_01",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_11_02",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_12",
+            "state": "Could Not Test",
+            "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite."
+          },
+          {
+            "name": "test_12_01",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_12_02",
+            "state": "Could Not Test",
+            "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite."
+          },
+          {
+            "name": "test_13",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_15",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_16",
+            "state": "Could Not Test",
+            "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite."
+          },
+          {
+            "name": "test_17",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_18",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_19",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_20",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_21",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_22",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_23",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_23_01",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_24",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_24_01",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_25",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_26",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_27",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_28",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_29",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_30",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_31",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_32",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_33",
+            "state": "Not Applicable",
+            "detail": "Replaced by 'auto' test"
+          },
+          {
+            "name": "test_34",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_35",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_36",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_37",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_38",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_39",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_40",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_41",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "test_42",
+            "state": "Could Not Test",
+            "detail": "Not tested. No resources found."
+          },
+          {
+            "name": "tear_down_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          }
+        ]
+      },
+      "BCP-007-03-01": {
+        "counts": {
+          "Not Applicable": 3,
+          "Pass": 41,
+          "Could Not Test": 14,
+          "Test Disabled": 14,
+          "Manual": 1
+        },
+        "cases": [
+          {
+            "name": "__init__",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "set_up_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_1",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_2",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_3",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_4",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_5",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_6",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_7",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_8",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_9",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_13",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_15",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_16",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_17",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_18",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_19",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_20",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_21",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_22",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_23",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_24",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_25",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_26",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_27",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_28",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_29",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_1",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_2",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_3",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_4",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_5",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_6",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_7",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_node_8",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_9",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_13",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_node_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_15",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_16",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_17",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_18",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_19",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_20",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_21",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_22",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_23",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "test_01",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_02",
+            "state": "Could Not Test",
+            "detail": "No MXL Sender resources found"
+          },
+          {
+            "name": "test_03",
+            "state": "Could Not Test",
+            "detail": "No Flows linked from MXL Senders"
+          },
+          {
+            "name": "test_04",
+            "state": "Could Not Test",
+            "detail": "No Sources linked from MXL Senders"
+          },
+          {
+            "name": "test_05",
+            "state": "Could Not Test",
+            "detail": "No MXL Sender resources found"
+          },
+          {
+            "name": "test_06",
+            "state": "Could Not Test",
+            "detail": "No MXL Sender resources found"
+          },
+          {
+            "name": "test_07",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_08",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_09",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_13",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_15",
+            "state": "Manual",
+            "detail": "Whether MXL read/write starts or stops on activation cannot be verified automatically by this tool"
+          },
+          {
+            "name": "test_16",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_17",
+            "state": "Could Not Test",
+            "detail": "No MXL Sender resources found"
+          },
+          {
+            "name": "test_18",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "tear_down_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          }
+        ]
+      },
+      "BCP-007-03-01-sender-a": {
+        "counts": {
+          "Not Applicable": 3,
+          "Pass": 43,
+          "Could Not Test": 12,
+          "Test Disabled": 14,
+          "Manual": 1
+        },
+        "cases": [
+          {
+            "name": "__init__",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "set_up_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_1",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_2",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_3",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_4",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_5",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_6",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_7",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_8",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_9",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_10",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_11",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_12",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_13",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_14",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_connection_15",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_16",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_17",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_18",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_19",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_20",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_21",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_22",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_connection_23",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_24",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_25",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_26",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_27",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_28",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_connection_29",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_1",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_2",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_3",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_4",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_5",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_6",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_7",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_8",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_9",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_node_10",
+            "state": "Could Not Test",
+            "detail": "No resources found to perform this test"
+          },
+          {
+            "name": "auto_node_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_13",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_14",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_15",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_16",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "auto_node_17",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_18",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_19",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_20",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_21",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_22",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "auto_node_23",
+            "state": "Test Disabled",
+            "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True"
+          },
+          {
+            "name": "test_01",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_02",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_03",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_04",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_05",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_06",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_07",
+            "state": "Could Not Test",
+            "detail": "No MXL Receiver resources found"
+          },
+          {
+            "name": "test_08",
+            "state": "Could Not Test",
+            "detail": "No MXL Receiver resources found"
+          },
+          {
+            "name": "test_09",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_10",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_11",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_12",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_13",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_14",
+            "state": "Could Not Test",
+            "detail": "No MXL Receiver resources found"
+          },
+          {
+            "name": "test_15",
+            "state": "Manual",
+            "detail": "Whether MXL read/write starts or stops on activation cannot be verified automatically by this tool"
+          },
+          {
+            "name": "test_16",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_17",
+            "state": "Pass",
+            "detail": ""
+          },
+          {
+            "name": "test_18",
+            "state": "Could Not Test",
+            "detail": "No MXL Receiver resources found"
+          },
+          {
+            "name": "tear_down_tests",
+            "state": "Not Applicable",
+            "detail": ""
+          }
+        ]
+      }
+    }
+  },
+  "acceptance": {
+    "1_two_flows_readable_in_viewer_domain": true,
+    "2_staged_and_active_carry_selection": true,
+    "3_pod_uid_kept_only_preview_child_replaced": true,
+    "4_preview_changes_a_to_b_within_bound": true,
+    "5_node_keeps_heartbeating": true,
+    "6_negative_case_cannot_satisfy_preview": true,
+    "7_node_and_supervisor_non_root": true
+  },
+  "slice_acceptance": {
+    "controller_by_digest_non_root_senders_advertise_source_flows": true,
+    "controller_patch_is_bcp_007_03_without_sdp_or_transport_file": true
+  },
+  "finished_at": "2026-10-21T18:52:47Z"
+}

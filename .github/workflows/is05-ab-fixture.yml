@@ -9,12 +9,14 @@ name: is05-ab-fixture
 # crosspoint controller's connection call in place of the direct PATCH, once
 # per line in tests/is05-ab-fixture/crosspoint/lines.json. A change to a pin
 # there runs this workflow, and the pins job fails until the slice's recorded
-# observations match the new commit and image.
+# observations match the new commit and image. The same holds for the digest
+# in charts/nmos-crosspoint, which the crosspoint-chart job deploys as rendered.
 on:
   workflow_dispatch:
   pull_request:
     paths:
       - tests/is05-ab-fixture/**
+      - charts/nmos-crosspoint/**
       - .github/workflows/is05-ab-fixture.yml
 permissions:
   contents: read
@@ -36,12 +38,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: patch, switch_via: patch, line: ""}
-          - {name: crosspoint-gemini, switch_via: crosspoint, line: gemini}
-          - {name: crosspoint-qvest, switch_via: crosspoint, line: qvest}
+          - {name: patch, switch_via: patch, line: "", from_chart: "0"}
+          - {name: crosspoint-gemini, switch_via: crosspoint, line: gemini, from_chart: "0"}
+          - {name: crosspoint-qvest, switch_via: crosspoint, line: qvest, from_chart: "0"}
+          # The deployed chart's controller, rendered from charts/nmos-crosspoint.
+          - {name: crosspoint-chart, switch_via: crosspoint, line: gemini, from_chart: "1"}
     env:
       SWITCH_VIA: ${{ matrix.switch_via }}
       CONTROLLER_LINE: ${{ matrix.line }}
+      CONTROLLER_FROM_CHART: ${{ matrix.from_chart }}
       KIND_VERSION: v0.33.0
       KIND_SHA256: 20022bee6cfcd5086cb7234d218e3454e6090022f2a8f55d1fa7fcf42c3867a2
       KUBECTL_VERSION: v1.37.0

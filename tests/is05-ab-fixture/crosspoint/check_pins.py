@@ -12,12 +12,19 @@ it is not a values-only change. This check makes that hold in review:
 3. Every line has a recorded slice run, reference/crosspoint-<line>/
    observations.json, made with that same commit and image, in which every
    acceptance item and every slice item passed.
+4. The deployed chart, charts/nmos-crosspoint, pins image.digest and
+   image.commit to one of those lines, and reference/crosspoint-chart/
+   observations.json is a passing slice run that deployed the controller from
+   the chart with that same digest.
 
 So a pin change fails here until someone runs the slice on the new pin
-(run.sh with SWITCH_VIA=crosspoint CONTROLLER_LINE=<line>) and commits its
-observations. The fixture workflow runs the slice itself on the same change.
+(run.sh with SWITCH_VIA=crosspoint CONTROLLER_LINE=<line>, and with
+CONTROLLER_FROM_CHART=1 for the chart) and commits its observations. The
+fixture workflow runs the slice itself on the same change.
 
-Usage: check_pins.py [FIXTURE_DIR]   (default: this file's parent directory)
+Usage: check_pins.py [FIXTURE_DIR [CHART_DIR]]
+  (defaults: this file's parent directory, and charts/nmos-crosspoint in the
+  repository that holds it)
 Exit 0 when all checks pass, 1 otherwise; each problem is printed.
 """
 from __future__ import annotations
@@ -29,6 +36,8 @@ from pathlib import Path
 
 DIGEST_REF = re.compile(r"^[a-z0-9._\-/:]+@sha256:[0-9a-f]{64}$")
 IMAGE_LINE = re.compile(r"^\s*(?:-\s*)?image:\s*(\S+)\s*$")
+# The chart's values.yaml keeps image keys at two-space indent under image:.
+CHART_IMAGE_KEY = re.compile(r"^  (repository|digest|commit|tag):\s*\"?([^\"#\s]*)\"?\s*(?:#.*)?$")
 PLACEHOLDER = "__CONTROLLER_IMAGE__"
 
 
@@ -39,7 +48,53 @@ def digest_only(ref: str) -> bool:
     return ":" not in name.rsplit("/", 1)[-1]
 
 
-def check(fixture: Path) -> list[str]:
+def chart_image(values: Path) -> dict:
+    """Read the image: block of a chart's values.yaml (standard library only)."""
+    out, inside = {}, False
+    for text in values.read_text().splitlines():
+        if not text.strip() or text.lstrip().startswith("#"):
+            continue
+        if not text.startswith(" "):
+            inside = text.startswith("image:")
+            continue
+        m = CHART_IMAGE_KEY.match(text) if inside else None
+        if m:
+            out[m.group(1)] = m.group(2)
+    return out
+
+
+def check_chart(fixture: Path, chart: Path, lines: dict) -> list[str]:
+    problems: list[str] = []
+    values = chart / "values.yaml"
+    if not values.is_file():
+        return [f"chart: no values.yaml at {values}"]
+    img = chart_image(values)
+    digest, commit = img.get("digest", ""), img.get("commit", "")
+    if "tag" in img:
+        problems.append("chart: image.tag is set; the controller is referenced by digest only")
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        problems.append(f"chart: image.digest must be sha256:<digest>, got {digest!r}")
+    pinned = [n for n, line in lines.get("lines", {}).items()
+              if line.get("image", "").split("@", 1)[-1] == digest and line.get("commit") == commit]
+    if not pinned:
+        problems.append(f"chart: image.digest {digest!r} with commit {commit!r} is not a pinned line in lines.json")
+    ref = fixture / "reference" / "crosspoint-chart" / "observations.json"
+    if not ref.is_file():
+        problems.append(f"chart: no recorded slice run from the chart at {ref.relative_to(fixture)}")
+        return problems
+    obs = json.loads(ref.read_text())
+    rendered = obs.get("controller", {}).get("rendered_image", "")
+    if not obs.get("controller", {}).get("from_chart"):
+        problems.append("chart: reference/crosspoint-chart is not a run that deployed the controller from the chart")
+    if rendered.split("@", 1)[-1] != digest:
+        problems.append(f"chart: image.digest {digest!r} was not tested; the recorded chart run rendered {rendered!r}")
+    failed = [k for k, v in {**obs.get("acceptance", {}), **obs.get("slice_acceptance", {})}.items() if v is not True]
+    if not obs.get("acceptance") or not obs.get("slice_acceptance") or failed:
+        problems.append(f"chart: recorded chart run did not pass: {failed or 'no acceptance recorded'}")
+    return problems
+
+
+def check(fixture: Path, chart: Path | None = None) -> list[str]:
     problems: list[str] = []
     for manifest in sorted((fixture / "manifests").glob("*.yaml")):
         for n, text in enumerate(manifest.read_text().splitlines(), 1):
@@ -70,16 +125,20 @@ def check(fixture: Path) -> list[str]:
         failed = [k for k, v in {**obs.get("acceptance", {}), **obs.get("slice_acceptance", {})}.items() if v is not True]
         if not obs.get("acceptance") or not obs.get("slice_acceptance") or failed:
             problems.append(f"{name}: recorded slice run did not pass: {failed or 'no acceptance recorded'}")
+    if chart is not None:
+        problems += check_chart(fixture, chart, lines)
     return problems
 
 
 def main() -> int:
     fixture = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
-    problems = check(fixture)
+    chart = Path(sys.argv[2]) if len(sys.argv) > 2 else fixture.parent.parent / "charts" / "nmos-crosspoint"
+    problems = check(fixture, chart)
     for p in problems:
         print(f"FAIL  {p}")
     if not problems:
-        print("OK    controller pins are digest-only and each has a passing slice run on the same commit and image")
+        print("OK    controller pins and the chart's digest are digest-only, and each has a passing slice run "
+              "on the same commit and image")
     return 1 if problems else 0
 
 
