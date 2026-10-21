@@ -106,3 +106,7 @@ bad:
     dirs: [good/video-sender]
     args: [--revocation, bad/revocation-revoked.yaml, --now, "2026-10-21T12:00:00Z"]
     expect: "is revoked"
+  - name: duplicate-port-name
+    twin: video-sender
+    dirs: [bad/duplicate-port-name]
+    expect: "ports: duplicate port name 'video-out' (indexes 0 and 1)"
