@@ -1,0 +1,47 @@
+name: is05-ab-fixture
+# IS-05 A/B MXL fixture (dmfdeploy/dmfdeploy#624): one ARM64 node in kind,
+# two MXL test sources, a viewer with an nmos-cpp node and the preview
+# supervisor. Runs the same command as a local run and uploads the
+# observations. The nmos-testing gate inside it is warn mode: its results are
+# recorded and never fail the job.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tests/is05-ab-fixture/**
+      - .github/workflows/is05-ab-fixture.yml
+permissions:
+  contents: read
+concurrency:
+  group: is05-ab-fixture-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fixture:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    env:
+      KIND_VERSION: v0.33.0
+      KIND_SHA256: 20022bee6cfcd5086cb7234d218e3454e6090022f2a8f55d1fa7fcf42c3867a2
+      KUBECTL_VERSION: v1.37.0
+      KUBECTL_SHA256: 922df28df248cc00a9e025f947704f1d1482de64ece54cfe57e61f19eaf1eef3
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Install kind and kubectl (pinned, checksum-verified)
+        run: |
+          set -eu
+          mkdir -p "${HOME}/bin"
+          curl -fsSLo "${HOME}/bin/kind" "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-arm64"
+          echo "${KIND_SHA256}  ${HOME}/bin/kind" | sha256sum -c -
+          curl -fsSLo "${HOME}/bin/kubectl" "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/arm64/kubectl"
+          echo "${KUBECTL_SHA256}  ${HOME}/bin/kubectl" | sha256sum -c -
+          chmod +x "${HOME}/bin/kind" "${HOME}/bin/kubectl"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+      - name: Run the fixture
+        run: tests/is05-ab-fixture/run.sh "${RUNNER_TEMP}/is05-ab-out"
+      - name: Upload observations
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: is05-ab-observations
+          path: ${{ runner.temp }}/is05-ab-out
+          if-no-files-found: warn

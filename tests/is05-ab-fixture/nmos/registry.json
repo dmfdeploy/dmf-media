@@ -1,0 +1,7 @@
+{
+  "logging_level": 0,
+  "http_port": 8010,
+  "server_address": "0.0.0.0",
+  "pri": 0,
+  "label": "is05-ab-fixture-registry"
+}
