@@ -11,6 +11,8 @@ good:
     dirs: [good/mxl-fixed-singleton]
   - name: extension-benign
     dirs: [good/extension-benign]
+  - name: extension-benign-arrays
+    dirs: [good/extension-benign-arrays]
   - name: reserved-project-publisher
     dirs: [good/reserved-project-publisher]
   - name: distinct-keys
@@ -71,6 +73,18 @@ bad:
     twin: extension-benign
     dirs: [bad/extension-weakens-policy]
     expect: "/extensions/example.com/tuning"
+  - name: extension-array-object
+    twin: extension-benign
+    dirs: [bad/extension-array-object]
+    expect: "/extensions/example.com/tuning/items/1"
+  - name: extension-array-nested
+    twin: extension-benign
+    dirs: [bad/extension-array-nested]
+    expect: "/extensions/example.com/tuning/items/0/1/0"
+  - name: extension-object-array-object
+    twin: extension-benign
+    dirs: [bad/extension-object-array-object]
+    expect: "/extensions/example.com/tuning/tuning/profiles/0/runtime"
   - name: mxl-uuid-not-fixed-singleton
     twin: mxl-view
     dirs: [bad/mxl-uuid-not-fixed-singleton]

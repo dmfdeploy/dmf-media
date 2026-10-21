@@ -534,10 +534,13 @@
           ]
         }
       },
-      "additionalProperties": {
-        "if": { "type": "object" },
-        "then": { "$ref": "#/$defs/extensionBody" }
-      }
+      "additionalProperties": { "$ref": "#/$defs/extensionValue" }
+    },
+    "extensionValue": {
+      "allOf": [
+        { "if": { "type": "object" }, "then": { "$ref": "#/$defs/extensionBody" } },
+        { "if": { "type": "array" }, "then": { "items": { "$ref": "#/$defs/extensionValue" } } }
+      ]
     },
     "port": {
       "type": "object",
