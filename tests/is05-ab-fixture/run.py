@@ -324,8 +324,10 @@ def deploy_base() -> None:
         "data": data,
     }
     kubectl("apply", "-f", "-", input_=json.dumps(cm))
+    # Generous: a fresh cluster pulls every image, and the pulls are slow on a
+    # loaded host. The timed checks start only after everything is Ready.
     for pod in ("nmos-registry", "source-a", "source-b"):
-        kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=180s")
+        kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=600s")
 
 
 def sender_ids(k: str) -> dict:
@@ -378,7 +380,7 @@ def deploy_crosspoint(line: dict) -> tuple[str, dict]:
     text = (HERE / "manifests" / "crosspoint.yaml").read_text().replace("__CONTROLLER_IMAGE__", line["image"])
     kubectl("apply", "-f", "-", input_=text)
     for pod in ("sender-a", "sender-b", "crosspoint"):
-        kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=300s")
+        kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=600s")
 
     facts: dict = {"senders": {}}
     pod = json.loads(kubectl("-n", NS, "get", "pod", "crosspoint", "-o", "json"))
@@ -853,7 +855,7 @@ def main() -> int:
         password, facts = deploy_crosspoint(line)
         report["controller"] = facts
         kubectl("apply", "-f", str(HERE / "manifests" / "capture.yaml"))
-        kubectl("-n", NS, "wait", "--for=condition=Ready", "pod/capture", "--timeout=300s")
+        kubectl("-n", NS, "wait", "--for=condition=Ready", "pod/capture", "--timeout=600s")
         switcher = CrosspointSwitch(password)
     log("main run (supervised)")
     report["main"] = run_main(out, switcher)
