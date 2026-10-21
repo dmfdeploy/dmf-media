@@ -7,7 +7,7 @@ the AMWA nmos-testing suites (warn mode), and writes the observations to
 --out. Exit status is 0 only when every primary acceptance item passes;
 nmos-testing results never change it.
 
-Needs kubectl on PATH with the fixture cluster as the current context, and
+Needs kubectl on PATH with KUBECONFIG pointing at the fixture cluster, and
 Pillow for reading the preview frames.
 """
 from __future__ import annotations

@@ -20,8 +20,15 @@ run takes about eight minutes on a 4-CPU ARM64 Docker host, most of it in the
 nmos-testing suites.
 
 You need Docker, kind, kubectl and Python 3.11 or later. The driver installs
-Pillow into a temporary virtual environment. Set `KEEP_CLUSTER=1` to keep the
-cluster afterwards, or `SKIP_NMOS_TESTING=1` to skip the second gate.
+Pillow into a temporary virtual environment. Set `SKIP_NMOS_TESTING=1` to skip
+the second gate.
+
+The script never touches a cluster it did not create. If a cluster named
+`is05-ab` already exists, it stops with an error; set `KIND_CLUSTER` to an
+unused name instead. The cluster's credentials live in a temporary kubeconfig
+that the script deletes on exit, so your own kubeconfig and current context stay
+unchanged. Set `KEEP_CLUSTER=1` to keep the cluster afterwards, then run
+`kind export kubeconfig --name <cluster>` to reach it.
 
 The `is05-ab-fixture` workflow runs the same command on a GitHub ARM64 runner
 and uploads `OUT_DIR` as an artifact.
