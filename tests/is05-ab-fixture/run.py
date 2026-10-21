@@ -571,6 +571,14 @@ def capture_patches(out: Path, receiver_id: str, controller_ip: str, calls: list
         )
         ok = ok and row["pass"]
         rows.append(row)
+    # Saved results are shared as a reference, so name the pods, not their
+    # addresses: the controller, then each viewer pod in order of appearance.
+    names = {controller_ip: "controller-pod-ip"}
+    for x in patches:
+        for k in ("src", "dst"):
+            if x[k] not in names:
+                names[x[k]] = f"viewer-pod-ip-{sum(v.startswith('viewer') for v in names.values()) + 1}"
+            x[k] = names[x[k]]
     (out / "captured-patches.json").write_text(json.dumps(patches, indent=2))
     return {
         "patches_to_receiver": len(to_rx),

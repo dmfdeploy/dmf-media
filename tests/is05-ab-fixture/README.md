@@ -138,6 +138,13 @@ reference for the crosspoint adoption work: `observations.json`, both
 nmos-testing result files, and preview frames before and after a switch and
 from the negative case.
 
+[`reference/crosspoint-gemini/`](reference/crosspoint-gemini/) and
+[`reference/crosspoint-qvest/`](reference/crosspoint-qvest/) hold the slice's
+recorded runs for each controller line: `observations.json`, the PATCHes the
+viewer's node received (`captured-patches.json`, pod addresses replaced by
+names), the nmos-testing results for the viewer and `sender-a`, and preview
+frames. `check_pins.py` compares `lines.json` against these files.
+
 ## Notes
 
 - The node reaches the registry by its Service ClusterIP. On the local kind

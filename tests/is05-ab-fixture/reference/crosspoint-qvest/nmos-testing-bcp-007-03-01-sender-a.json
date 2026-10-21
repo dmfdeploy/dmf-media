@@ -1,0 +1,613 @@
+{
+  "config": {
+    "API_PROCESSING_TIMEOUT": 1,
+    "AUTH_TOKEN": null,
+    "BIND_INTERFACE": null,
+    "CACHE_PATH": "cache",
+    "CERTS_MOCKS": [
+      "test_data/BCP00301/ca/intermediate/certs/ecdsa.mocks.testsuite.nmos.tv.cert.chain.pem",
+      "test_data/BCP00301/ca/intermediate/certs/rsa.mocks.testsuite.nmos.tv.cert.chain.pem"
+    ],
+    "CERT_TRUST_ROOT_CA": "test_data/BCP00301/ca/certs/ca.cert.pem",
+    "CONTROLLER_TESTING_TIMEOUT": 120,
+    "DNS_DOMAIN": "testsuite.nmos.tv",
+    "DNS_SD_ADVERT_TIMEOUT": 30,
+    "DNS_SD_BROWSE_TIMEOUT": 2,
+    "DNS_SD_MODE": "multicast",
+    "DNS_UPSTREAM_IP": null,
+    "ENABLE_AUTH": false,
+    "ENABLE_DNS_SD": true,
+    "ENABLE_HTTPS": false,
+    "ENABLE_MQTT_BROKER": true,
+    "GARBAGE_COLLECTION_TIMEOUT": 12,
+    "HEARTBEAT_INTERVAL": 5,
+    "HTTP_TIMEOUT": 1,
+    "IS11_REFERENCE_SENDER_CONNECTION_API_URL": "",
+    "IS11_REFERENCE_SENDER_NODE_API_URL": "",
+    "JWKS_URI": null,
+    "KEYS_MOCKS": [
+      "test_data/BCP00301/ca/intermediate/private/ecdsa.mocks.testsuite.nmos.tv.key.pem",
+      "test_data/BCP00301/ca/intermediate/private/rsa.mocks.testsuite.nmos.tv.key.pem"
+    ],
+    "KEY_TRUST_ROOT_CA": "test_data/BCP00301/ca/private/ca.key.pem",
+    "MAX_TEST_ITERATIONS": 0,
+    "MOCK_SERVICES_WARM_UP_DELAY": 0,
+    "MQTT_BROKER_HOSTNAME": "mqtt",
+    "MQTT_BROKER_IP": "127.0.0.1",
+    "MQTT_BROKER_PORT": 1883,
+    "MQTT_MESSAGE_TIMEOUT": 2,
+    "MQTT_PASSWORD": null,
+    "MQTT_USERNAME": null,
+    "MS05_EXHAUSTIVE_TESTING": false,
+    "MS05_INTERACTIVE_TESTING": false,
+    "MS05_INVASIVE_TESTING": false,
+    "MULTICAST_STREAM_TARGET": "233.252.0.1",
+    "PORT_BASE": 5000,
+    "PREVALIDATE_API": true,
+    "QUERY_API_HOST": "127.0.0.1",
+    "QUERY_API_PORT": 80,
+    "RANDOM_SEED": 411327287138190607,
+    "REDIRECT_URI": null,
+    "SCOPE": null,
+    "SDP_PREFERENCES": {
+      "RANGE": null,
+      "TCS": "SDR",
+      "TP": "2110TPW",
+      "bit_rate": 109000,
+      "channels": 4,
+      "colorimetry": "BT709",
+      "depth": 10,
+      "exactframerate": "30000/1001",
+      "height": 1080,
+      "interlace": true,
+      "level": "2k-1",
+      "max_packet_time": 1,
+      "packet_time": 1,
+      "profile": "High444.12",
+      "sample_rate": 48000,
+      "sampling": "YCbCr-4:2:2",
+      "sublevel": "Sublev3bpp",
+      "width": 1920
+    },
+    "STABLE_STATE_ATTEMPTS": 5,
+    "STABLE_STATE_DELAY": 3,
+    "TESTING_FACADE_PORT": 5001,
+    "TEST_SSL_BASH": "bash",
+    "UNICAST_STREAM_TARGET": "192.0.2.1",
+    "VERSION": "6ad129b",
+    "WEBSOCKET_PORT_BASE": 6000,
+    "WS_MESSAGE_TIMEOUT": 2
+  },
+  "duration": 0.9636626243591309,
+  "endpoints": [
+    {
+      "host": "node-under-test-ip",
+      "port": 8020,
+      "selector": null,
+      "urlpath": null,
+      "version": "v1.3"
+    },
+    {
+      "host": "node-under-test-ip",
+      "port": 8020,
+      "selector": null,
+      "urlpath": null,
+      "version": "v1.2"
+    }
+  ],
+  "results": [
+    {
+      "description": "Test initialisation",
+      "detail": "",
+      "duration": 0.4869508743286133,
+      "name": "__init__",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Test setup",
+      "detail": "",
+      "duration": 0.008322477340698242,
+      "name": "set_up_tests",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "GET /x-nmos",
+      "detail": "",
+      "duration": 0.0020885467529296875,
+      "name": "auto_connection_1",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection",
+      "detail": "",
+      "duration": 0.0012154579162597656,
+      "name": "auto_connection_2",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2",
+      "detail": "",
+      "duration": 0.0022954940795898438,
+      "name": "auto_connection_3",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/bulk",
+      "detail": "",
+      "duration": 0.006042957305908203,
+      "name": "auto_connection_4",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/bulk/receivers",
+      "detail": "",
+      "duration": 0.0020322799682617188,
+      "name": "auto_connection_5",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/bulk/senders",
+      "detail": "",
+      "duration": 0.005574226379394531,
+      "name": "auto_connection_6",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single",
+      "detail": "",
+      "duration": 0.01645064353942871,
+      "name": "auto_connection_7",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers",
+      "detail": "",
+      "duration": 0.0060160160064697266,
+      "name": "auto_connection_8",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}",
+      "detail": "No resources found to perform this test",
+      "duration": 9.226799011230469e-05,
+      "name": "auto_connection_9",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/active",
+      "detail": "No resources found to perform this test",
+      "duration": 5.7220458984375e-06,
+      "name": "auto_connection_10",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/constraints",
+      "detail": "No resources found to perform this test",
+      "duration": 3.814697265625e-06,
+      "name": "auto_connection_11",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/staged",
+      "detail": "No resources found to perform this test",
+      "duration": 3.337860107421875e-06,
+      "name": "auto_connection_12",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/single/receivers/{receiverId}/staged",
+      "detail": "No resources found to perform this test",
+      "duration": 3.337860107421875e-06,
+      "name": "auto_connection_13",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/transporttype",
+      "detail": "No resources found to perform this test",
+      "duration": 3.337860107421875e-06,
+      "name": "auto_connection_14",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders",
+      "detail": "",
+      "duration": 0.0071713924407958984,
+      "name": "auto_connection_15",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}",
+      "detail": "",
+      "duration": 0.005814552307128906,
+      "name": "auto_connection_16",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/active",
+      "detail": "",
+      "duration": 0.009233713150024414,
+      "name": "auto_connection_17",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/constraints",
+      "detail": "",
+      "duration": 0.008782386779785156,
+      "name": "auto_connection_18",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/staged",
+      "detail": "",
+      "duration": 0.011286497116088867,
+      "name": "auto_connection_19",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/single/senders/{senderId}/staged",
+      "detail": "",
+      "duration": 0.010895967483520508,
+      "name": "auto_connection_20",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/transporttype",
+      "detail": "",
+      "duration": 0.020978212356567383,
+      "name": "auto_connection_21",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/901dc4cc-c79d-4b55-b290-250a2ecb3e3f (Invalid Path)",
+      "detail": "",
+      "duration": 0.010888814926147461,
+      "name": "auto_connection_22",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Missing Authorization Header)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 8.463859558105469e-05,
+      "name": "auto_connection_23",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Invalid Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.9087066650390625e-05,
+      "name": "auto_connection_24",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Expired Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 3.0517578125e-05,
+      "name": "auto_connection_25",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Incorrect Authorization Audience)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 5.650520324707031e-05,
+      "name": "auto_connection_26",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Incorrect Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 6.67572021484375e-05,
+      "name": "auto_connection_27",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Valid Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.86102294921875e-05,
+      "name": "auto_connection_28",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (No Matching Public Keys)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 5.9604644775390625e-06,
+      "name": "auto_connection_29",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos",
+      "detail": "",
+      "duration": 0.0036916732788085938,
+      "name": "auto_node_1",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node",
+      "detail": "",
+      "duration": 0.003558635711669922,
+      "name": "auto_node_2",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3",
+      "detail": "",
+      "duration": 0.007231235504150391,
+      "name": "auto_node_3",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/devices",
+      "detail": "",
+      "duration": 0.006330251693725586,
+      "name": "auto_node_4",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/devices/{deviceId}",
+      "detail": "",
+      "duration": 0.008305072784423828,
+      "name": "auto_node_5",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/flows",
+      "detail": "",
+      "duration": 0.03304147720336914,
+      "name": "auto_node_6",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/flows/{flowId}",
+      "detail": "",
+      "duration": 0.02323317527770996,
+      "name": "auto_node_7",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/receivers",
+      "detail": "",
+      "duration": 0.017000675201416016,
+      "name": "auto_node_8",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/receivers/{receiverId}",
+      "detail": "No resources found to perform this test",
+      "duration": 1.71661376953125e-05,
+      "name": "auto_node_9",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "OPTIONS /x-nmos/node/v1.3/receivers/{receiverId}/target",
+      "detail": "No resources found to perform this test",
+      "duration": 4.5299530029296875e-06,
+      "name": "auto_node_10",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/self",
+      "detail": "",
+      "duration": 0.01587843894958496,
+      "name": "auto_node_11",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/senders",
+      "detail": "",
+      "duration": 0.010385274887084961,
+      "name": "auto_node_12",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/senders/{senderId}",
+      "detail": "",
+      "duration": 0.010476350784301758,
+      "name": "auto_node_13",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/sources",
+      "detail": "",
+      "duration": 0.008963346481323242,
+      "name": "auto_node_14",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/sources/{sourceId}",
+      "detail": "",
+      "duration": 0.015833139419555664,
+      "name": "auto_node_15",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3/e692c5f0-e05b-4650-8441-700d3fcb704d (Invalid Path)",
+      "detail": "",
+      "duration": 0.003961324691772461,
+      "name": "auto_node_16",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Missing Authorization Header)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 1.9550323486328125e-05,
+      "name": "auto_node_17",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Invalid Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.5987625122070312e-05,
+      "name": "auto_node_18",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Expired Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.6464462280273438e-05,
+      "name": "auto_node_19",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Incorrect Authorization Audience)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 3.0040740966796875e-05,
+      "name": "auto_node_20",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Incorrect Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.6702880859375e-05,
+      "name": "auto_node_21",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (Valid Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.8848648071289062e-05,
+      "name": "auto_node_22",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/node/v1.3 (No Matching Public Keys)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.6226043701171875e-06,
+      "name": "auto_node_23",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "Node implements IS-04 version 1.3 or higher",
+      "detail": "",
+      "duration": 0.01207733154296875,
+      "name": "test_01",
+      "state": "Pass"
+    },
+    {
+      "description": "Node exposes Source, Flow and Sender resources for each MXL writer",
+      "detail": "",
+      "duration": 0.014417886734008789,
+      "name": "test_02",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Flow format and media_type use NMOS parameter register values",
+      "detail": "",
+      "duration": 0.0017900466918945312,
+      "name": "test_03",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Source format uses a value from the NMOS formats parameter register",
+      "detail": "",
+      "duration": 0.0008628368377685547,
+      "name": "test_04",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Sender transport, interface_bindings and manifest_href are correct",
+      "detail": "",
+      "duration": 2.5987625122070312e-05,
+      "name": "test_05",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL IS-05 Sender transportfile endpoint returns 404",
+      "detail": "",
+      "duration": 0.005592823028564453,
+      "name": "test_06",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Receiver transport, interface_bindings, format and media_type are correct",
+      "detail": "No MXL Receiver resources found",
+      "duration": 0.0043087005615234375,
+      "name": "test_07",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receiver declares BCP-004-01 constraints",
+      "detail": "No MXL Receiver resources found",
+      "duration": 1.0728836059570312e-05,
+      "name": "test_08",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Connection API implements IS-05 version 1.2 or higher",
+      "detail": "",
+      "duration": 0.009121894836425781,
+      "name": "test_09",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Sender and Receiver transport parameters are correct",
+      "detail": "",
+      "duration": 0.01940298080444336,
+      "name": "test_10",
+      "state": "Pass"
+    },
+    {
+      "description": "Transport parameter payloads conform to BCP-007-03 MXL sender and receiver transport parameter schemas",
+      "detail": "",
+      "duration": 0.02129197120666504,
+      "name": "test_11",
+      "state": "Pass"
+    },
+    {
+      "description": "Staged MXL parameters comply with transport schema and per-parameter IS-05 constraints",
+      "detail": "",
+      "duration": 0.012455463409423828,
+      "name": "test_12",
+      "state": "Pass"
+    },
+    {
+      "description": "Constraints MUST NOT list auto for mxl_domain_id or mxl_flow_id",
+      "detail": "",
+      "duration": 0.003449678421020508,
+      "name": "test_13",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL IS-05 Receiver staged PATCH succeeds when transport_file is omitted from the request body",
+      "detail": "No MXL Receiver resources found",
+      "duration": 3.266334533691406e-05,
+      "name": "test_14",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "MXL read/write starts or stops on activation.",
+      "detail": "Whether MXL read/write starts or stops on activation cannot be verified automatically by this tool",
+      "duration": 3.695487976074219e-05,
+      "name": "test_15",
+      "state": "Manual"
+    },
+    {
+      "description": "MXL transport parameters use null when undetermined; active MUST NOT contain auto",
+      "detail": "",
+      "duration": 0.009636163711547852,
+      "name": "test_16",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Sender accepts null and resolvable auto for mxl_domain_id and mxl_flow_id",
+      "detail": "",
+      "duration": 0.05857706069946289,
+      "name": "test_17",
+      "state": "Pass"
+    },
+    {
+      "description": "MXL Receiver null and auto semantics for mxl_domain_id and mxl_flow_id",
+      "detail": "No MXL Receiver resources found",
+      "duration": 3.457069396972656e-05,
+      "name": "test_18",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Test teardown",
+      "detail": "",
+      "duration": 1.049041748046875e-05,
+      "name": "tear_down_tests",
+      "state": "Not Applicable"
+    }
+  ],
+  "suite": "BCP-007-03-01",
+  "timestamp": 1792604043.8376198
+}

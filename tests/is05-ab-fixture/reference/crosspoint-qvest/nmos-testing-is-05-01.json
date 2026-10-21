@@ -1,0 +1,662 @@
+{
+  "config": {
+    "API_PROCESSING_TIMEOUT": 1,
+    "AUTH_TOKEN": null,
+    "BIND_INTERFACE": null,
+    "CACHE_PATH": "cache",
+    "CERTS_MOCKS": [
+      "test_data/BCP00301/ca/intermediate/certs/ecdsa.mocks.testsuite.nmos.tv.cert.chain.pem",
+      "test_data/BCP00301/ca/intermediate/certs/rsa.mocks.testsuite.nmos.tv.cert.chain.pem"
+    ],
+    "CERT_TRUST_ROOT_CA": "test_data/BCP00301/ca/certs/ca.cert.pem",
+    "CONTROLLER_TESTING_TIMEOUT": 120,
+    "DNS_DOMAIN": "testsuite.nmos.tv",
+    "DNS_SD_ADVERT_TIMEOUT": 30,
+    "DNS_SD_BROWSE_TIMEOUT": 2,
+    "DNS_SD_MODE": "multicast",
+    "DNS_UPSTREAM_IP": null,
+    "ENABLE_AUTH": false,
+    "ENABLE_DNS_SD": true,
+    "ENABLE_HTTPS": false,
+    "ENABLE_MQTT_BROKER": true,
+    "GARBAGE_COLLECTION_TIMEOUT": 12,
+    "HEARTBEAT_INTERVAL": 5,
+    "HTTP_TIMEOUT": 1,
+    "IS11_REFERENCE_SENDER_CONNECTION_API_URL": "",
+    "IS11_REFERENCE_SENDER_NODE_API_URL": "",
+    "JWKS_URI": null,
+    "KEYS_MOCKS": [
+      "test_data/BCP00301/ca/intermediate/private/ecdsa.mocks.testsuite.nmos.tv.key.pem",
+      "test_data/BCP00301/ca/intermediate/private/rsa.mocks.testsuite.nmos.tv.key.pem"
+    ],
+    "KEY_TRUST_ROOT_CA": "test_data/BCP00301/ca/private/ca.key.pem",
+    "MAX_TEST_ITERATIONS": 0,
+    "MOCK_SERVICES_WARM_UP_DELAY": 0,
+    "MQTT_BROKER_HOSTNAME": "mqtt",
+    "MQTT_BROKER_IP": "127.0.0.1",
+    "MQTT_BROKER_PORT": 1883,
+    "MQTT_MESSAGE_TIMEOUT": 2,
+    "MQTT_PASSWORD": null,
+    "MQTT_USERNAME": null,
+    "MS05_EXHAUSTIVE_TESTING": false,
+    "MS05_INTERACTIVE_TESTING": false,
+    "MS05_INVASIVE_TESTING": false,
+    "MULTICAST_STREAM_TARGET": "233.252.0.1",
+    "PORT_BASE": 5000,
+    "PREVALIDATE_API": true,
+    "QUERY_API_HOST": "127.0.0.1",
+    "QUERY_API_PORT": 80,
+    "RANDOM_SEED": 7775531392887215406,
+    "REDIRECT_URI": null,
+    "SCOPE": null,
+    "SDP_PREFERENCES": {
+      "RANGE": null,
+      "TCS": "SDR",
+      "TP": "2110TPW",
+      "bit_rate": 109000,
+      "channels": 4,
+      "colorimetry": "BT709",
+      "depth": 10,
+      "exactframerate": "30000/1001",
+      "height": 1080,
+      "interlace": true,
+      "level": "2k-1",
+      "max_packet_time": 1,
+      "packet_time": 1,
+      "profile": "High444.12",
+      "sample_rate": 48000,
+      "sampling": "YCbCr-4:2:2",
+      "sublevel": "Sublev3bpp",
+      "width": 1920
+    },
+    "STABLE_STATE_ATTEMPTS": 5,
+    "STABLE_STATE_DELAY": 3,
+    "TESTING_FACADE_PORT": 5001,
+    "TEST_SSL_BASH": "bash",
+    "UNICAST_STREAM_TARGET": "192.0.2.1",
+    "VERSION": "6ad129b",
+    "WEBSOCKET_PORT_BASE": 6000,
+    "WS_MESSAGE_TIMEOUT": 2
+  },
+  "duration": 1.5338363647460938,
+  "endpoints": [
+    {
+      "host": "node-under-test-ip",
+      "port": 8020,
+      "selector": null,
+      "urlpath": null,
+      "version": "v1.2"
+    }
+  ],
+  "results": [
+    {
+      "description": "Test initialisation",
+      "detail": "",
+      "duration": 0.08699893951416016,
+      "name": "__init__",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Test setup",
+      "detail": "",
+      "duration": 0.005828380584716797,
+      "name": "set_up_tests",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "GET /x-nmos",
+      "detail": "",
+      "duration": 0.0013201236724853516,
+      "name": "auto_connection_1",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection",
+      "detail": "",
+      "duration": 0.0009083747863769531,
+      "name": "auto_connection_2",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2",
+      "detail": "",
+      "duration": 0.003386259078979492,
+      "name": "auto_connection_3",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/bulk",
+      "detail": "",
+      "duration": 0.0013523101806640625,
+      "name": "auto_connection_4",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/bulk/receivers",
+      "detail": "",
+      "duration": 0.0009663105010986328,
+      "name": "auto_connection_5",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/bulk/senders",
+      "detail": "",
+      "duration": 0.0008971691131591797,
+      "name": "auto_connection_6",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single",
+      "detail": "",
+      "duration": 0.0011036396026611328,
+      "name": "auto_connection_7",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers",
+      "detail": "",
+      "duration": 0.001493215560913086,
+      "name": "auto_connection_8",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}",
+      "detail": "",
+      "duration": 0.0012576580047607422,
+      "name": "auto_connection_9",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/active",
+      "detail": "",
+      "duration": 0.0025606155395507812,
+      "name": "auto_connection_10",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/constraints",
+      "detail": "",
+      "duration": 0.0018262863159179688,
+      "name": "auto_connection_11",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/staged",
+      "detail": "",
+      "duration": 0.0023233890533447266,
+      "name": "auto_connection_12",
+      "state": "Pass"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/single/receivers/{receiverId}/staged",
+      "detail": "",
+      "duration": 0.0010161399841308594,
+      "name": "auto_connection_13",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/receivers/{receiverId}/transporttype",
+      "detail": "",
+      "duration": 0.0037631988525390625,
+      "name": "auto_connection_14",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders",
+      "detail": "",
+      "duration": 0.0012040138244628906,
+      "name": "auto_connection_15",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}",
+      "detail": "No resources found to perform this test",
+      "duration": 8.344650268554688e-06,
+      "name": "auto_connection_16",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/active",
+      "detail": "No resources found to perform this test",
+      "duration": 4.0531158447265625e-06,
+      "name": "auto_connection_17",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/constraints",
+      "detail": "No resources found to perform this test",
+      "duration": 3.814697265625e-06,
+      "name": "auto_connection_18",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/staged",
+      "detail": "No resources found to perform this test",
+      "duration": 3.337860107421875e-06,
+      "name": "auto_connection_19",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "OPTIONS /x-nmos/connection/v1.2/single/senders/{senderId}/staged",
+      "detail": "No resources found to perform this test",
+      "duration": 3.0994415283203125e-06,
+      "name": "auto_connection_20",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/single/senders/{senderId}/transporttype",
+      "detail": "No resources found to perform this test",
+      "duration": 3.0994415283203125e-06,
+      "name": "auto_connection_21",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2/7bb4dec7-3f3d-4af6-80f1-36fa4eccb00f (Invalid Path)",
+      "detail": "",
+      "duration": 0.0015769004821777344,
+      "name": "auto_connection_22",
+      "state": "Pass"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Missing Authorization Header)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 8.344650268554688e-06,
+      "name": "auto_connection_23",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Invalid Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.384185791015625e-06,
+      "name": "auto_connection_24",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Expired Authorization Token)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.574920654296875e-05,
+      "name": "auto_connection_25",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Incorrect Authorization Audience)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.6226043701171875e-05,
+      "name": "auto_connection_26",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Incorrect Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.8848648071289062e-05,
+      "name": "auto_connection_27",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (Valid Authorization Scope)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 2.9802322387695312e-05,
+      "name": "auto_connection_28",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "GET /x-nmos/connection/v1.2 (No Matching Public Keys)",
+      "detail": "This test is only performed when an API supports Authorization and 'ENABLE_AUTH' is True",
+      "duration": 3.0994415283203125e-06,
+      "name": "auto_connection_29",
+      "state": "Test Disabled"
+    },
+    {
+      "description": "API root matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 6.9141387939453125e-06,
+      "name": "test_01",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Single endpoint root matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_02",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Root of /single/senders/ matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_03",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Root of /single/receivers/ matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_04",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Index of /single/senders/{senderId}/ matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 5.4836273193359375e-06,
+      "name": "test_05",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Index of /single/receivers/{receiverId}/ matches the spec",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_06",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Return of /single/senders/{senderId}/constraints/ meets the schema",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_07",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "Return of /single/receivers/{receiverId}/constraints/ meets the schema",
+      "detail": "Replaced by 'auto' test",
+      "duration": 2.86102294921875e-06,
+      "name": "test_08",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "All params listed in /single/senders/{senderId}/constraints/ matches /staged/ and /active/",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.5299530029296875e-06,
+      "name": "test_09",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "All params listed in /single/senders/{senderId}/active/ match their corresponding SDP files",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.291534423828125e-06,
+      "name": "test_09_01",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "All params listed in /single/receivers/{receiverId}/constraints/ matches /staged/ and /active/",
+      "detail": "",
+      "duration": 0.004129886627197266,
+      "name": "test_10",
+      "state": "Pass"
+    },
+    {
+      "description": "Senders are using valid combination of parameters",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.291534423828125e-06,
+      "name": "test_11",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Sender /active parameters do not use the keyword 'auto'",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.384185791015625e-06,
+      "name": "test_11_01",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Patched 'auto' values are translated on '/active' endpoint for all senders",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.384185791015625e-06,
+      "name": "test_11_02",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receivers are using valid combination of parameters",
+      "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite.",
+      "duration": 5.0067901611328125e-06,
+      "name": "test_12",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receiver /active parameters do not use the keyword 'auto'",
+      "detail": "",
+      "duration": 0.00128936767578125,
+      "name": "test_12_01",
+      "state": "Pass"
+    },
+    {
+      "description": "Patched 'auto' values are translated on '/active' endpoint for all receivers",
+      "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite.",
+      "duration": 6.198883056640625e-06,
+      "name": "test_12_02",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Return of /single/senders/{senderId}/staged/ meets the schema",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.86102294921875e-06,
+      "name": "test_13",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Return of /single/receivers/{receiverId}/staged/ meets the schema",
+      "detail": "",
+      "duration": 0.002413034439086914,
+      "name": "test_14",
+      "state": "Pass"
+    },
+    {
+      "description": "Staged parameters for senders comply with constraints",
+      "detail": "Not tested. No resources found.",
+      "duration": 6.198883056640625e-06,
+      "name": "test_15",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Staged parameters for receivers comply with constraints",
+      "detail": "Not tested. MXL senders/receivers are covered by the BCP-007-03-01 test suite.",
+      "duration": 8.821487426757812e-06,
+      "name": "test_16",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Sender patch response meets the schema",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.1457672119140625e-06,
+      "name": "test_17",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receiver patch response meets the schema",
+      "detail": "",
+      "duration": 0.007315397262573242,
+      "name": "test_18",
+      "state": "Pass"
+    },
+    {
+      "description": "Sender invalid patch is refused",
+      "detail": "Not tested. No resources found.",
+      "duration": 3.814697265625e-06,
+      "name": "test_19",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receiver invalid patch is refused",
+      "detail": "",
+      "duration": 0.0019466876983642578,
+      "name": "test_20",
+      "state": "Pass"
+    },
+    {
+      "description": "Sender id on staged receiver is changeable",
+      "detail": "",
+      "duration": 0.006020069122314453,
+      "name": "test_21",
+      "state": "Pass"
+    },
+    {
+      "description": "Receiver id on staged sender is changeable",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.0531158447265625e-06,
+      "name": "test_22",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Sender transport parameters are changeable",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.384185791015625e-06,
+      "name": "test_23",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Senders accept a patch request with empty leg(s) in transport parameters",
+      "detail": "Not tested. No resources found.",
+      "duration": 2.384185791015625e-06,
+      "name": "test_23_01",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Receiver transport parameters are changeable",
+      "detail": "",
+      "duration": 0.004860639572143555,
+      "name": "test_24",
+      "state": "Pass"
+    },
+    {
+      "description": "Receivers accept a patch request with empty leg(s) in transport parameters",
+      "detail": "",
+      "duration": 0.0023126602172851562,
+      "name": "test_24_01",
+      "state": "Pass"
+    },
+    {
+      "description": "Immediate activation of a sender is possible",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.76837158203125e-06,
+      "name": "test_25",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Immediate activation of a receiver is possible",
+      "detail": "",
+      "duration": 0.013300895690917969,
+      "name": "test_26",
+      "state": "Pass"
+    },
+    {
+      "description": "Relative activation of a sender is possible",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.291534423828125e-06,
+      "name": "test_27",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Relative activation of a receiver is possible",
+      "detail": "",
+      "duration": 0.21036005020141602,
+      "name": "test_28",
+      "state": "Pass"
+    },
+    {
+      "description": "Absolute activation of a sender is possible",
+      "detail": "Not tested. No resources found.",
+      "duration": 9.298324584960938e-06,
+      "name": "test_29",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Absolute activation of a receiver is possible",
+      "detail": "",
+      "duration": 1.118955135345459,
+      "name": "test_30",
+      "state": "Pass"
+    },
+    {
+      "description": "Return of /single/senders/{senderId}/active/ meets the schema",
+      "detail": "Not tested. No resources found.",
+      "duration": 4.673004150390625e-05,
+      "name": "test_31",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Return of /single/receivers/{receiverId}/active/ meets the schema",
+      "detail": "",
+      "duration": 0.008301973342895508,
+      "name": "test_32",
+      "state": "Pass"
+    },
+    {
+      "description": "/bulk/ endpoint returns correct JSON",
+      "detail": "Replaced by 'auto' test",
+      "duration": 1.0251998901367188e-05,
+      "name": "test_33",
+      "state": "Not Applicable"
+    },
+    {
+      "description": "GET on /bulk/senders returns 405",
+      "detail": "",
+      "duration": 0.004825592041015625,
+      "name": "test_34",
+      "state": "Pass"
+    },
+    {
+      "description": "GET on /bulk/receivers returns 405",
+      "detail": "",
+      "duration": 0.003923177719116211,
+      "name": "test_35",
+      "state": "Pass"
+    },
+    {
+      "description": "Bulk interface can be used to change destination port on all senders",
+      "detail": "Not tested. No resources found.",
+      "duration": 1.3828277587890625e-05,
+      "name": "test_36",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Bulk interface can be used to change destination port on all receivers",
+      "detail": "",
+      "duration": 0.011992454528808594,
+      "name": "test_37",
+      "state": "Pass"
+    },
+    {
+      "description": "Number of legs matches on constraints, staged and active endpoint for senders",
+      "detail": "Not tested. No resources found.",
+      "duration": 8.344650268554688e-06,
+      "name": "test_38",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Number of legs matches on constraints, staged and active endpoint for receivers",
+      "detail": "",
+      "duration": 0.011736869812011719,
+      "name": "test_39",
+      "state": "Pass"
+    },
+    {
+      "description": "Only valid transport types for a given API version are advertised",
+      "detail": "",
+      "duration": 1.8596649169921875e-05,
+      "name": "test_40",
+      "state": "Pass"
+    },
+    {
+      "description": "SDP transport files pass SDPoker tests",
+      "detail": "Not tested. No resources found.",
+      "duration": 6.4373016357421875e-06,
+      "name": "test_41",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Transport files use the expected Content-Type",
+      "detail": "Not tested. No resources found.",
+      "duration": 3.814697265625e-06,
+      "name": "test_42",
+      "state": "Could Not Test"
+    },
+    {
+      "description": "Test teardown",
+      "detail": "",
+      "duration": 5.245208740234375e-06,
+      "name": "tear_down_tests",
+      "state": "Not Applicable"
+    }
+  ],
+  "suite": "IS-05-01",
+  "timestamp": 1792603967.1887674
+}
