@@ -1,13 +1,30 @@
 namespace: nmos
 createNamespace: true
 
+# The controller image, by digest only (dmfdeploy/dmfdeploy#629). This is the
+# image index the IS-05 A/B crosspoint slice tested
+# (dmf-media tests/is05-ab-fixture/crosspoint/lines.json, line "gemini"); its
+# check_pins.py fails if this digest differs from a passing slice run. The
+# repository is the cluster-internal Zot mirror, which dmf-infra playbook 630
+# seeds from the fork's published image with every manifest and the index
+# digest preserved. There is no tag: the template refuses anything but a
+# sha256 digest.
 image:
   repository: zot.zot.svc.cluster.local:5000/dmf/nmos-crosspoint
-  tag: "0.1.1"
-  pullPolicy: Always
+  digest: "sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3"
+  # Provenance, recorded beside the digest (not used by the templates).
+  source: https://github.com/Gemini2350/nmos-crosspoint_v3
+  commit: fa31061c04a7a74773cd8c859850d05ff2b056ec
+  # A digest never changes content, so a cached copy is always the right one.
+  pullPolicy: IfNotPresent
 
 service:
   port: 80
+
+# Port the server listens on inside the pod (settings.json server.port). The
+# container runs as a non-root user, which cannot bind port 80; the Service
+# keeps port 80 and targets this one.
+containerPort: 8080
 
 ingress:
   enabled: true
@@ -24,10 +41,11 @@ registry:
   priority: 10
   domain: ""
 
-# NMOS API versions the crosspoint negotiates (upstream defaults).
+# NMOS API versions the crosspoint negotiates. IS-05 v1.2 first: BCP-007-03
+# MXL senders and receivers are IS-05 v1.2 resources.
 nmos:
   registryVersions: ["v1.3", "v1.2"]
-  connectVersions: ["v1.1", "v1.0"]
+  connectVersions: ["v1.2", "v1.1", "v1.0"]
 
 # Auth (users.json). The admin password SHA256 is injected by the launcher role
 # from OpenBao at deploy time — NEVER commit a real hash. This default is a
@@ -42,3 +60,14 @@ resources:
   limits:
     memory: "256Mi"
     cpu: "500m"
+
+# The seed-config init container copies two small files. It needs its own
+# requests: the L3 capacity preflight fails closed on any container without
+# them. It runs before the server, so the pod's demand stays that of
+# `resources` above.
+initResources:
+  requests:
+    memory: "16Mi"
+    cpu: "10m"
+  limits:
+    memory: "32Mi"

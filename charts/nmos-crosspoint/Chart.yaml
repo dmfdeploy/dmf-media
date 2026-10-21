@@ -1,7 +1,7 @@
 apiVersion: v2
 name: nmos-crosspoint
-description: AMWA NMOS IS-04/05 crosspoint routing UI (3dmedium/nmos_crosspoint) for ADR-0025 Lane B catalog launches
+description: NMOS IS-04/IS-05 crosspoint controller with BCP-007-03 MXL support (Gemini2350/nmos-crosspoint_v3, pinned by digest) for ADR-0025 Lane B catalog launches
 type: application
-version: 0.1.1
-appVersion: "0.1.1"
+version: 0.2.0
+appVersion: "4.50"
 kubeVersion: ">=1.28.0-0"
