@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "nmos-crosspoint chart values",
+  "description": "Values accepted by the nmos-crosspoint chart. Unknown keys and unsafe values (mutable image tags, scheme or port in the registry host, missing resource bounds) are rejected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["namespace", "createNamespace", "image", "service", "ingress", "registry", "nmos", "auth", "resources"],
+  "properties": {
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$",
+      "description": "Kubernetes namespace of the release."
+    },
+    "createNamespace": {
+      "type": "boolean",
+      "description": "Whether the chart renders the Namespace object."
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "tag", "pullPolicy"],
+      "description": "Crosspoint container image.",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+(:[0-9]+)?(/[a-z0-9._-]+)+$",
+          "description": "Image repository with registry host and no tag or digest."
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$",
+          "not": { "const": "latest" },
+          "description": "Image tag. The tag latest is rejected because it is mutable."
+        },
+        "pullPolicy": {
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Kubernetes image pull policy."
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["port"],
+      "description": "Kubernetes Service.",
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Service port." }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "host", "ingressClass", "entryPoint"],
+      "description": "Private-lane ingress.",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Whether to render the IngressRoute." },
+        "host": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$",
+          "description": "Host name of the ingress. No scheme, port or path."
+        },
+        "ingressClass": {
+          "enum": ["traefik-private"],
+          "description": "Ingress class. Only the private lane is accepted: the crosspoint is never exposed publicly."
+        },
+        "entryPoint": { "type": "string", "minLength": 1, "description": "Traefik entry point." }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ip", "port", "priority", "domain"],
+      "description": "IS-04 registry that the crosspoint subscribes to.",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$",
+          "description": "Bare host name or address of the registry. No scheme and no port."
+        },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Registry port." },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 255, "description": "IS-04 registry priority." },
+        "domain": { "type": "string", "description": "DNS-SD domain. Empty means the default." }
+      }
+    },
+    "nmos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registryVersions", "connectVersions"],
+      "description": "NMOS API versions the crosspoint negotiates.",
+      "properties": {
+        "registryVersions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^v1\\.[0-9]+$" },
+          "description": "IS-04 versions."
+        },
+        "connectVersions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^v1\\.[0-9]+$" },
+          "description": "IS-05 versions."
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adminPasswordSha256"],
+      "description": "Console authentication.",
+      "properties": {
+        "adminPasswordSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 hex digest of the admin password. The launcher injects the real value at deploy time; the committed value is a placeholder."
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests", "limits"],
+      "description": "Container resources. Both bounds are required.",
+      "properties": {
+        "requests": { "$ref": "#/$defs/quantities", "description": "Resource requests." },
+        "limits": { "$ref": "#/$defs/quantities", "description": "Resource limits." }
+      }
+    }
+  },
+  "$defs": {
+    "quantities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": { "type": "string", "pattern": "^[1-9][0-9]*m?$", "description": "CPU in whole cores or millicores." },
+        "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Ki|Mi|Gi)$", "description": "Memory in binary units." }
+      }
+    }
+  }
+}

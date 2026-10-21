@@ -1,0 +1,86 @@
+apiVersion: dmf.io/v1
+kind: MediaFunction
+metadata:
+  key: example-mxl-view
+  version: 1.2.0
+  display_name: Example MXL Viewer
+  summary: Receives one MXL video flow and shows it.
+publisher:
+  name: example-publisher
+  uri: https://example.com/publisher
+origin:
+  commit_sha: 0123456789abcdef0123456789abcdef01234567
+  provenance_uri: https://example.com/builds/1
+licence:
+  identifier: Apache-2.0
+  enforcement: declared-unenforced
+ebu:
+  layer: 5
+  media_function_type: view
+  lifecycle_owner: configure
+artifacts:
+  chart:
+    name: example-mxl-view
+    version: 1.2.0
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  images:
+  - name: registry.example.com/media/example-mxl-view
+    digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    architectures:
+    - amd64
+    - arm64
+resources:
+  requests:
+    small:
+      values_file: ci/small-values.yaml
+      cpu: 100m
+      memory: 128Mi
+ports:
+- name: video-in
+  direction: in
+  control: nmos
+  transport: urn:x-nmos:transport:mxl
+  format: urn:x-nmos:format:video
+  geometry:
+    frame_width: 1920
+    frame_height: 1080
+    frame_rate:
+      numerator: 30
+      denominator: 1
+  caps:
+    constraint_sets:
+    - urn:x-nmos:cap:format:frame_width:
+        enum:
+        - 1920
+  mxl:
+    role: viewer-input
+    binding_policy: fixed-singleton
+    flow_id: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
+nmos:
+  nodes:
+  - roles:
+    - receiver
+    is04:
+      version: v1.3
+    is05:
+      version: v1.1
+    registry_dependency: required
+provision:
+  namespace: media
+health:
+  kind: http
+  port: 8080
+  path: /healthz
+  expect_status: 200
+monitoring:
+  scrape:
+  - port: 9100
+    path: /metrics
+  probe: []
+finalise:
+  data: delete
+dependencies: []
+provides: []
+consumes:
+- type: nmos-registry
+  name: registry
