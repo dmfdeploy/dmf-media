@@ -34,5 +34,5 @@ volume — the server reads `./config/settings.json` and `./config/users.json`.
 Phase 1 deploys the routing UI; it discovers and **lists** NMOS senders/receivers
 from the registry. Switching real flows depends on the registered devices
 advertising routable IS-05 control hrefs — see the
-[plan](../../../dmfdeploy/docs/plans/DMF%20NMOS%20Crosspoint%20Media%20Function%20Plan%202026-06-21.md)
+[plan](https://github.com/dmfdeploy/dmfdeploy/blob/45eb326e973b10e0b52deef290981ceac9bcf5bd/docs/plans/DMF%20NMOS%20Crosspoint%20Media%20Function%20Plan%202026-06-21.md)
 and tracking issue dmfdeploy/dmfdeploy#108.
