@@ -18,7 +18,7 @@ scope, not a status report — most of it is still unimplemented. See
 ```
 catalog/        — Function-catalog entries (YAML) + topology-params schema/instance
 charts/         — Helm charts: mxl-fabrics-demo, nmos-cpp, nmos-crosspoint
-docker/         — Dockerfiles: the compiled upstream MXL image (mxl-fabrics), nmos-crosspoint
+docker/         — Dockerfiles: the compiled upstream MXL image (mxl-fabrics)
 bin/            — CI gates + publish scripts (catalog-demand check, GHCR chart/image publish)
 tests/          — Harness scripts (tests/harness/): the acceptance-gate proof
                   (run-demo.sh) and the render matrix (render-matrix.sh), plus

@@ -21,24 +21,56 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/auth: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
+      # The image's own user (node, uid 1000). Only config/, state/, log/ and
+      # /tmp are writable; the root filesystem is read-only.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # The server rewrites ./config/settings.json at startup (it normalises
+        # the file and persists generated identifiers), so the config
+        # directory must be writable. Copy the rendered settings.json
+        # (ConfigMap) and users.json (Secret) into it; the image's entrypoint
+        # then runs unchanged.
+        - name: seed-config
+          image: {{ include "nmos-crosspoint.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "cp /seed/settings.json /seed/users.json /nmos-crosspoint/server/config/"]
+          securityContext: &containerSecurity
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.initResources | nindent 12 }}
+          volumeMounts:
+            - name: seed
+              mountPath: /seed
+              readOnly: true
+            - name: config
+              mountPath: /nmos-crosspoint/server/config
       containers:
         - name: crosspoint
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ include "nmos-crosspoint.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.port }}
+            - containerPort: {{ .Values.containerPort }}
               name: http
               protocol: TCP
+          securityContext: *containerSecurity
           volumeMounts:
-            # settings.json (ConfigMap) + users.json (Secret) merged into one
-            # config dir via a projected volume — the server reads ./config.
             - name: config
-              mountPath: /app/server/config
-              readOnly: true
+              mountPath: /nmos-crosspoint/server/config
             - name: state
-              mountPath: /app/server/state
+              mountPath: /nmos-crosspoint/server/state
             - name: logs
-              mountPath: /app/server/log
+              mountPath: /nmos-crosspoint/server/log
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             httpGet:
               path: /
@@ -54,7 +86,9 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: config
+        # settings.json (ConfigMap) + users.json (Secret), merged into one
+        # read-only seed directory via a projected volume.
+        - name: seed
           projected:
             sources:
               - configMap:
@@ -67,7 +101,11 @@ spec:
                   items:
                     - key: users.json
                       path: users.json
+        - name: config
+          emptyDir: {}
         - name: state
           emptyDir: {}
         - name: logs
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
