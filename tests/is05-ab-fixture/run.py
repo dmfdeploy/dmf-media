@@ -123,7 +123,7 @@ def classify(jpeg: bytes) -> str:
     except Exception:  # noqa: BLE001 - a partly written JPEG is not a frame
         return "?"
     w, h = img.size
-    cols = list(img.crop((0, int(h * 0.15), w, int(h * 0.6))).resize((7, 1), Image.BOX).getdata())
+    cols = list(img.crop((0, int(h * 0.15), w, int(h * 0.6))).resize((7, 1), Image.BOX).get_flattened_data())
     spread = max(max(c[i] for c in cols) - min(c[i] for c in cols) for i in range(3))
     r, g, b = (sum(c[i] for c in cols) / 7 for i in range(3))
     if spread > 150:
