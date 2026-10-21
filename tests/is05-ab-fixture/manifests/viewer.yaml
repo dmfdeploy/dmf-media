@@ -1,0 +1,54 @@
+# Viewer pod: the nmos-cpp node (one MXL receiver) and the preview supervisor.
+# run.py replaces __SUPERVISE__ and __STATIC_FLOW_ID__ before it applies this
+# file: "1" and "" for the main run, "0" and flow A for the negative case.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: viewer
+  namespace: is05-ab
+  labels: {app.kubernetes.io/name: viewer, app.kubernetes.io/part-of: is05-ab-fixture}
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: nmos-node
+      image: docker.io/rhastie/nmos-cpp@sha256:68e61e17dffab70303cfc10fcf4f5f8f219ae84eb189961e120e86a126959413
+      command: [bash, -c]
+      args:
+        - jq --arg ip "$POD_IP" '.host_address=$ip' /config/node.json > /tmp/node.json
+          && exec /home/nmos-cpp-node /tmp/node.json
+      env:
+        - {name: POD_IP, valueFrom: {fieldRef: {fieldPath: status.podIP}}}
+      ports: [{containerPort: 8020, name: http}]
+      readinessProbe: {tcpSocket: {port: 8020}, periodSeconds: 2}
+      securityContext: &ctrsec
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
+      volumeMounts:
+        - {name: nmos-config, mountPath: /config, readOnly: true}
+        - {name: node-tmp, mountPath: /tmp}
+    - name: supervisor
+      image: ghcr.io/dmfdeploy/mxl-fabrics-demo@sha256:3fb75956ea776e17a16eeaf56b7983df3524cb8c465c367d53589be548000970
+      command: [python3, /opt/supervisor/mxl-is05-supervisor.py]
+      env:
+        - {name: NODE_API, value: "http://127.0.0.1:8020"}
+        - {name: MXL_DOMAIN, value: /home/mxl/domain}
+        - {name: MXL_DOMAIN_ID, value: d0d0d0d0-0000-4000-8000-000000000001}
+        - {name: SUPERVISE, value: "__SUPERVISE__"}
+        - {name: STATIC_FLOW_ID, value: "__STATIC_FLOW_ID__"}
+      ports: [{containerPort: 9000, name: status}]
+      readinessProbe: {httpGet: {path: /status, port: 9000}, periodSeconds: 2}
+      securityContext: *ctrsec
+      volumeMounts:
+        - {name: domain, mountPath: /home/mxl/domain}
+        - {name: supervisor, mountPath: /opt/supervisor, readOnly: true}
+        - {name: preview, mountPath: /tmp/preview}
+  volumes:
+    - {name: domain, hostPath: {path: /var/lib/dmf-mxl/is05-ab, type: Directory}}
+    - {name: nmos-config, configMap: {name: nmos-config}}
+    - {name: supervisor, configMap: {name: mxl-is05-supervisor}}
+    - {name: node-tmp, emptyDir: {}}
+    - {name: preview, emptyDir: {medium: Memory, sizeLimit: 16Mi}}
