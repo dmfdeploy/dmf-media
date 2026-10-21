@@ -4,6 +4,12 @@ name: is05-ab-fixture
 # supervisor. Runs the same command as a local run and uploads the
 # observations. The nmos-testing gate inside it is warn mode: its results are
 # recorded and never fail the job.
+#
+# The crosspoint slice (dmfdeploy/dmfdeploy#629) runs the same checks with the
+# crosspoint controller's connection call in place of the direct PATCH, once
+# per line in tests/is05-ab-fixture/crosspoint/lines.json. A change to a pin
+# there runs this workflow, and the pins job fails until the slice's recorded
+# observations match the new commit and image.
 on:
   workflow_dispatch:
   pull_request:
@@ -16,10 +22,26 @@ concurrency:
   group: is05-ab-fixture-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  pins:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Controller pins are digest-only and tested
+        run: python3 tests/is05-ab-fixture/crosspoint/check_pins.py
   fixture:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: patch, switch_via: patch, line: ""}
+          - {name: crosspoint-gemini, switch_via: crosspoint, line: gemini}
+          - {name: crosspoint-qvest, switch_via: crosspoint, line: qvest}
     env:
+      SWITCH_VIA: ${{ matrix.switch_via }}
+      CONTROLLER_LINE: ${{ matrix.line }}
       KIND_VERSION: v0.33.0
       KIND_SHA256: 20022bee6cfcd5086cb7234d218e3454e6090022f2a8f55d1fa7fcf42c3867a2
       KUBECTL_VERSION: v1.37.0
@@ -42,6 +64,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: is05-ab-observations
+          name: is05-ab-observations-${{ matrix.name }}
           path: ${{ runner.temp }}/is05-ab-out
           if-no-files-found: warn

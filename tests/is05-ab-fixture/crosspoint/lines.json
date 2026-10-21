@@ -1,0 +1,22 @@
+{
+  "description": "MXL-capable crosspoint controller lines for the IS-05 A/B slice (dmfdeploy/dmfdeploy#629). The slice deploys the controller from this file only. Changing a commit or a digest here runs the fixture workflow, and check_pins.py fails until the slice's reference observations record the same line, commit and digest.",
+  "default": "gemini",
+  "lines": {
+    "gemini": {
+      "role": "pin",
+      "source": "https://github.com/Gemini2350/nmos-crosspoint_v3",
+      "commit": "fa31061c04a7a74773cd8c859850d05ff2b056ec",
+      "published_tag": "docker.io/gemini2350/nmos-crosspoint_v3:master-fa31061",
+      "image": "docker.io/gemini2350/nmos-crosspoint_v3@sha256:6255ec93f743adf238a1136f67465f764c45d58e4b4684e95eacf48304dd09f3",
+      "arm64_manifest": "sha256:27d9dfbbee3a9f4f492076a30403f7cb789320aee55be6db912f5f8f0565fcea"
+    },
+    "qvest": {
+      "role": "second column",
+      "source": "https://github.com/qvest-digital/dmf-app-nmos-crosspoint",
+      "commit": "d188d4f4e997f8ba74615a1e52e13df9b337bfa5",
+      "published_tag": "ghcr.io/qvest-digital/dmf-app-nmos-crosspoint:master-d188d4f",
+      "image": "ghcr.io/qvest-digital/dmf-app-nmos-crosspoint@sha256:a15b27ed00dd117404d13795eb46572b2143389578124b2c7e71384152bf3c92",
+      "arm64_manifest": "sha256:2c0b1e1d192abda5529d4b53a4f0c3855293ee8d3767a926dcf59249089de527"
+    }
+  }
+}

@@ -1,0 +1,121 @@
+# Crosspoint slice (dmfdeploy/dmfdeploy#629): two fixture-only NMOS sender
+# nodes and the MXL-capable crosspoint controller. run.py applies this file
+# only with --switch-via crosspoint, after base.yaml, and replaces
+# __CONTROLLER_IMAGE__ with the "image" of the selected line in
+# crosspoint/lines.json. That value is always repository@sha256:digest.
+#
+# FIXTURE-ONLY senders: each is a stock nmos-cpp node with one MXL video
+# sender and no media. It advertises the flow that its source pod writes: the
+# source pod's flow ID is derived from the sender node's seed_id the same way
+# nmos-cpp derives it, and run.py checks the two match. The real source
+# sidecar is dmfdeploy/dmfdeploy#627.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sender-a
+  namespace: is05-ab
+  labels: {app.kubernetes.io/name: sender-a, app.kubernetes.io/part-of: is05-ab-fixture}
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: nmos-node
+      image: docker.io/rhastie/nmos-cpp@sha256:68e61e17dffab70303cfc10fcf4f5f8f219ae84eb189961e120e86a126959413
+      command: [bash, -c]
+      args:
+        - jq --arg ip "$POD_IP" '.host_address=$ip' /config/sender-a.json > /tmp/node.json
+          && exec /home/nmos-cpp-node /tmp/node.json
+      env:
+        - {name: POD_IP, valueFrom: {fieldRef: {fieldPath: status.podIP}}}
+      ports: [{containerPort: 8020, name: http}]
+      readinessProbe: {tcpSocket: {port: 8020}, periodSeconds: 2}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
+      volumeMounts:
+        - {name: nmos-config, mountPath: /config, readOnly: true}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: nmos-config, configMap: {name: nmos-config}}
+    - {name: tmp, emptyDir: {}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sender-b
+  namespace: is05-ab
+  labels: {app.kubernetes.io/name: sender-b, app.kubernetes.io/part-of: is05-ab-fixture}
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: nmos-node
+      image: docker.io/rhastie/nmos-cpp@sha256:68e61e17dffab70303cfc10fcf4f5f8f219ae84eb189961e120e86a126959413
+      command: [bash, -c]
+      args:
+        - jq --arg ip "$POD_IP" '.host_address=$ip' /config/sender-b.json > /tmp/node.json
+          && exec /home/nmos-cpp-node /tmp/node.json
+      env:
+        - {name: POD_IP, valueFrom: {fieldRef: {fieldPath: status.podIP}}}
+      ports: [{containerPort: 8020, name: http}]
+      readinessProbe: {tcpSocket: {port: 8020}, periodSeconds: 2}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
+      volumeMounts:
+        - {name: nmos-config, mountPath: /config, readOnly: true}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: nmos-config, configMap: {name: nmos-config}}
+    - {name: tmp, emptyDir: {}}
+---
+# The controller, unmodified: the image's own entrypoint and paths. The init
+# container copies the seed config into the writable config directory,
+# because the server rewrites settings.json at startup. config, state and log
+# are the only writable paths; the root filesystem is read-only.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crosspoint
+  namespace: is05-ab
+  labels: {app.kubernetes.io/name: crosspoint, app.kubernetes.io/part-of: is05-ab-fixture}
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile: {type: RuntimeDefault}
+  initContainers:
+    - name: seed-config
+      image: __CONTROLLER_IMAGE__
+      command: [sh, -c, cp /seed/settings.json /seed/users.json /nmos-crosspoint/server/config/]
+      securityContext: &xpsec
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: {drop: [ALL]}
+      volumeMounts:
+        - {name: seed, mountPath: /seed, readOnly: true}
+        - {name: config, mountPath: /nmos-crosspoint/server/config}
+  containers:
+    - name: crosspoint
+      image: __CONTROLLER_IMAGE__
+      ports: [{containerPort: 8080, name: http}]
+      readinessProbe: {tcpSocket: {port: 8080}, periodSeconds: 2}
+      securityContext: *xpsec
+      volumeMounts:
+        - {name: config, mountPath: /nmos-crosspoint/server/config}
+        - {name: state, mountPath: /nmos-crosspoint/server/state}
+        - {name: log, mountPath: /nmos-crosspoint/server/log}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: seed, secret: {secretName: crosspoint-seed}}
+    - {name: config, emptyDir: {}}
+    - {name: state, emptyDir: {}}
+    - {name: log, emptyDir: {}}
+    - {name: tmp, emptyDir: {}}
