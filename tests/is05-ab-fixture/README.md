@@ -84,6 +84,53 @@ The second gate runs AMWA nmos-testing (`master-6ad129b`, pinned by digest)
 against the viewer node: the IS-05-01 suite and BCP-007-03-01. It is warn mode:
 the results land in the observations and never change the exit status.
 
+## Crosspoint slice
+
+The crosspoint slice ([dmfdeploy/dmfdeploy#629](https://github.com/dmfdeploy/dmfdeploy/issues/629))
+runs the same seven checks with the same bounds, but every switch is the
+crosspoint controller's own connection call. The driver never sends a PATCH.
+
+```sh
+SWITCH_VIA=crosspoint tests/is05-ab-fixture/run.sh [OUT_DIR]
+SWITCH_VIA=crosspoint CONTROLLER_LINE=qvest tests/is05-ab-fixture/run.sh [OUT_DIR]
+```
+
+[`crosspoint/lines.json`](crosspoint/lines.json) pins each controller line by
+source commit and image digest. The slice adds these pods:
+
+| Pod | What | Image (pinned by digest) |
+|---|---|---|
+| `sender-a`, `sender-b` | Fixture-only nmos-cpp nodes, one MXL video sender each, no media | `rhastie/nmos-cpp` `master-b6c8367` |
+| `crosspoint` | The controller, with its own entrypoint, non-root, read-only root filesystem | from `lines.json` |
+| `capture` | `tcpdump` on the node, TCP port 8020; the one root pod | `nicolaka/netshoot` `v0.14` |
+
+nmos-cpp derives a sender node's flow ID from its `seed_id`. The slice gives
+each test source that flow ID, and it checks that the sender node's IS-04 flow,
+its sender's `flow_id` and its IS-05 `/active` `mxl_flow_id` all agree.
+
+The driver talks to the controller only through the controller's public
+WebSocket API, as its web UI does. It logs in with a password generated for
+each run, reads the device and flow numbers from the `crosspoint` sync channel,
+and sends `makeconnection` ([`crosspoint/client.py`](crosspoint/client.py)).
+
+On top of the seven items, the slice checks two things:
+
+- The controller runs from a digest-only image as a non-zero uid, and both
+  senders advertise their source's flow.
+- Every PATCH the viewer's node received is the controller's: one per
+  connection call, with the selected sender's `sender_id`, one leg of
+  `mxl_domain_id` and `mxl_flow_id`, `master_enable: true`, immediate
+  activation, and no transport file or SDP. The slice reads the PATCHes from
+  the packet capture, so they are what arrived on the wire.
+
+With nmos-testing on, the slice also runs BCP-007-03-01 against `sender-a`.
+
+To move the controller to another line, commit or image, change
+`lines.json`, run the slice for that line, and commit its observations as
+`reference/crosspoint-<line>/`. [`crosspoint/check_pins.py`](crosspoint/check_pins.py)
+fails until the recorded run used the same commit and image and passed. The
+fixture workflow runs the pin check and the slice for every line.
+
 ## Reference observations
 
 [`reference/`](reference/) holds the observations from the run recorded as the

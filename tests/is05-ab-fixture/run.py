@@ -7,6 +7,12 @@ the AMWA nmos-testing suites (warn mode), and writes the observations to
 --out. Exit status is 0 only when every primary acceptance item passes;
 nmos-testing results never change it.
 
+With --switch-via crosspoint (dmfdeploy/dmfdeploy#629) the same checks run,
+but every switch is the crosspoint controller's own connection call instead of
+the driver's direct PATCH. The slice adds two fixture-only NMOS sender nodes,
+the controller line chosen from crosspoint/lines.json, and a packet capture
+that records the PATCH the viewer's node received.
+
 Needs kubectl on PATH with KUBECONFIG pointing at the fixture cluster, and
 Pillow for reading the preview frames.
 """
@@ -15,8 +21,10 @@ from __future__ import annotations
 import argparse
 import base64
 import contextlib
+import hashlib
 import io
 import json
+import secrets
 import socket
 import subprocess
 import sys
@@ -24,17 +32,27 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / "crosspoint"))
+from client import Crosspoint  # noqa: E402 - fixture-local module
 NS = "is05-ab"
 DOMAIN_ID = "d0d0d0d0-0000-4000-8000-000000000001"
 FLOW = {
     "A": "5a1e0000-0000-4000-8000-00000000000a",
     "B": "5a1e0000-0000-4000-8000-00000000000b",
 }
+# Crosspoint slice: the sources write the flows that the fixture-only sender
+# nodes advertise. nmos-cpp derives a flow ID from the node's seed_id as a
+# name-based UUID; deploy_crosspoint checks the derived IDs against the
+# nodes' own IS-04 flows.
+SENDER_CONFIG = {"A": "sender-a.json", "B": "sender-b.json"}
+CROSSPOINT_PORT = 8080
+CROSSPOINT_USER = "is05-ab-slice"
 # Upper bound for "the preview shows the newly selected pattern", measured
 # from the PATCH. The observed interval is recorded next to it.
 SWITCH_BOUND_S = 10.0
@@ -269,33 +287,296 @@ def deploy_viewer(supervise: bool) -> None:
 
 def deploy_base() -> None:
     kubectl("apply", "-f", "-", input_=kubectl("create", "namespace", NS, "--dry-run=client", "-o", "yaml"))
-    for name, files in (
-        ("mxl-flows", ["flows/flow-a.json", "flows/flow-b.json"]),
-        ("mxl-is05-supervisor", ["supervisor/mxl-is05-supervisor.py"]),
-    ):
-        args = ["-n", NS, "create", "configmap", name, "--dry-run=client", "-o", "yaml"]
-        args += [f"--from-file={HERE / f}" for f in files]
-        kubectl("apply", "-f", "-", input_=kubectl(*args))
+    # Pods are refused until the namespace's default service account exists.
+    deadline = time.time() + 60
+    while not kubectl("-n", NS, "get", "serviceaccount", "default", "--ignore-not-found", "-o", "name").strip():
+        if time.time() > deadline:
+            raise RuntimeError(f"namespace {NS} never got its default service account")
+        time.sleep(0.5)
+    args = ["-n", NS, "create", "configmap", "mxl-is05-supervisor", "--dry-run=client", "-o", "yaml",
+            f"--from-file={HERE / 'supervisor' / 'mxl-is05-supervisor.py'}"]
+    kubectl("apply", "-f", "-", input_=kubectl(*args))
+    flows = {}
+    for k in "AB":
+        flow = json.loads((HERE / "flows" / f"flow-{k.lower()}.json").read_text())
+        flow["id"] = FLOW[k]
+        flows[f"flow-{k.lower()}.json"] = json.dumps(flow, indent=2)
+    kubectl("apply", "-f", "-", input_=json.dumps({
+        "apiVersion": "v1", "kind": "ConfigMap",
+        "metadata": {"name": "mxl-flows", "namespace": NS}, "data": flows,
+    }))
     kubectl("apply", "-f", str(HERE / "manifests" / "base.yaml"))
     # The node resolves registry_address on every request. On the local kind
     # cluster each cluster-DNS lookup took 3-6 s, longer than the heartbeat
     # timeout, so the node lost its registration. Using the Service ClusterIP
     # keeps the heartbeat check about the node, not about cluster DNS.
-    node = json.loads((HERE / "nmos" / "node.json").read_text())
-    node["registry_address"] = kubectl(
+    registry_ip = kubectl(
         "-n", NS, "get", "svc", "nmos-registry", "-o", "jsonpath={.spec.clusterIP}"
     ).strip()
+    data = {"registry.json": (HERE / "nmos" / "registry.json").read_text()}
+    for name in ("node.json", *SENDER_CONFIG.values()):
+        node = json.loads((HERE / "nmos" / name).read_text())
+        node["registry_address"] = registry_ip
+        data[name] = json.dumps(node, indent=2)
     cm = {
         "apiVersion": "v1", "kind": "ConfigMap",
         "metadata": {"name": "nmos-config", "namespace": NS},
-        "data": {
-            "node.json": json.dumps(node, indent=2),
-            "registry.json": (HERE / "nmos" / "registry.json").read_text(),
-        },
+        "data": data,
     }
     kubectl("apply", "-f", "-", input_=json.dumps(cm))
     for pod in ("nmos-registry", "source-a", "source-b"):
         kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=180s")
+
+
+def sender_ids(k: str) -> dict:
+    """IDs the fixture-only sender node for source k registers (nmos-cpp's own derivation)."""
+    seed = uuid.UUID(json.loads((HERE / "nmos" / SENDER_CONFIG[k]).read_text())["seed_id"])
+    return {t: str(uuid.uuid5(seed, f"/x-nmos/node/{t}/xv0")) for t in ("node", "flow", "sender")}
+
+
+def load_line(name: str | None) -> tuple[str, dict]:
+    lines = json.loads((HERE / "crosspoint" / "lines.json").read_text())
+    name = name or lines["default"]
+    line = lines["lines"][name]
+    repo, _, digest = line["image"].partition("@sha256:")
+    if not digest or len(digest) != 64 or ":" in repo.rsplit("/", 1)[-1]:
+        raise ValueError(f"line {name}: image must be repository@sha256:<digest> with no tag, got {line['image']}")
+    return name, line
+
+
+def deploy_crosspoint(line: dict) -> tuple[str, dict]:
+    """Senders and the controller. Returns the fixture login's password and the checked facts."""
+    registry_ip = kubectl(
+        "-n", NS, "get", "svc", "nmos-registry", "-o", "jsonpath={.spec.clusterIP}"
+    ).strip()
+    password = secrets.token_hex(16)
+    users = {
+        "users": {CROSSPOINT_USER: {"password": hashlib.sha256(password.encode()).hexdigest(), "groups": ["user"]}},
+        "permissions": {
+            scope: {
+                "allowRead": {"users": [], "groups": ["user"]},
+                "allowWrite": {"users": [], "groups": ["user"]},
+                "denyRead": {"users": [], "groups": []},
+                "denyWrite": {"users": [], "groups": []},
+            } for scope in ("global", "public")
+        },
+    }
+    # As with the nodes, the registry is addressed by ClusterIP: cluster DNS
+    # on the local kind cluster is too slow for a heartbeat-driven client.
+    settings = {
+        "staticNmosRegistries": [{"ip": registry_ip, "port": 8010, "priority": 10, "domain": ""}],
+        "logFiles": "./log/",
+        "logOutput": True,
+        "server": {"port": CROSSPOINT_PORT, "address": "0.0.0.0"},
+        "nmos": {"registryVersions": ["v1.3"], "connectVersions": ["v1.2", "v1.1", "v1.0"]},
+    }
+    kubectl("apply", "-f", "-", input_=json.dumps({
+        "apiVersion": "v1", "kind": "Secret", "type": "Opaque",
+        "metadata": {"name": "crosspoint-seed", "namespace": NS},
+        "stringData": {"settings.json": json.dumps(settings, indent=2), "users.json": json.dumps(users, indent=2)},
+    }))
+    text = (HERE / "manifests" / "crosspoint.yaml").read_text().replace("__CONTROLLER_IMAGE__", line["image"])
+    kubectl("apply", "-f", "-", input_=text)
+    for pod in ("sender-a", "sender-b", "crosspoint"):
+        kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=300s")
+
+    facts: dict = {"senders": {}}
+    pod = json.loads(kubectl("-n", NS, "get", "pod", "crosspoint", "-o", "json"))
+    facts["controller_image"] = pod["spec"]["containers"][0]["image"]
+    facts["controller_image_id"] = pod["status"]["containerStatuses"][0]["imageID"]
+    facts["controller_uid"] = exec_pod("crosspoint", "id -u").strip()
+    for k in "AB":
+        want = sender_ids(k)
+        with port_forward(f"pod/sender-{k.lower()}", 8020) as node:
+            deadline = time.time() + 60
+            while True:
+                try:
+                    flows = [f["id"] for f in get_json(f"{node}/x-nmos/node/v1.3/flows")]
+                    senders = get_json(f"{node}/x-nmos/node/v1.3/senders")
+                    active = get_json(f"{node}/x-nmos/connection/v1.2/single/senders/{want['sender']}/active")
+                    break
+                except (RuntimeError, ValueError):
+                    if time.time() > deadline:
+                        raise
+                    time.sleep(1)
+        leg = active["transport_params"][0]
+        facts["senders"][k] = {
+            "sender_id": want["sender"],
+            "is04_flows": flows,
+            "is04_sender_flow_id": [x["flow_id"] for x in senders if x["id"] == want["sender"]],
+            "transport": [x["transport"] for x in senders if x["id"] == want["sender"]],
+            "active": {"master_enable": active["master_enable"], **leg},
+            "pass": (
+                flows == [FLOW[k]]
+                and [x["flow_id"] for x in senders if x["id"] == want["sender"]] == [FLOW[k]]
+                and leg.get("mxl_flow_id") == FLOW[k]
+                and leg.get("mxl_domain_id") == DOMAIN_ID
+                and active["master_enable"] is True
+            ),
+        }
+    facts["pass"] = all(v["pass"] for v in facts["senders"].values()) and facts["controller_uid"] != "0"
+    return password, facts
+
+
+def exec_pod(pod: str, script: str) -> str:
+    return kubectl("-n", NS, "exec", pod, "--", "sh", "-c", script)
+
+
+class DirectPatch:
+    """#624 baseline: the driver PATCHes the viewer's receiver itself."""
+
+    name = "patch"
+
+    def attach(self, stack: contextlib.ExitStack, viewer: "Viewer") -> None:
+        pass
+
+    def switch(self, viewer: "Viewer", want: str) -> dict:
+        return viewer.patch(FLOW[want])
+
+
+class CrosspointSwitch:
+    """#629 slice: the controller's own connection call PATCHes the receiver.
+
+    Each run opens a fresh controller session after the viewer is deployed and
+    waits until the controller lists the viewer's receiver at the pod's
+    current address and both senders. The driver never PATCHes.
+    """
+
+    name = "crosspoint"
+
+    def __init__(self, password: str):
+        self.password = password
+        self.calls: list[dict] = []
+        self.xp: Crosspoint | None = None
+
+    def attach(self, stack: contextlib.ExitStack, viewer: "Viewer") -> None:
+        url = stack.enter_context(port_forward("pod/crosspoint", CROSSPOINT_PORT))
+        viewer_ip = kubectl("-n", NS, "get", "pod", "viewer", "-o", "jsonpath={.status.podIP}").strip()
+        deadline = time.time() + 120
+        while True:
+            try:
+                self.xp = Crosspoint(url, CROSSPOINT_USER, self.password)
+                break
+            except (OSError, TimeoutError, ConnectionError):
+                if time.time() > deadline:
+                    raise
+                time.sleep(1)
+        stack.callback(self.xp.close)
+        while True:
+            self.xp.refresh()
+            self.destination = self.xp.find(viewer.receiver_id, "receivers")
+            self.sources = {k: self.xp.find(sender_ids(k)["sender"], "senders") for k in "AB"}
+            # The controller must also know the viewer's current address: after
+            # the negative case redeploys the viewer, its control href changes.
+            nmos = self.xp.refresh("nmos")
+            rx = (nmos.get("receivers") or {}).get(viewer.receiver_id) or {}
+            dev = (nmos.get("devices") or {}).get(rx.get("device_id")) or {}
+            hrefs = [c.get("href", "") for c in dev.get("controls") or []]
+            current = any(f"//{viewer_ip}:" in h for h in hrefs)
+            if self.destination and all(self.sources.values()) and current:
+                return
+            if time.time() > deadline:
+                raise RuntimeError(f"controller never listed receiver and senders: dst={self.destination} "
+                                   f"src={self.sources} control_hrefs={hrefs} viewer_ip={viewer_ip}")
+            time.sleep(1)
+
+    def switch(self, viewer: "Viewer", want: str) -> dict:
+        data = {"source": self.sources[want], "destination": self.destination, "preview": False}
+        sent = time.time()
+        reply = self.xp.request("makeconnection", data)
+        done = time.time()
+        conns = (reply.get("data") or {}).get("connections") or []
+        ok = reply.get("status") == 200 and len(conns) == 1 and conns[0].get("status") == "ok"
+        call = {
+            "request": data,
+            "sent_at": sent,
+            "response_at": done,
+            "status": 200 if ok else reply.get("status"),
+            "controller_ok": ok,
+            "response": {
+                "status": reply.get("status"),
+                "message": reply.get("message"),
+                "connections": [{"status": c.get("status"), "detail": c.get("detail")} for c in conns],
+            },
+            "staged": get_json(f"{viewer.rx}/staged"),
+            "active": get_json(f"{viewer.rx}/active"),
+            "to": want,
+        }
+        self.calls.append({k: call[k] for k in ("request", "sent_at", "to", "controller_ok")})
+        return call
+
+
+def capture_patches(out: Path, receiver_id: str, controller_ip: str, calls: list[dict]) -> dict:
+    """Read the PATCHes the viewer's node received from the packet capture.
+
+    Each must be the controller's BCP-007-03 receiver PATCH: sender_id of the
+    selected source, one leg with mxl_domain_id and mxl_flow_id, master_enable
+    true, immediate activation, and no transport file or SDP anywhere in it.
+    """
+    raw = kubectl(
+        "-n", NS, "exec", "capture", "--", "tshark", "-r", "/capture/is05.pcap",
+        "-d", "tcp.port==8020,http", "-o", "tcp.relative_sequence_numbers:FALSE",
+        "-Y", 'http.request.method == "PATCH"', "-T", "json",
+        "-e", "frame.time_epoch", "-e", "ip.src", "-e", "ip.dst", "-e", "tcp.srcport", "-e", "tcp.seq",
+        "-e", "http.request.uri", "-e", "http.file_data",
+    )
+    seen, patches = set(), []
+    for pkt in json.loads(raw or "[]"):
+        f = {k: v[0] for k, v in pkt["_source"]["layers"].items()}
+        key = (f.get("ip.src"), f.get("tcp.srcport"), f.get("tcp.seq"))
+        if key in seen:
+            continue  # the same segment, seen on both ends of the node's veth pair
+        seen.add(key)
+        body_text = f.get("http.file_data", "")
+        if body_text and not body_text.lstrip().startswith(("{", "[")):
+            with contextlib.suppress(ValueError):
+                body_text = bytes.fromhex(body_text.replace(":", "")).decode()
+        try:
+            body = json.loads(body_text)
+        except ValueError:
+            body = None
+        patches.append({
+            "t": float(f.get("frame.time_epoch", 0)), "src": f.get("ip.src"), "dst": f.get("ip.dst"),
+            "uri": f.get("http.request.uri"), "body_text": body_text, "body": body,
+        })
+    # Capture times come from the node's clock, not the driver's, so PATCHes
+    # pair with connection calls by order only.
+    patches.sort(key=lambda x: x["t"])
+    to_rx = [x for x in patches if (x["uri"] or "").endswith(f"/single/receivers/{receiver_id}/staged")]
+    flow_to_label = {v: k for k, v in FLOW.items()}
+    rows, ok = [], len(to_rx) == len(calls)
+    for x, call in zip(to_rx, calls):
+        b = x["body"] or {}
+        legs = b.get("transport_params") or []
+        leg = legs[0] if legs else {}
+        row = {
+            "from_controller": x["src"] == controller_ip,
+            "flow": flow_to_label.get(leg.get("mxl_flow_id"), leg.get("mxl_flow_id")),
+            "expected_flow": call["to"],
+            "sender_id_matches": b.get("sender_id") == sender_ids(call["to"])["sender"],
+            "one_leg_mxl_only": len(legs) == 1 and set(leg) == {"mxl_domain_id", "mxl_flow_id"},
+            "domain": leg.get("mxl_domain_id"),
+            "master_enable": b.get("master_enable"),
+            "activation_mode": (b.get("activation") or {}).get("mode"),
+            "no_transport_file": "transport_file" not in b,
+            "no_sdp": "v=0" not in x["body_text"] and "application/sdp" not in x["body_text"],
+        }
+        row["pass"] = (
+            row["from_controller"] and row["flow"] == call["to"] and row["sender_id_matches"]
+            and row["one_leg_mxl_only"] and row["domain"] in ("auto", DOMAIN_ID)
+            and row["master_enable"] is True and row["activation_mode"] == "activate_immediate"
+            and row["no_transport_file"] and row["no_sdp"]
+        )
+        ok = ok and row["pass"]
+        rows.append(row)
+    (out / "captured-patches.json").write_text(json.dumps(patches, indent=2))
+    return {
+        "patches_to_receiver": len(to_rx),
+        "controller_calls": len(calls),
+        "first_patch_as_received": to_rx[0]["body"] if to_rx else None,
+        "rows": rows,
+        "pass": ok and bool(rows),
+    }
 
 
 def check_flows_readable(out: Path) -> dict:
@@ -343,6 +624,7 @@ def check_selection(step: dict, flow_id: str) -> dict:
     active = step["active"]["transport_params"][0]
     ok = (
         step["status"] in (200, 202)
+        and step.get("controller_ok", True)
         and staged["mxl_flow_id"] == flow_id
         and staged["mxl_domain_id"] in ("auto", DOMAIN_ID)
         and active["mxl_flow_id"] == flow_id
@@ -365,11 +647,12 @@ def check_non_root() -> dict:
     return {"nmos_node_uid": node_uid, "supervisor_uid": sup_uid, "preview_child_uids": child, "pod_security_context": spec, "pass": bool(ok)}
 
 
-def run_main(out: Path) -> dict:
-    obs: dict = {}
+def run_main(out: Path, switcher) -> dict:
+    obs: dict = {"switch_via": switcher.name}
     deploy_viewer(supervise=True)
     with contextlib.ExitStack() as stack:
         viewer = Viewer(stack)
+        switcher.attach(stack, viewer)
         registry = stack.enter_context(port_forward("svc/nmos-registry", 8010))
         node_id = viewer.node_id()
         obs["receiver_id"] = viewer.receiver_id
@@ -391,12 +674,13 @@ def run_main(out: Path) -> dict:
         sequence = ["A", "B"] + ["A", "B"] * EXTRA_PAIRS
         switches = []
         for i, want in enumerate(sequence):
-            log(f"switch {i + 1}/{len(sequence)}: PATCH flow {want}")
-            step = viewer.patch(FLOW[want])
+            log(f"switch {i + 1}/{len(sequence)}: {switcher.name} to flow {want}")
+            step = switcher.switch(viewer, want)
             sel = check_selection(step, FLOW[want])
             seen = wait_for_pattern(viewer, want, step["sent_at"], SWITCH_BOUND_S, out, f"{i + 1:02d}-{want.lower()}")
             switches.append({"to": want, "patch_sent_at": step["sent_at"], "http_status": step["status"],
-                             "selection": sel, "preview": seen})
+                             "selection": sel, "preview": seen,
+                             "controller": step.get("response") if switcher.name == "crosspoint" else None})
             if i == 1:
                 obs["patch_a"] = {**switches[0]["selection"], "http_status": switches[0]["http_status"]}
                 obs["patch_b"] = {**sel, "http_status": step["status"]}
@@ -444,6 +728,7 @@ def run_main(out: Path) -> dict:
             "supervisor_observed_after_patch_s": round(ev["observed_at"] - sw["patch_sent_at"], 3),
             "child_stop_s": round(ev["stopped_at"] - ev["observed_at"], 3),
             "selection_pass": sw["selection"]["pass"],
+            **({"controller": sw["controller"]} if sw["controller"] else {}),
         })
     obs["switches"] = rows
     shown = sorted(r["shown_after_patch_s"] for r in rows if r["shown_after_patch_s"] is not None)
@@ -459,14 +744,15 @@ def run_main(out: Path) -> dict:
     return obs
 
 
-def run_negative(out: Path) -> dict:
-    """Same PATCHes with the supervisor in static mode: /active moves, the picture must not."""
+def run_negative(out: Path, switcher) -> dict:
+    """Same switches with the supervisor in static mode: /active moves, the picture must not."""
     deploy_viewer(supervise=False)
     with contextlib.ExitStack() as stack:
         viewer = Viewer(stack)
+        switcher.attach(stack, viewer)
         start_a = wait_for_pattern(viewer, "A", time.time(), 30.0, out, "negative-start")
-        step_a = viewer.patch(FLOW["A"])
-        step_b = viewer.patch(FLOW["B"])
+        step_a = switcher.switch(viewer, "A")
+        step_b = switcher.switch(viewer, "B")
         sel_b = check_selection(step_b, FLOW["B"])
         result = wait_for_pattern(viewer, "B", step_b["sent_at"], SWITCH_BOUND_S, out, "negative-b")
         labels = sorted({s["label"] for s in result["samples"]})
@@ -482,17 +768,25 @@ def run_negative(out: Path) -> dict:
         }
 
 
-def run_nmos_testing(out: Path) -> dict:
-    """Second gate, warn mode: IS-05-01 and BCP-007-03-01 against the viewer node."""
+def run_nmos_testing(out: Path, sender_pods: tuple[str, ...] = ()) -> dict:
+    """Second gate, warn mode: IS-05-01 and BCP-007-03-01 against the viewer node.
+
+    The crosspoint slice also runs BCP-007-03-01 against a sender node, so the
+    sender-side cases that had no resources in #624 have one.
+    """
     deploy_viewer(supervise=True)
     ip = kubectl("-n", NS, "get", "pod", "viewer", "-o", "jsonpath={.status.podIP}").strip()
     suites = {
-        "IS-05-01": ["--host", ip, "--port", "8020", "--version", "v1.2"],
-        "BCP-007-03-01": ["--host", ip, ip, "--port", "8020", "8020", "--version", "v1.3", "v1.2"],
+        "IS-05-01": ("IS-05-01", ["--host", ip, "--port", "8020", "--version", "v1.2"], ip),
+        "BCP-007-03-01": ("BCP-007-03-01", ["--host", ip, ip, "--port", "8020", "8020", "--version", "v1.3", "v1.2"], ip),
     }
+    for pod in sender_pods:
+        pip = kubectl("-n", NS, "get", "pod", pod, "-o", "jsonpath={.status.podIP}").strip()
+        suites[f"BCP-007-03-01-{pod}"] = (
+            "BCP-007-03-01", ["--host", pip, pip, "--port", "8020", "8020", "--version", "v1.3", "v1.2"], pip)
     results = {"image": NMOS_TESTING_IMAGE, "suites": {}}
-    for suite, args in suites.items():
-        name = "nmos-testing-" + suite.lower()
+    for label, (suite, args, ip) in suites.items():
+        name = "nmos-testing-" + label.lower()
         cmd = " ".join(
             ["python3", "nmos-test.py", "suite", suite, *args, "--output", "/tmp/result.json"]
         )
@@ -508,19 +802,19 @@ def run_nmos_testing(out: Path) -> dict:
             time.sleep(5)
             phase = kubectl("-n", NS, "get", "pod", name, "-o", "jsonpath={.status.phase}", check=False).strip()
         # Saved results are shared as a reference, so drop the pod address.
-        logs = kubectl("-n", NS, "logs", name, check=False).replace(ip, "viewer-pod-ip")
+        logs = kubectl("-n", NS, "logs", name, check=False).replace(ip, "node-under-test-ip")
         head, _, body = logs.partition("-----JSON-----")
         (out / f"{name}.raw.txt").write_text(logs)
         try:
             data = json.loads(body)
         except ValueError:
-            results["suites"][suite] = {"error": "no JSON result", "pod_phase": phase, "head": head.strip()[-2000:]}
+            results["suites"][label] = {"error": "no JSON result", "pod_phase": phase, "head": head.strip()[-2000:]}
             continue
         (out / f"{name}.json").write_text(json.dumps(data, indent=2))
         counts: dict[str, int] = {}
         for r in data.get("results", []):
             counts[r["state"]] = counts.get(r["state"], 0) + 1
-        results["suites"][suite] = {
+        results["suites"][label] = {
             "counts": counts,
             "cases": [{"name": r["name"], "state": r["state"], "detail": r.get("detail", "")} for r in data.get("results", [])],
         }
@@ -531,6 +825,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--skip-nmos-testing", action="store_true")
+    parser.add_argument("--switch-via", choices=["patch", "crosspoint"], default="patch",
+                        help="patch: the driver PATCHes the receiver (#624); "
+                             "crosspoint: the controller's connection call does (#629)")
+    parser.add_argument("--controller-line", help="line in crosspoint/lines.json (default: its 'default')")
     args = parser.parse_args()
     out: Path = args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -542,16 +840,34 @@ def main() -> int:
          "os": n["status"]["nodeInfo"]["osImage"], "kernel": n["status"]["nodeInfo"]["kernelVersion"]}
         for n in nodes
     ]
+    report["switch_via"] = args.switch_via
+    if args.switch_via == "crosspoint":
+        line_name, line = load_line(args.controller_line)
+        report["controller_line"] = {"name": line_name, **line}
+        FLOW.update({k: sender_ids(k)["flow"] for k in "AB"})
     log("deploying registry and sources")
     deploy_base()
+    switcher = DirectPatch()
+    if args.switch_via == "crosspoint":
+        log(f"deploying fixture senders and the {line_name} controller {line['image']}")
+        password, facts = deploy_crosspoint(line)
+        report["controller"] = facts
+        kubectl("apply", "-f", str(HERE / "manifests" / "capture.yaml"))
+        kubectl("-n", NS, "wait", "--for=condition=Ready", "pod/capture", "--timeout=300s")
+        switcher = CrosspointSwitch(password)
     log("main run (supervised)")
-    report["main"] = run_main(out)
+    report["main"] = run_main(out, switcher)
     log("negative case (supervisor ignores /active)")
-    report["negative"] = run_negative(out)
+    report["negative"] = run_negative(out, switcher)
+    if args.switch_via == "crosspoint":
+        controller_ip = kubectl("-n", NS, "get", "pod", "crosspoint", "-o", "jsonpath={.status.podIP}").strip()
+        report["captured_patch"] = capture_patches(out, report["main"]["receiver_id"], controller_ip, switcher.calls)
+        (out / "crosspoint.log").write_text(kubectl("-n", NS, "logs", "crosspoint", check=False))
     if not args.skip_nmos_testing:
         log("nmos-testing (warn mode)")
         try:
-            report["nmos_testing"] = run_nmos_testing(out)
+            report["nmos_testing"] = run_nmos_testing(
+                out, ("sender-a",) if args.switch_via == "crosspoint" else ())
         except Exception as exc:  # noqa: BLE001 - warn mode never fails the run
             report["nmos_testing"] = {"error": str(exc)}
 
@@ -565,6 +881,11 @@ def main() -> int:
         "6_negative_case_cannot_satisfy_preview": report["negative"]["pass"],
         "7_node_and_supervisor_non_root": m["non_root"]["pass"],
     }
+    if args.switch_via == "crosspoint":
+        report["slice_acceptance"] = {
+            "controller_by_digest_non_root_senders_advertise_source_flows": report["controller"]["pass"],
+            "controller_patch_is_bcp_007_03_without_sdp_or_transport_file": report["captured_patch"]["pass"],
+        }
     report["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     (out / "observations.json").write_text(json.dumps(report, indent=2))
     for item, ok in report["acceptance"].items():
@@ -573,7 +894,10 @@ def main() -> int:
         f"interruption {m['switch']['interruption_s']} s (bound {SWITCH_BOUND_S} s)")
     for suite, res in report.get("nmos_testing", {}).get("suites", {}).items():
         log(f"nmos-testing {suite}: {res.get('counts', res)}")
-    return 0 if all(report["acceptance"].values()) else 1
+    for item, ok in report.get("slice_acceptance", {}).items():
+        log(f"{'PASS' if ok else 'FAIL'}  slice: {item}")
+    passed = all(report["acceptance"].values()) and all(report.get("slice_acceptance", {}).values())
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

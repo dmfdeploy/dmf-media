@@ -49,7 +49,11 @@ metadata:
   namespace: is05-ab
 spec:
   selector: {app.kubernetes.io/name: nmos-registry}
-  ports: [{name: http, port: 8010, targetPort: 8010}]
+  # 8011: the Query API WebSocket. The registry's subscription ws_href names
+  # the address the client used with this port; the crosspoint slice needs it.
+  ports:
+    - {name: http, port: 8010, targetPort: 8010}
+    - {name: query-ws, port: 8011, targetPort: 8011}
 ---
 apiVersion: v1
 kind: Pod

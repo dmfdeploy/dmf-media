@@ -13,6 +13,13 @@
   "receivers": [
     "xv"
   ],
+  "frame_rate": {
+    "numerator": 30000,
+    "denominator": 1001
+  },
+  "frame_width": 960,
+  "frame_height": 540,
+  "interlace_mode": "progressive",
   "mxl_video_type": "video/v210",
   "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
 }

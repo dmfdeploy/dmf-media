@@ -1,0 +1,26 @@
+# Crosspoint slice (dmfdeploy/dmfdeploy#629): records the IS-05 requests the
+# viewer's node actually receives, so the slice can show the controller's
+# PATCH as it arrived on the wire. FIXTURE-ONLY and the one pod in the fixture
+# that runs as root: packet capture needs CAP_NET_RAW in the node's network
+# namespace. It captures TCP to port 8020 (the nmos-cpp node APIs) on every
+# interface into a file; run.py reads the file with tshark after the run.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: capture
+  namespace: is05-ab
+  labels: {app.kubernetes.io/name: capture, app.kubernetes.io/part-of: is05-ab-fixture}
+spec:
+  hostNetwork: true
+  containers:
+    - name: tcpdump
+      # nicolaka/netshoot v0.14
+      image: docker.io/nicolaka/netshoot@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
+      command: [tcpdump, -i, any, -s, "0", -U, -n, -w, /capture/is05.pcap, tcp port 8020]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL], add: [NET_RAW, NET_ADMIN]}
+      volumeMounts:
+        - {name: capture, mountPath: /capture}
+  volumes:
+    - {name: capture, emptyDir: {}}

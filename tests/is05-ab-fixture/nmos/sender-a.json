@@ -1,0 +1,25 @@
+{
+  "logging_level": 0,
+  "http_port": 8020,
+  "server_address": "0.0.0.0",
+  "label": "is05-ab-fixture-sender-a",
+  "description": "Fixture-only NMOS sender node for test source A (one MXL video sender, no media)",
+  "seed_id": "f1c7a0e0-0000-4000-8000-00000000062a",
+  "registry_address": "nmos-registry.is05-ab.svc.cluster.local",
+  "registration_port": 8010,
+  "registry_version": "v1.3",
+  "highest_pri": 2147483647,
+  "senders": [
+    "xv"
+  ],
+  "receivers": [],
+  "frame_rate": {
+    "numerator": 30000,
+    "denominator": 1001
+  },
+  "frame_width": 960,
+  "frame_height": 540,
+  "interlace_mode": "progressive",
+  "mxl_video_type": "video/v210",
+  "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+}
