@@ -24,6 +24,8 @@
 #   SWITCH_VIA         patch (default, #624) or crosspoint (#629: the crosspoint
 #                      controller's connection call replaces the direct PATCH)
 #   CONTROLLER_LINE    with SWITCH_VIA=crosspoint: a line in crosspoint/lines.json
+#   CONTROLLER_FROM_CHART=1  with SWITCH_VIA=crosspoint: deploy the controller
+#                      from charts/nmos-crosspoint (needs helm)
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -74,6 +76,7 @@ args=(--out "${out}")
 [ "${SKIP_NMOS_TESTING:-0}" = "1" ] && args+=(--skip-nmos-testing)
 args+=(--switch-via "${SWITCH_VIA:-patch}")
 [ -n "${CONTROLLER_LINE:-}" ] && args+=(--controller-line "${CONTROLLER_LINE}")
+[ "${CONTROLLER_FROM_CHART:-0}" = "1" ] && args+=(--controller-from-chart)
 
 status=0
 "${venv}/bin/python" "${here}/run.py" "${args[@]}" 2>&1 | tee "${out}/run.log" || status=$?

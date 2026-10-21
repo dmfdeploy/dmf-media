@@ -53,6 +53,9 @@ FLOW = {
 SENDER_CONFIG = {"A": "sender-a.json", "B": "sender-b.json"}
 CROSSPOINT_PORT = 8080
 CROSSPOINT_USER = "is05-ab-slice"
+CHART = HERE.parent.parent / "charts" / "nmos-crosspoint"
+# The controller pod and login; deploy_crosspoint fills these in.
+CONTROLLER = {"pod": "crosspoint", "user": CROSSPOINT_USER}
 # Upper bound for "the preview shows the newly selected pattern", measured
 # from the PATCH. The observed interval is recorded next to it.
 SWITCH_BOUND_S = 10.0
@@ -346,7 +349,36 @@ def load_line(name: str | None) -> tuple[str, dict]:
     return name, line
 
 
-def deploy_crosspoint(line: dict) -> tuple[str, dict]:
+def deploy_chart_controller(line: dict, registry_ip: str, password: str) -> dict:
+    """Deploy the controller by rendering charts/nmos-crosspoint as it ships.
+
+    The chart's own digest, paths, user, init container and port are used.
+    Only the repository is pointed at the line's public source, because the
+    fixture has no Zot mirror; the digest must equal the line's, which is the
+    index dmf-infra playbook 630 mirrors with its digest preserved.
+    """
+    rendered = subprocess.run(
+        ["helm", "template", "nmos-crosspoint", str(CHART),
+         "--set", f"namespace={NS}", "--set", "createNamespace=false", "--set", "ingress.enabled=false",
+         "--set", f"registry.ip={registry_ip}", "--set", "registry.port=8010",
+         "--set", f"image.repository={line['image'].split('@', 1)[0]}",
+         "--set", f"auth.adminPasswordSha256={hashlib.sha256(password.encode()).hexdigest()}"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    rendered_images = sorted(set(
+        part.split("image:", 1)[1].strip().strip('"') for part in rendered.splitlines() if part.strip().startswith("image:")
+    ))
+    if rendered_images != [line["image"]]:
+        raise RuntimeError(f"chart renders {rendered_images}, but the line under test is {line['image']}")
+    kubectl("apply", "-f", "-", input_=rendered)
+    kubectl("-n", NS, "rollout", "status", "deployment/nmos-crosspoint", "--timeout=600s")
+    CONTROLLER["pod"] = kubectl("-n", NS, "get", "pod", "-l", "app=nmos-crosspoint",
+                                "-o", "jsonpath={.items[0].metadata.name}").strip()
+    CONTROLLER["user"] = "admin"
+    return {"from_chart": str(CHART.relative_to(HERE.parent.parent)), "rendered_image": rendered_images[0]}
+
+
+def deploy_crosspoint(line: dict, from_chart: bool = False) -> tuple[str, dict]:
     """Senders and the controller. Returns the fixture login's password and the checked facts."""
     registry_ip = kubectl(
         "-n", NS, "get", "svc", "nmos-registry", "-o", "jsonpath={.spec.clusterIP}"
@@ -378,15 +410,21 @@ def deploy_crosspoint(line: dict) -> tuple[str, dict]:
         "stringData": {"settings.json": json.dumps(settings, indent=2), "users.json": json.dumps(users, indent=2)},
     }))
     text = (HERE / "manifests" / "crosspoint.yaml").read_text().replace("__CONTROLLER_IMAGE__", line["image"])
+    if from_chart:
+        # The senders only; the chart brings the controller.
+        text = "\n---\n".join(d for d in text.split("\n---\n") if "\n  name: crosspoint\n" not in d)
     kubectl("apply", "-f", "-", input_=text)
-    for pod in ("sender-a", "sender-b", "crosspoint"):
+    for pod in ("sender-a", "sender-b"):
         kubectl("-n", NS, "wait", "--for=condition=Ready", f"pod/{pod}", "--timeout=600s")
-
     facts: dict = {"senders": {}}
-    pod = json.loads(kubectl("-n", NS, "get", "pod", "crosspoint", "-o", "json"))
+    if from_chart:
+        facts.update(deploy_chart_controller(line, registry_ip, password))
+    else:
+        kubectl("-n", NS, "wait", "--for=condition=Ready", "pod/crosspoint", "--timeout=600s")
+    pod = json.loads(kubectl("-n", NS, "get", "pod", CONTROLLER["pod"], "-o", "json"))
     facts["controller_image"] = pod["spec"]["containers"][0]["image"]
     facts["controller_image_id"] = pod["status"]["containerStatuses"][0]["imageID"]
-    facts["controller_uid"] = exec_pod("crosspoint", "id -u").strip()
+    facts["controller_uid"] = exec_pod(CONTROLLER["pod"], "id -u").strip()
     for k in "AB":
         want = sender_ids(k)
         with port_forward(f"pod/sender-{k.lower()}", 8020) as node:
@@ -452,12 +490,12 @@ class CrosspointSwitch:
         self.xp: Crosspoint | None = None
 
     def attach(self, stack: contextlib.ExitStack, viewer: "Viewer") -> None:
-        url = stack.enter_context(port_forward("pod/crosspoint", CROSSPOINT_PORT))
+        url = stack.enter_context(port_forward(f"pod/{CONTROLLER['pod']}", CROSSPOINT_PORT))
         viewer_ip = kubectl("-n", NS, "get", "pod", "viewer", "-o", "jsonpath={.status.podIP}").strip()
         deadline = time.time() + 120
         while True:
             try:
-                self.xp = Crosspoint(url, CROSSPOINT_USER, self.password)
+                self.xp = Crosspoint(url, CONTROLLER["user"], self.password)
                 break
             except (OSError, TimeoutError, ConnectionError):
                 if time.time() > deadline:
@@ -839,6 +877,9 @@ def main() -> int:
                         help="patch: the driver PATCHes the receiver (#624); "
                              "crosspoint: the controller's connection call does (#629)")
     parser.add_argument("--controller-line", help="line in crosspoint/lines.json (default: its 'default')")
+    parser.add_argument("--controller-from-chart", action="store_true",
+                        help="with --switch-via crosspoint: deploy the controller from charts/nmos-crosspoint "
+                             "(needs helm); the chart's digest must equal the line's")
     args = parser.parse_args()
     out: Path = args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -860,7 +901,7 @@ def main() -> int:
     switcher = DirectPatch()
     if args.switch_via == "crosspoint":
         log(f"deploying fixture senders and the {line_name} controller {line['image']}")
-        password, facts = deploy_crosspoint(line)
+        password, facts = deploy_crosspoint(line, from_chart=args.controller_from_chart)
         report["controller"] = facts
         kubectl("apply", "-f", str(HERE / "manifests" / "capture.yaml"))
         kubectl("-n", NS, "wait", "--for=condition=Ready", "pod/capture", "--timeout=600s")
@@ -870,9 +911,14 @@ def main() -> int:
     log("negative case (supervisor ignores /active)")
     report["negative"] = run_negative(out, switcher)
     if args.switch_via == "crosspoint":
-        controller_ip = kubectl("-n", NS, "get", "pod", "crosspoint", "-o", "jsonpath={.status.podIP}").strip()
+        controller_ip = kubectl("-n", NS, "get", "pod", CONTROLLER["pod"], "-o", "jsonpath={.status.podIP}").strip()
         report["captured_patch"] = capture_patches(out, report["main"]["receiver_id"], controller_ip, switcher.calls)
-        (out / "crosspoint.log").write_text(kubectl("-n", NS, "logs", "crosspoint", check=False))
+        (out / "crosspoint.log").write_text(kubectl("-n", NS, "logs", CONTROLLER["pod"], "-c", "crosspoint", check=False))
+        # Peak memory of the controller over the whole run, against the
+        # chart's limit (cgroup v2 memory.peak).
+        peak = kubectl("-n", NS, "exec", CONTROLLER["pod"], "-c", "crosspoint", "--",
+                       "cat", "/sys/fs/cgroup/memory.peak", check=False).strip()
+        report["controller"]["memory_peak_bytes"] = int(peak) if peak.isdigit() else None
     if not args.skip_nmos_testing:
         log("nmos-testing (warn mode)")
         try:
