@@ -1,0 +1,282 @@
+[
+  {
+    "t": 1792603657.941471,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603660.07518,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603662.316455,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603664.554397,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603666.796693,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603668.929549,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603671.171586,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603673.429206,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603675.779375,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603678.014206,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603680.262011,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603682.511104,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-1",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603728.452853,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-2",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"1dfa29d4-d6ae-5777-8837-d554a8a44625\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"74228f56-069f-5651-9a42-b64bfc10d6c4\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "1dfa29d4-d6ae-5777-8837-d554a8a44625",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "74228f56-069f-5651-9a42-b64bfc10d6c4",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  },
+  {
+    "t": 1792603728.47151,
+    "src": "controller-pod-ip",
+    "dst": "viewer-pod-ip-2",
+    "uri": "/x-nmos/connection/v1.2/single/receivers/3305b7d7-393a-57f1-bb48-c0964ceb653e/staged",
+    "body_text": "{\"sender_id\":\"7cf6656c-d39d-56b6-8938-735e23616f16\",\"master_enable\":true,\"activation\":{\"mode\":\"activate_immediate\"},\"transport_params\":[{\"mxl_flow_id\":\"a6405f34-eb84-5d00-82a1-62c84c702f62\",\"mxl_domain_id\":\"d0d0d0d0-0000-4000-8000-000000000001\"}]}",
+    "body": {
+      "sender_id": "7cf6656c-d39d-56b6-8938-735e23616f16",
+      "master_enable": true,
+      "activation": {
+        "mode": "activate_immediate"
+      },
+      "transport_params": [
+        {
+          "mxl_flow_id": "a6405f34-eb84-5d00-82a1-62c84c702f62",
+          "mxl_domain_id": "d0d0d0d0-0000-4000-8000-000000000001"
+        }
+      ]
+    }
+  }
+]
