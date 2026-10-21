@@ -8,7 +8,8 @@ Usage:
 A package directory (packages/<key>/) holds one Helm chart and one
 dmf-function.yaml. For every package the tool:
 
-  1. validates dmf-function.yaml against schemas/dmf-function.schema.json;
+  1. validates dmf-function.yaml against schemas/dmf-function.schema.json and
+     rejects duplicate port names (a schema cannot express uniqueness by name);
   2. checks the descriptor identity against Chart.yaml (key, version, chart
      name and version, chart apiVersion v2);
   3. validates the chart's values.yaml, and every values file named by a
@@ -228,6 +229,27 @@ def check_revocation(args, descriptors, report):
             report.add(where, "revocation", f"release {publisher}/{key} {version} is revoked")
 
 
+def check_unique_port_names(where, desc, report):
+    """Port names are unique in the descriptor.
+
+    JSON Schema uniqueItems compares whole port objects, so it cannot express
+    uniqueness by name. The schema states the contract; this check enforces it.
+    """
+    ports = desc.get("ports")
+    if not isinstance(ports, list):
+        return
+    first = {}
+    for index, port in enumerate(ports):
+        name = port.get("name") if isinstance(port, dict) else None
+        if not isinstance(name, str):
+            continue
+        if name in first:
+            report.add(where, "dmf-function.yaml/ports",
+                       f"ports: duplicate port name '{name}' (indexes {first[name]} and {index})")
+        else:
+            first[name] = index
+
+
 def check_package(pkg_dir, args, schema, report, descriptors):
     where = pkg_dir
     desc_path = os.path.join(pkg_dir, "dmf-function.yaml")
@@ -246,6 +268,8 @@ def check_package(pkg_dir, args, schema, report, descriptors):
 
     for p, msg in schema_errors(schema, desc):
         report.add(where, f"dmf-function.yaml{p}", msg)
+
+    check_unique_port_names(where, desc, report)
 
     meta = desc.get("metadata") if isinstance(desc.get("metadata"), dict) else {}
     key, version = meta.get("key"), meta.get("version")
