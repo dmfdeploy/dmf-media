@@ -1,0 +1,108 @@
+# Conformance cases for bin/dmf-function-conform.
+# Each bad case lists the good twin it was derived from. The test run asserts
+# that every good case exits 0 and every bad case exits 1 with the expected text.
+# Paths are relative to tests/conformance/fixtures. `args` are extra tool flags.
+good:
+  - name: video-sender
+    dirs: [good/video-sender]
+  - name: mxl-view
+    dirs: [good/mxl-view]
+  - name: mxl-fixed-singleton
+    dirs: [good/mxl-fixed-singleton]
+  - name: extension-benign
+    dirs: [good/extension-benign]
+  - name: reserved-project-publisher
+    dirs: [good/reserved-project-publisher]
+  - name: distinct-keys
+    dirs: [good/video-sender, good/second-sender]
+  - name: revocation-fresh
+    dirs: [good/video-sender]
+    args: [--revocation, good/revocation-fresh.yaml, --require-revocation, --now, "2026-10-21T12:00:00Z"]
+bad:
+  - name: missing-required-field
+    twin: video-sender
+    dirs: [bad/missing-required-field]
+    expect: "'licence' is a required property"
+  - name: wrong-type
+    twin: video-sender
+    dirs: [bad/wrong-type]
+    expect: "/metadata/summary: 5 is not of type 'string'"
+  - name: unknown-field
+    twin: video-sender
+    dirs: [bad/unknown-field]
+    expect: "'colour' was unexpected"
+  - name: bad-port-direction
+    twin: video-sender
+    dirs: [bad/bad-port-direction]
+    expect: "/ports/0/direction: 'sideways' is not one of"
+  - name: bad-format-geometry
+    twin: video-sender
+    dirs: [bad/bad-format-geometry]
+    expect: "/ports/0/geometry"
+  - name: invalid-version
+    twin: video-sender
+    dirs: [bad/invalid-version]
+    expect: "/metadata/version"
+  - name: self-asserted-launcher-mode
+    twin: video-sender
+    dirs: [bad/self-asserted-launcher-mode]
+    expect: "'launcher' is self-asserted"
+  - name: self-asserted-source-class
+    twin: video-sender
+    dirs: [bad/self-asserted-source-class]
+    expect: "'source_class' is self-asserted"
+  - name: missing-provenance
+    twin: video-sender
+    dirs: [bad/missing-provenance]
+    expect: "'origin' is a required property"
+  - name: image-by-tag
+    twin: video-sender
+    dirs: [bad/image-by-tag]
+    expect: "/artifacts/images/0/digest"
+  - name: identity-mismatch
+    twin: video-sender
+    dirs: [bad/identity-mismatch]
+    expect: "differs from Chart.yaml version"
+  - name: reserved-namespace
+    twin: reserved-project-publisher
+    dirs: [bad/reserved-namespace]
+    expect: "reserved for the project source"
+  - name: extension-weakens-policy
+    twin: extension-benign
+    dirs: [bad/extension-weakens-policy]
+    expect: "/extensions/example.com/tuning"
+  - name: mxl-uuid-not-fixed-singleton
+    twin: mxl-view
+    dirs: [bad/mxl-uuid-not-fixed-singleton]
+    expect: "/ports/0/mxl/binding_policy"
+  - name: mxl-missing-binding
+    twin: mxl-view
+    dirs: [bad/mxl-missing-binding]
+    expect: "'binding_policy' is a required property"
+  - name: bespoke-launcher
+    twin: video-sender
+    dirs: [bad/bespoke-launcher]
+    expect: "package contains launcher code"
+  - name: values-unsafe
+    twin: video-sender
+    dirs: [bad/values-unsafe]
+    expect: "values.yaml"
+  - name: package-key-collision
+    twin: distinct-keys
+    dirs: [bad/key-collision-a, bad/key-collision-b]
+    expect: "package-key collision"
+  - name: revocation-missing
+    twin: revocation-fresh
+    dirs: [good/video-sender]
+    args: [--require-revocation]
+    expect: "revocation state is missing"
+  - name: revocation-stale
+    twin: revocation-fresh
+    dirs: [good/video-sender]
+    args: [--revocation, bad/revocation-stale.yaml, --require-revocation, --now, "2026-10-21T12:00:00Z"]
+    expect: "revocation list is stale"
+  - name: revocation-revoked
+    twin: revocation-fresh
+    dirs: [good/video-sender]
+    args: [--revocation, bad/revocation-revoked.yaml, --now, "2026-10-21T12:00:00Z"]
+    expect: "is revoked"

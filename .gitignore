@@ -76,3 +76,4 @@ vault_pass
 .netrc
 secret_id
 secret_id.*
+__pycache__/
