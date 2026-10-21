@@ -19,7 +19,7 @@ deletes the cluster. It exits 0 only when every acceptance item passes. A full
 run takes about eight minutes on a 4-CPU ARM64 Docker host, most of it in the
 nmos-testing suites.
 
-You need Docker, kind, kubectl and Python 3.10 or later. The driver installs
+You need Docker, kind, kubectl and Python 3.11 or later. The driver installs
 Pillow into a temporary virtual environment. Set `KEEP_CLUSTER=1` to keep the
 cluster afterwards, or `SKIP_NMOS_TESTING=1` to skip the second gate.
 

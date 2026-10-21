@@ -8,7 +8,7 @@
 # the node, runs run.py, and deletes the cluster again. Observations land in
 # OUT_DIR (default: tests/is05-ab-fixture/out/<UTC timestamp>).
 #
-# Needs: docker, kind, kubectl, python3 (3.10 or later), network access to
+# Needs: docker, kind, kubectl, python3 (3.11 or later), network access to
 # pull the pinned images and Pillow.
 #
 # Env:
