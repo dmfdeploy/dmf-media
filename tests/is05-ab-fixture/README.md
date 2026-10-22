@@ -157,8 +157,18 @@ viewer's node received (`captured-patches.json`, pod addresses replaced by
 names), the nmos-testing results for the viewer and `sender-a`, and preview
 frames. `check_pins.py` compares `lines.json` against these files.
 
+`reference/crosspoint-gemini/sbom-arm64.spdx.json.gz` is an SPDX 2.3 SBOM of
+the pinned controller's arm64 image, `sha256:27d9dfbb…`, the arm64 manifest in
+the index that `lines.json` pins. The file records the tool and the time it was
+generated. Read it with `gunzip -c`.
+
 ## Notes
 
+- The viewer in `nmos/node.json` advertises the format of the flows it reads
+  (960x540, 30000/1001, progressive), because the pinned controller checks a
+  receiver's BCP-004 caps before it connects a sender. The observations in
+  `reference/` were recorded with the nmos-cpp default caps (1920x1080, 25 fps,
+  interlaced). They don't include caps, and they weren't re-recorded.
 - The node reaches the registry by its Service ClusterIP. On the local kind
   cluster each cluster DNS lookup took 3 to 6 s, longer than the heartbeat
   timeout, and the node lost its registration.
