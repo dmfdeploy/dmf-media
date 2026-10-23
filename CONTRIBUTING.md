@@ -2,13 +2,13 @@
 
 Media-domain catalog metadata and (future) Layer 5 roles + Helm charts.
 
-This repo is part of the **DMF Platform**. GitHub is the canonical home and the
+This repo is part of the **dmfdeploy platform**. GitHub is the canonical home and the
 single source of truth: all changes land via **Pull Request** against `main`.
 
 ## Quick start
 
 1. Read the platform overview in the [dmfdeploy/dmfdeploy](https://github.com/dmfdeploy/dmfdeploy) umbrella repo
-   (`docs/architecture/DMF Platform Plan.md`, the long-term blueprint; current
+   (`docs/architecture/dmfdeploy-platform-plan.md`, the long-term blueprint; current
    plans are listed in `docs/plans/INDEX.md`) and apply any relevant ADRs from
    `docs/decisions/INDEX.md`.
 2. Fork or branch, make your change on a topic branch, open a PR against `main`.
