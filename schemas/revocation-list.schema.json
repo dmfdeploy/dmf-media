@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dmfdeploy.invalid/revocation-list/v1.json",
+  "title": "Revocation list snapshot",
+  "description": "Snapshot of revoked package releases, as published by the catalog-source index. The conformance tool reads it only to check freshness and that a release is not revoked. A package never carries this data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated_at", "revoked"],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "UTC time the snapshot was produced, for example 2026-10-21T08:00:00Z."
+    },
+    "revoked": {
+      "type": "array",
+      "description": "Revoked releases. May be empty.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["publisher", "key", "version"],
+        "properties": {
+          "publisher": { "type": "string", "minLength": 1, "description": "Publisher handle." },
+          "key": { "type": "string", "minLength": 1, "description": "Package key." },
+          "version": { "type": "string", "minLength": 1, "description": "Revoked release version." },
+          "reason": { "type": "string", "description": "Why the release was revoked." }
+        }
+      }
+    }
+  }
+}

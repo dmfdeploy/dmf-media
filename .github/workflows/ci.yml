@@ -57,6 +57,40 @@ jobs:
           python3 -m pip install --user pyyaml
           python3 bin/check-catalog-demand.py
 
+  conformance:
+    # Media Function package conformance (umbrella issue dmfdeploy/dmfdeploy#634).
+    # No path filter on purpose: a workflow- or job-level filter would leave the
+    # check unreported on a diff that touches no package, and a required check
+    # would then wait forever. The job is cheap, so it always runs.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814  # v4.2.0
+      - name: Install conformance tool dependencies
+        run: python3 -m pip install --user pyyaml==6.0.3 jsonschema==4.26.0
+      - name: Conformance tool tests (good and bad fixtures)
+        run: python3 -m unittest discover -s tests/conformance -v
+      - name: Chart values schema and helm lint --strict (charts with a values schema)
+        run: |
+          set -eu
+          for chart in charts/*/; do
+            if [ -f "${chart}values.schema.json" ]; then
+              echo "=== chart-only: $chart ==="
+              python3 bin/dmf-function-conform --chart-only "$chart"
+            fi
+          done
+      - name: Conformance of every package
+        run: |
+          set -eu
+          if [ -d packages ] && [ -n "$(ls -A packages)" ]; then
+            python3 bin/dmf-function-conform packages/*/
+          else
+            echo "SKIP: no packages yet"
+          fi
+
   working-model:
     # Working-model block sync (umbrella issue dmfdeploy/dmfdeploy#32): the
     # agent-context block in CLAUDE.md/AGENTS.md/QWEN.md must stay byte-identical

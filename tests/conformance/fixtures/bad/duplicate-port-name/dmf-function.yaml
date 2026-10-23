@@ -1,0 +1,85 @@
+apiVersion: dmf.io/v1
+kind: MediaFunction
+metadata:
+  key: example-sender
+  version: 1.2.0
+  display_name: Example Test Pattern Sender
+  summary: Sends a test pattern as one NMOS video sender.
+publisher:
+  name: example-publisher
+  uri: https://example.com/publisher
+origin:
+  commit_sha: 0123456789abcdef0123456789abcdef01234567
+  provenance_uri: https://example.com/builds/1
+licence:
+  identifier: Apache-2.0
+  enforcement: declared-unenforced
+ebu:
+  layer: 5
+  media_function_type: source
+  lifecycle_owner: provision
+artifacts:
+  chart:
+    name: example-sender
+    version: 1.2.0
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  images:
+  - name: registry.example.com/media/example-sender
+    digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    architectures:
+    - amd64
+    - arm64
+resources:
+  requests:
+    small:
+      values_file: ci/small-values.yaml
+      cpu: 100m
+      memory: 128Mi
+ports:
+- name: video-out
+  direction: out
+  control: nmos
+  transport: urn:x-nmos:transport:rtp.mcast
+  format: urn:x-nmos:format:video
+  geometry:
+    frame_width: 1920
+    frame_height: 1080
+    frame_rate:
+      numerator: 30000
+      denominator: 1001
+- name: video-out
+  direction: in
+  control: nmos
+  transport: urn:x-nmos:transport:rtp.mcast
+  format: urn:x-nmos:format:video
+  geometry:
+    frame_width: 1280
+    frame_height: 720
+    frame_rate:
+      numerator: 25
+      denominator: 1
+nmos:
+  nodes:
+  - roles:
+    - sender
+    is04:
+      version: v1.3
+    is05:
+      version: v1.1
+provision:
+  namespace: media
+health:
+  kind: http
+  port: 8080
+  path: /healthz
+  expect_status: 200
+monitoring:
+  scrape:
+  - port: 9100
+    path: /metrics
+  probe: []
+finalise:
+  data: delete
+dependencies: []
+provides: []
+consumes: []

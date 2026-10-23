@@ -1,0 +1,662 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dmfdeploy.invalid/dmf-function/v1.json",
+  "title": "dmf-function.yaml (Media Function descriptor, dmf.io/v1)",
+  "description": "Descriptor that sits next to an ordinary Helm chart in packages/<key>/. It declares what a media function is, what it ships, which ports it exposes and how it behaves. It never declares trust: source class, launcher privilege, promotion state and revocation come from the catalog-source index and the ingestion record, so this schema rejects them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "publisher",
+    "origin",
+    "licence",
+    "ebu",
+    "artifacts",
+    "resources",
+    "ports",
+    "nmos",
+    "provision",
+    "health",
+    "monitoring",
+    "finalise",
+    "dependencies",
+    "provides",
+    "consumes"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "dmf.io/v1",
+      "description": "Descriptor schema version. Only dmf.io/v1 exists."
+    },
+    "kind": {
+      "const": "MediaFunction",
+      "description": "Document kind. Always MediaFunction."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Identity of the function. key and version must equal name and version in Chart.yaml.",
+      "additionalProperties": false,
+      "required": ["key", "version", "display_name", "summary"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$",
+          "description": "Package key: a DNS-label-style handle, unique per publisher. Threads through NetBox tags, job templates and console button ids. Must equal Chart.yaml name. The prefixes dmf- and project- are reserved for the project source."
+        },
+        "version": {
+          "$ref": "#/$defs/semver",
+          "description": "Release version of the package. Must equal Chart.yaml version."
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Name an operator sees in the console."
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400,
+          "description": "One or two sentences that say what the function does."
+        }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "description": "Who publishes the package. The claim is checked again at ingestion; it does not grant any trust by itself.",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$",
+          "description": "Publisher handle. Package keys are unique per publisher."
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Public page of the publisher."
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "description": "Where the package source came from. Required so a reader can trace every release to a commit.",
+      "additionalProperties": false,
+      "required": ["commit_sha", "provenance_uri"],
+      "properties": {
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Full 40-character commit hash of the package source."
+        },
+        "provenance_uri": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "description": "HTTPS link to the build or attestation record for this release."
+        }
+      }
+    },
+    "licence": {
+      "type": "object",
+      "description": "Licence declaration. It may state that the licence is not enforced by the platform, but it may never be absent.",
+      "additionalProperties": false,
+      "required": ["identifier", "enforcement"],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "pattern": "^(LicenseRef-[A-Za-z0-9.-]+|[A-Za-z0-9.+-]+)$",
+          "description": "SPDX licence identifier, or a LicenseRef- identifier for a custom licence."
+        },
+        "enforcement": {
+          "enum": ["declared-unenforced", "enforced"],
+          "description": "declared-unenforced: the platform records the licence but does not check it. enforced: a licence mechanism gates use."
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Link to the licence text or terms."
+        }
+      }
+    },
+    "ebu": {
+      "type": "object",
+      "description": "EBU Dynamic Media Facility classification (ADR-0046 enums). Set exactly one of vertical or media_function_type.",
+      "additionalProperties": false,
+      "required": ["layer", "lifecycle_owner"],
+      "oneOf": [
+        { "required": ["vertical"], "not": { "required": ["media_function_type"] } },
+        { "required": ["media_function_type"], "not": { "required": ["vertical"] } }
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "EBU layer number."
+        },
+        "lifecycle_owner": {
+          "enum": ["provision", "configure"],
+          "description": "Which lifecycle wrapper drives launch."
+        },
+        "vertical": {
+          "enum": ["orchestration", "control", "monitoring", "security"],
+          "description": "Class of a support or control function."
+        },
+        "media_function_type": {
+          "enum": ["source", "view", "processor", "mixer", "output", "render", "gfx", "multiviewer"],
+          "description": "Class of a media-processing function."
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "The release closure: the chart and every workload image, each pinned by digest.",
+      "additionalProperties": false,
+      "required": ["chart", "images"],
+      "properties": {
+        "chart": {
+          "type": "object",
+          "description": "The OCI Helm chart of this release.",
+          "additionalProperties": false,
+          "required": ["name", "version", "digest"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1, "description": "Chart name. Must equal Chart.yaml name." },
+            "version": { "$ref": "#/$defs/semver", "description": "Chart version. Must equal Chart.yaml version." },
+            "digest": { "$ref": "#/$defs/digest", "description": "Digest of the chart in the OCI registry." }
+          }
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Every workload image the chart renders, including init containers.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "digest", "architectures"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9.-]+(:[0-9]+)?(/[a-z0-9._-]+)+$",
+                "description": "Image repository path with registry host and no tag or digest."
+              },
+              "digest": { "$ref": "#/$defs/digest", "description": "Digest of the image. A tag alone is not accepted." },
+              "architectures": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "enum": ["amd64", "arm64"] },
+                "description": "CPU architectures the image manifest covers."
+              }
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource declaration checked against named render fixtures.",
+      "additionalProperties": false,
+      "required": ["requests"],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Aggregate CPU and memory requests of the rendered release, keyed by the name of a canonical render fixture.",
+          "propertyNames": { "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["values_file", "cpu", "memory"],
+            "properties": {
+              "values_file": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$",
+                "description": "Values file of the fixture, relative to the chart directory."
+              },
+              "cpu": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*m$",
+                "description": "CPU requests in whole millicores, for example 225m."
+              },
+              "memory": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*(Ki|Mi|Gi)$",
+                "description": "Memory requests in whole binary units, for example 128Mi."
+              }
+            }
+          }
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "description": "All media ports in one list. A port is one NMOS sender or receiver.",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/port" }
+    },
+    "nmos": {
+      "type": "object",
+      "description": "NMOS node declarations.",
+      "additionalProperties": false,
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "description": "NMOS nodes the function runs. The list may be empty.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["roles", "is04", "is05"],
+            "properties": {
+              "roles": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "enum": ["sender", "receiver", "registry", "controller"] },
+                "description": "What the node does in an NMOS system."
+              },
+              "is04": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": { "type": "string", "pattern": "^v1\\.[0-9]+$", "description": "IS-04 version the node implements." }
+                },
+                "description": "IS-04 declaration."
+              },
+              "is05": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": { "type": "string", "pattern": "^v1\\.[0-9]+$", "description": "IS-05 version the node implements." }
+                },
+                "description": "IS-05 declaration."
+              },
+              "registry_dependency": {
+                "enum": ["required", "optional"],
+                "description": "Whether the node needs an IS-04 registry. Omit when it does not."
+              }
+            }
+          }
+        }
+      }
+    },
+    "provision": {
+      "type": "object",
+      "description": "Where the release installs. Declarative only: a package carries no launcher code.",
+      "additionalProperties": false,
+      "required": ["namespace"],
+      "properties": {
+        "namespace": { "$ref": "#/$defs/dnsLabel", "description": "Kubernetes namespace of the Helm release." },
+        "create_namespace": { "type": "boolean", "description": "Whether the release creates the namespace." }
+      }
+    },
+    "health": {
+      "description": "How to tell that the function is healthy.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "expect_status"],
+          "properties": {
+            "kind": { "const": "http", "description": "HTTP probe." },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Container port to probe." },
+            "path": { "type": "string", "pattern": "^/", "description": "Request path." },
+            "expect_status": { "type": "integer", "minimum": 100, "maximum": 599, "description": "Expected HTTP status." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "container", "expect_pattern"],
+          "properties": {
+            "kind": { "const": "log", "description": "Log probe." },
+            "container": { "type": "string", "minLength": 1, "description": "Container whose log is read." },
+            "expect_pattern": { "type": "string", "minLength": 1, "description": "Text that must appear in the log." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "port"],
+          "properties": {
+            "kind": { "const": "tcp", "description": "TCP connect probe." },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Container port to connect to." }
+          }
+        }
+      ]
+    },
+    "monitoring": {
+      "type": "object",
+      "description": "Monitoring intent (ADR-0038). Both lists may be empty.",
+      "additionalProperties": false,
+      "properties": {
+        "scrape": {
+          "type": "array",
+          "description": "Prometheus scrape targets.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["port", "path"],
+            "properties": {
+              "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Metrics port." },
+              "path": { "type": "string", "pattern": "^/", "description": "Metrics path." }
+            }
+          }
+        },
+        "probe": {
+          "type": "array",
+          "description": "Blackbox probe targets.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "port"],
+            "properties": {
+              "kind": { "enum": ["http", "tcp"], "description": "Probe type." },
+              "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Port to probe." },
+              "path": { "type": "string", "pattern": "^/", "description": "Request path for an http probe." }
+            }
+          }
+        }
+      }
+    },
+    "finalise": {
+      "type": "object",
+      "description": "What teardown does to data. Declarative only.",
+      "additionalProperties": false,
+      "required": ["data"],
+      "properties": {
+        "data": { "enum": ["delete", "retain"], "description": "Whether teardown deletes or keeps persistent data." }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Other functions this one needs. The list may be empty.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key"],
+        "properties": {
+          "key": { "$ref": "#/$defs/dnsLabel", "description": "Package key of the required function." },
+          "version_range": { "type": "string", "minLength": 1, "description": "Semver range the required function must satisfy." }
+        }
+      }
+    },
+    "provides": {
+      "type": "array",
+      "description": "Typed references to functions or control APIs this package offers. The list may be empty.",
+      "items": { "$ref": "#/$defs/typedRef" }
+    },
+    "consumes": {
+      "type": "array",
+      "description": "Typed references to functions or control APIs this package needs from others. The list may be empty.",
+      "items": { "$ref": "#/$defs/typedRef" }
+    },
+    "ingress": {
+      "type": "object",
+      "description": "Optional. How the function exposes a web interface.",
+      "additionalProperties": false,
+      "required": ["exposure"],
+      "properties": {
+        "exposure": { "enum": ["private", "public"], "description": "Network lane of the interface." },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Service port behind the ingress." }
+      }
+    },
+    "topology_ref": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$",
+      "description": "Optional. File name of the topology parameters contract that this function deploys with."
+    },
+    "placement": {
+      "type": "object",
+      "description": "Optional. Placement hints. The hints inform scheduling; they do not grant host access.",
+      "additionalProperties": false,
+      "properties": {
+        "architectures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["amd64", "arm64"] },
+          "description": "Architectures the function supports."
+        },
+        "host_capabilities": {
+          "type": "object",
+          "description": "Host features the function benefits from, grouped by area.",
+          "additionalProperties": false,
+          "properties": {
+            "cpu": { "$ref": "#/$defs/stringList", "description": "CPU features." },
+            "network": { "$ref": "#/$defs/stringList", "description": "Network features." },
+            "gpu": { "$ref": "#/$defs/stringList", "description": "GPU features." },
+            "memory": { "$ref": "#/$defs/stringList", "description": "Memory features." },
+            "storage": { "$ref": "#/$defs/stringList", "description": "Storage features." }
+          }
+        }
+      }
+    },
+    "clock_quality": {
+      "type": "object",
+      "description": "Optional. Time reference the function needs.",
+      "additionalProperties": false,
+      "required": ["reference"],
+      "properties": {
+        "reference": { "enum": ["ptp", "ntp", "system"], "description": "Kind of clock." },
+        "max_offset_ns": { "type": "integer", "minimum": 1, "description": "Largest accepted offset in nanoseconds." }
+      }
+    },
+    "documentation": {
+      "type": "array",
+      "description": "Optional. Links to documentation.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "uri"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "description": "Link text." },
+          "uri": { "type": "string", "format": "uri", "pattern": "^https://", "description": "HTTPS link." }
+        }
+      }
+    },
+    "resourceManifest": {
+      "type": "object",
+      "description": "Optional. Reference to an AMWA IN-003 resource manifest generated from this descriptor. Never write it by hand. The conformance run checks it against the descriptor.",
+      "additionalProperties": false,
+      "required": ["path", "digest"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$",
+          "description": "Path of the generated file, relative to the package."
+        },
+        "digest": { "$ref": "#/$defs/digest", "description": "Digest of the generated file." }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Optional. Namespaced, versioned extension blocks. An extension adds data; it cannot weaken or override generic policy, so keys that name policy, privilege, trust or launcher settings are rejected at any depth.",
+      "propertyNames": { "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?/[a-z0-9]([a-z0-9-]*[a-z0-9])?$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["version"],
+        "properties": {
+          "version": { "$ref": "#/$defs/semver", "description": "Version of the extension block." }
+        },
+        "$ref": "#/$defs/extensionBody"
+      }
+    },
+    "launcher": { "not": {}, "description": "Forbidden. Launcher mode and privilege come from the catalog-source index; a package never declares them." },
+    "source_class": { "not": {}, "description": "Forbidden. Source class is derived from the catalog-source index." },
+    "promotion": { "not": {}, "description": "Forbidden. Promotion state belongs to the ingestion record." },
+    "trust": { "not": {}, "description": "Forbidden. Trust state belongs to the index and the ingestion record." },
+    "revocation": { "not": {}, "description": "Forbidden. Revocation state belongs to the index." }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "dnsLabel": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "typedRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$", "description": "Reference type, for example nmos-registry or control-api." },
+        "name": { "$ref": "#/$defs/dnsLabel", "description": "Name of the reference within its type." },
+        "version": { "type": "string", "minLength": 1, "description": "Version or semver range of the reference." }
+      }
+    },
+    "extensionBody": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "launcher", "launcher_mode", "source_class", "promotion", "trust", "revocation",
+            "policy", "generic_policy", "privileged", "host_network", "hostNetwork",
+            "host_pid", "hostPID", "security_context", "securityContext", "capabilities",
+            "allow_privilege_escalation", "allowPrivilegeEscalation"
+          ]
+        }
+      },
+      "additionalProperties": { "$ref": "#/$defs/extensionValue" }
+    },
+    "extensionValue": {
+      "allOf": [
+        { "if": { "type": "object" }, "then": { "$ref": "#/$defs/extensionBody" } },
+        { "if": { "type": "array" }, "then": { "items": { "$ref": "#/$defs/extensionValue" } } }
+      ]
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "direction", "control", "transport", "format"],
+      "properties": {
+        "name": { "$ref": "#/$defs/dnsLabel", "description": "Port name, unique in the descriptor." },
+        "direction": { "enum": ["in", "out"], "description": "in: the function receives. out: the function sends." },
+        "control": { "enum": ["nmos", "static"], "description": "nmos: connected through IS-05. static: wired by configuration." },
+        "transport": {
+          "type": "string",
+          "pattern": "^urn:x-nmos:transport:[a-z0-9._-]+(:[a-z0-9._-]+)*$",
+          "description": "NMOS Parameter Register transport URN, for example urn:x-nmos:transport:mxl."
+        },
+        "format": {
+          "enum": [
+            "urn:x-nmos:format:video",
+            "urn:x-nmos:format:audio",
+            "urn:x-nmos:format:data",
+            "urn:x-nmos:format:mux"
+          ],
+          "description": "NMOS Parameter Register format URN."
+        },
+        "geometry": {
+          "type": "object",
+          "description": "Optional. Format geometry. Field names follow the AMWA IN-003 names where a counterpart exists. Video accepts frame_width, frame_height and frame_rate; audio accepts sample_rate and channel_count; data and mux accept none.",
+          "properties": {
+            "frame_width": { "type": "integer", "minimum": 1, "maximum": 16384, "description": "Video frame width in pixels." },
+            "frame_height": { "type": "integer", "minimum": 1, "maximum": 16384, "description": "Video frame height in pixels." },
+            "frame_rate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["numerator", "denominator"],
+              "properties": {
+                "numerator": { "type": "integer", "minimum": 1, "description": "Frames per denominator seconds." },
+                "denominator": { "type": "integer", "minimum": 1, "description": "Seconds, usually 1 or 1001." }
+              },
+              "description": "Video frame rate as a rational number."
+            },
+            "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 384000, "description": "Audio sample rate in hertz." },
+            "channel_count": { "type": "integer", "minimum": 1, "maximum": 256, "description": "Number of audio channels." }
+          }
+        },
+        "caps": {
+          "type": "object",
+          "description": "Optional, receivers only. Receiver capabilities in the BCP-004-01 shape.",
+          "additionalProperties": false,
+          "required": ["constraint_sets"],
+          "properties": {
+            "constraint_sets": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Alternative constraint sets. A stream must satisfy at least one.",
+              "items": {
+                "type": "object",
+                "patternProperties": {
+                  "^urn:x-nmos:cap:[a-z0-9:._-]+$": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "enum": { "type": "array", "minItems": 1 },
+                      "minimum": { "type": ["number", "object"] },
+                      "maximum": { "type": ["number", "object"] }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "mxl": {
+          "type": "object",
+          "description": "Required when transport is urn:x-nmos:transport:mxl. Declares how the port gets its flow identity. Resolved flow IDs live in the instance overlay, not the package.",
+          "additionalProperties": false,
+          "required": ["role", "binding_policy"],
+          "properties": {
+            "role": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", "description": "Role this port plays in the MXL domain." },
+            "binding_policy": {
+              "enum": ["runtime-assigned", "topology-supplied", "fixed-singleton"],
+              "description": "runtime-assigned: the platform picks the flow ID at deploy time. topology-supplied: the topology gives it. fixed-singleton: the package fixes one ID, which allows one instance per MXL domain."
+            },
+            "flow_id": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "description": "Concrete flow UUID. Allowed only with binding_policy fixed-singleton, and required there."
+            }
+          },
+          "if": { "required": ["flow_id"] },
+          "then": { "properties": { "binding_policy": { "const": "fixed-singleton" } } },
+          "else": { "properties": { "binding_policy": { "not": { "const": "fixed-singleton" } } } }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "transport": { "const": "urn:x-nmos:transport:mxl" } }, "required": ["transport"] },
+          "then": { "required": ["mxl"] },
+          "else": { "not": { "required": ["mxl"] } }
+        },
+        {
+          "if": { "properties": { "direction": { "const": "out" } }, "required": ["direction"] },
+          "then": { "not": { "required": ["caps"] } }
+        },
+        {
+          "if": { "properties": { "format": { "const": "urn:x-nmos:format:video" } }, "required": ["format"] },
+          "then": { "properties": { "geometry": { "propertyNames": { "enum": ["frame_width", "frame_height", "frame_rate"] } } } }
+        },
+        {
+          "if": { "properties": { "format": { "const": "urn:x-nmos:format:audio" } }, "required": ["format"] },
+          "then": { "properties": { "geometry": { "propertyNames": { "enum": ["sample_rate", "channel_count"] } } } }
+        },
+        {
+          "if": { "properties": { "format": { "enum": ["urn:x-nmos:format:data", "urn:x-nmos:format:mux"] } }, "required": ["format"] },
+          "then": { "not": { "required": ["geometry"] } }
+        }
+      ]
+    }
+  }
+}

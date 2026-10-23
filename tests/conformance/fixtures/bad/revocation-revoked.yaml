@@ -1,0 +1,6 @@
+generated_at: "2026-10-21T08:00:00Z"
+revoked:
+  - publisher: example-publisher
+    key: example-sender
+    version: "1.2.0"
+    reason: withdrawn

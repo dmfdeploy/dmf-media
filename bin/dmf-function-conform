@@ -1,0 +1,391 @@
+#!/usr/bin/env python3
+"""dmf-function-conform - conformance tool for Media Function packages.
+
+Usage:
+    bin/dmf-function-conform [options] PACKAGE_DIR [PACKAGE_DIR ...]
+    bin/dmf-function-conform [options] --chart-only CHART_DIR [CHART_DIR ...]
+
+A package directory (packages/<key>/) holds one Helm chart and one
+dmf-function.yaml. For every package the tool:
+
+  1. validates dmf-function.yaml against schemas/dmf-function.schema.json and
+     rejects duplicate port names (a schema cannot express uniqueness by name);
+  2. checks the descriptor identity against Chart.yaml (key, version, chart
+     name and version, chart apiVersion v2);
+  3. validates the chart's values.yaml, and every values file named by a
+     resource fixture, against the chart's values.schema.json;
+  4. rejects launcher code inside the package;
+  5. rejects reserved key prefixes (dmf-, project-) for other publishers;
+  6. runs `helm lint --strict` (skip with --skip-helm);
+  7. checks revocation state when --revocation or --require-revocation is set.
+
+Across all packages given in one run it also rejects a package-key collision.
+
+With --chart-only the tool checks only steps 3 and 6 for plain charts that have
+no descriptor yet.
+
+Every violation prints one line on stderr:  VIOLATION <dir>: <where>: <message>
+Exit status: 0 = conformant, 1 = at least one violation, 2 = usage or tool error.
+
+Dependencies: PyYAML and jsonschema (pip install pyyaml jsonschema).
+"""
+
+import argparse
+import datetime
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+try:
+    import yaml
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import best_match
+except ImportError as exc:  # pragma: no cover - environment problem
+    print(f"error: {exc}. Run: pip install pyyaml jsonschema", file=sys.stderr)
+    sys.exit(2)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DESCRIPTOR_SCHEMA = os.path.join(ROOT, "schemas", "dmf-function.schema.json")
+REVOCATION_SCHEMA = os.path.join(ROOT, "schemas", "revocation-list.schema.json")
+
+SELF_ASSERTED = {"launcher", "source_class", "promotion", "trust", "revocation"}
+RESERVED_PREFIXES = ("dmf-", "project-")
+PROJECT_PUBLISHER = "dmfdeploy"
+LAUNCHER_DIR_NAMES = {"launcher", "launchers", "playbooks", "roles"}
+LAUNCHER_FILE_RE = re.compile(r"(^|[-_.])(launch|launcher|playbook)([-_.]|$)", re.I)
+
+
+class Report:
+    def __init__(self):
+        self.items = []
+
+    def add(self, where, path, message):
+        self.items.append((where, path, message))
+        print(f"VIOLATION {where}: {path}: {message}", file=sys.stderr)
+
+
+def load_json(path):
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def load_yaml(path):
+    with open(path, encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
+
+
+def json_path(error):
+    parts = [str(p) for p in error.absolute_path]
+    return "/" + "/".join(parts) if parts else "/"
+
+
+def schema_errors(schema, instance):
+    """Yield (path, message) for every schema violation of instance."""
+    validator = Draft202012Validator(schema)
+    for err in sorted(validator.iter_errors(instance), key=lambda e: list(map(str, e.absolute_path))):
+        path = json_path(err)
+        leaf = err.absolute_path[-1] if err.absolute_path else None
+        if len(err.absolute_path) == 1 and leaf in SELF_ASSERTED:
+            yield path, (
+                f"'{leaf}' is self-asserted trust or launcher data; a package may not "
+                "declare it (the catalog-source index and ingestion record own it)"
+            )
+            continue
+        message = err.message
+        if len(message) > 200:
+            message = message[:200] + "..."
+        if err.context:
+            sub = best_match(err.context)
+            if sub is not None:
+                sub_path = json_path(sub)
+                message += f" [{sub_path}: {sub.message[:160]}]"
+        yield path, message
+
+
+def deep_merge(base, over):
+    """Return base with over merged in, the way Helm merges a values file."""
+    if isinstance(base, dict) and isinstance(over, dict):
+        merged = dict(base)
+        for k, v in over.items():
+            merged[k] = deep_merge(base[k], v) if k in base else v
+        return merged
+    return over
+
+
+def check_values(where, chart_dir, files, report):
+    schema_path = os.path.join(chart_dir, "values.schema.json")
+    if not os.path.isfile(schema_path):
+        report.add(where, "values.schema.json", "chart has no values.schema.json")
+        return
+    try:
+        schema = load_json(schema_path)
+        Draft202012Validator.check_schema(schema)
+    except (ValueError, Exception) as exc:  # noqa: BLE001 - report any bad schema
+        report.add(where, "values.schema.json", f"not a valid JSON Schema: {exc}")
+        return
+    defaults = {}
+    seen = set()
+    for rel in files:
+        path = os.path.join(chart_dir, rel)
+        if not os.path.isfile(path):
+            report.add(where, rel, "values file not found")
+            continue
+        try:
+            values = load_yaml(path)
+        except yaml.YAMLError as exc:
+            report.add(where, rel, f"invalid YAML: {exc}")
+            continue
+        values = values if values is not None else {}
+        if rel == "values.yaml":
+            defaults = values
+        else:
+            # A fixture file is an overlay: check it merged over values.yaml.
+            values = deep_merge(defaults, values)
+        for p, msg in schema_errors(schema, values):
+            if (p, msg) in seen:  # already reported for values.yaml
+                continue
+            seen.add((p, msg))
+            report.add(where, f"{rel}{p}", msg)
+
+
+def run_helm_lint(where, chart_dir, report):
+    helm = shutil.which("helm")
+    if not helm:
+        report.add(where, "helm lint", "helm is not installed (use --skip-helm to skip)")
+        return
+    proc = subprocess.run(
+        [helm, "lint", "--strict", chart_dir],
+        capture_output=True, text=True, check=False,
+    )
+    if proc.returncode != 0:
+        detail = " | ".join(
+            line.strip() for line in (proc.stdout + proc.stderr).splitlines()
+            if "[ERROR]" in line or "[WARNING]" in line or "Error" in line
+        ) or "helm lint failed"
+        report.add(where, "helm lint --strict", detail)
+
+
+def find_launcher_assets(pkg_dir):
+    hits = []
+    for dirpath, dirnames, filenames in os.walk(pkg_dir):
+        rel_dir = os.path.relpath(dirpath, pkg_dir)
+        # Helm templates and chart dependencies are not launcher code.
+        if rel_dir == "templates" or rel_dir.startswith("templates" + os.sep):
+            dirnames[:] = []
+            continue
+        for d in list(dirnames):
+            if d.lower() in LAUNCHER_DIR_NAMES:
+                hits.append(os.path.normpath(os.path.join(rel_dir, d)))
+        for f in filenames:
+            if LAUNCHER_FILE_RE.search(f):
+                hits.append(os.path.normpath(os.path.join(rel_dir, f)))
+    return sorted(hits)
+
+
+def parse_utc(text):
+    return datetime.datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+
+
+def check_revocation(args, descriptors, report):
+    """descriptors: list of (where, publisher, key, version)."""
+    if not args.revocation:
+        if args.require_revocation:
+            for where, *_ in descriptors:
+                report.add(where, "revocation", "no revocation list supplied; revocation state is missing")
+        return
+    if not os.path.isfile(args.revocation):
+        for where, *_ in descriptors:
+            report.add(where, "revocation", "revocation list file not found; revocation state is missing")
+        return
+    try:
+        data = load_yaml(args.revocation)
+    except yaml.YAMLError as exc:
+        for where, *_ in descriptors:
+            report.add(where, "revocation", f"revocation list is not valid YAML: {exc}")
+        return
+    problems = list(schema_errors(load_json(REVOCATION_SCHEMA), data))
+    if problems:
+        for where, *_ in descriptors:
+            for p, msg in problems:
+                report.add(where, f"revocation{p}", msg)
+        return
+    now = parse_utc(args.now) if args.now else datetime.datetime.now(datetime.timezone.utc)
+    generated = parse_utc(data["generated_at"])
+    age = now - generated
+    if age > datetime.timedelta(hours=args.max_age_hours):
+        for where, *_ in descriptors:
+            report.add(where, "revocation/generated_at",
+                       f"revocation list is stale: {age.total_seconds() / 3600:.0f} h old, "
+                       f"limit is {args.max_age_hours} h")
+    elif age < datetime.timedelta(minutes=-5):
+        for where, *_ in descriptors:
+            report.add(where, "revocation/generated_at", "revocation list is dated in the future")
+    revoked = {(r["publisher"], r["key"], r["version"]) for r in data["revoked"]}
+    for where, publisher, key, version in descriptors:
+        if (publisher, key, version) in revoked:
+            report.add(where, "revocation", f"release {publisher}/{key} {version} is revoked")
+
+
+def check_unique_port_names(where, desc, report):
+    """Port names are unique in the descriptor.
+
+    JSON Schema uniqueItems compares whole port objects, so it cannot express
+    uniqueness by name. The schema states the contract; this check enforces it.
+    """
+    ports = desc.get("ports")
+    if not isinstance(ports, list):
+        return
+    first = {}
+    for index, port in enumerate(ports):
+        name = port.get("name") if isinstance(port, dict) else None
+        if not isinstance(name, str):
+            continue
+        if name in first:
+            report.add(where, "dmf-function.yaml/ports",
+                       f"ports: duplicate port name '{name}' (indexes {first[name]} and {index})")
+        else:
+            first[name] = index
+
+
+def check_package(pkg_dir, args, schema, report, descriptors):
+    where = pkg_dir
+    desc_path = os.path.join(pkg_dir, "dmf-function.yaml")
+    chart_path = os.path.join(pkg_dir, "Chart.yaml")
+    if not os.path.isfile(desc_path):
+        report.add(where, "dmf-function.yaml", "file not found")
+        return
+    try:
+        desc = load_yaml(desc_path)
+    except yaml.YAMLError as exc:
+        report.add(where, "dmf-function.yaml", f"invalid YAML: {exc}")
+        return
+    if not isinstance(desc, dict):
+        report.add(where, "dmf-function.yaml", "document must be a mapping")
+        return
+
+    for p, msg in schema_errors(schema, desc):
+        report.add(where, f"dmf-function.yaml{p}", msg)
+
+    check_unique_port_names(where, desc, report)
+
+    meta = desc.get("metadata") if isinstance(desc.get("metadata"), dict) else {}
+    key, version = meta.get("key"), meta.get("version")
+    pub = desc.get("publisher") if isinstance(desc.get("publisher"), dict) else {}
+    publisher = pub.get("name")
+
+    # Chart identity.
+    chart = None
+    if not os.path.isfile(chart_path):
+        report.add(where, "Chart.yaml", "file not found")
+    else:
+        try:
+            chart = load_yaml(chart_path)
+        except yaml.YAMLError as exc:
+            report.add(where, "Chart.yaml", f"invalid YAML: {exc}")
+    if isinstance(chart, dict):
+        if chart.get("apiVersion") != "v2":
+            report.add(where, "Chart.yaml/apiVersion", f"must be v2, got {chart.get('apiVersion')!r}")
+        if key is not None and chart.get("name") != key:
+            report.add(where, "metadata/key",
+                       f"descriptor key {key!r} differs from Chart.yaml name {chart.get('name')!r}")
+        if version is not None and str(chart.get("version")) != str(version):
+            report.add(where, "metadata/version",
+                       f"descriptor version {version!r} differs from Chart.yaml version {chart.get('version')!r}")
+        art = (desc.get("artifacts") or {}).get("chart") if isinstance(desc.get("artifacts"), dict) else None
+        if isinstance(art, dict):
+            if art.get("name") is not None and art.get("name") != chart.get("name"):
+                report.add(where, "artifacts/chart/name", "differs from Chart.yaml name")
+            if art.get("version") is not None and str(art.get("version")) != str(chart.get("version")):
+                report.add(where, "artifacts/chart/version", "differs from Chart.yaml version")
+
+    # Package directory name.
+    if key and os.path.basename(os.path.dirname(os.path.abspath(pkg_dir))) == "packages":
+        if os.path.basename(os.path.abspath(pkg_dir)) != key:
+            report.add(where, "metadata/key", f"directory name must equal the package key {key!r}")
+
+    # Reserved namespaces.
+    if isinstance(key, str) and key.startswith(RESERVED_PREFIXES) and publisher != PROJECT_PUBLISHER:
+        report.add(where, "metadata/key",
+                   f"key prefix {key.split('-')[0]}- is reserved for the project source; "
+                   f"publisher is {publisher!r}")
+
+    # No launcher code.
+    for hit in find_launcher_assets(pkg_dir):
+        report.add(where, hit, "package contains launcher code or a launcher directory; "
+                               "packages carry no launcher, only the project source may add one")
+
+    # Values.
+    fixtures = []
+    req = (desc.get("resources") or {}).get("requests") if isinstance(desc.get("resources"), dict) else None
+    if isinstance(req, dict):
+        fixtures = [f["values_file"] for f in req.values()
+                    if isinstance(f, dict) and isinstance(f.get("values_file"), str)]
+    check_values(where, pkg_dir, ["values.yaml"] + sorted(set(fixtures)), report)
+
+    if not args.skip_helm and os.path.isfile(chart_path):
+        run_helm_lint(where, pkg_dir, report)
+
+    if isinstance(key, str) and isinstance(version, str) and isinstance(publisher, str):
+        descriptors.append((where, publisher, key, version))
+
+
+def check_collisions(seen, report):
+    by_id = {}
+    for where, publisher, key, _version in seen:
+        by_id.setdefault((publisher, key), []).append(where)
+    for (publisher, key), wheres in by_id.items():
+        if len(wheres) > 1:
+            for w in wheres:
+                report.add(w, "metadata/key",
+                           f"package-key collision: {publisher}/{key} is also declared in "
+                           + ", ".join(x for x in wheres if x != w))
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Check Media Function packages for conformance.")
+    ap.add_argument("dirs", nargs="+", metavar="DIR", help="package directories (or chart directories with --chart-only)")
+    ap.add_argument("--chart-only", action="store_true", help="check plain charts (values schema and helm lint) without a descriptor")
+    ap.add_argument("--skip-helm", action="store_true", help="do not run helm lint --strict")
+    ap.add_argument("--revocation", metavar="FILE", help="revocation list snapshot to check freshness and membership")
+    ap.add_argument("--require-revocation", action="store_true", help="fail when no revocation list is supplied")
+    ap.add_argument("--max-age-hours", type=float, default=24.0, help="oldest accepted revocation snapshot (default 24)")
+    ap.add_argument("--now", metavar="UTC", help="override the clock, for tests: YYYY-MM-DDTHH:MM:SSZ")
+    args = ap.parse_args(argv)
+
+    report = Report()
+    try:
+        if args.chart_only:
+            for chart_dir in args.dirs:
+                if not os.path.isfile(os.path.join(chart_dir, "Chart.yaml")):
+                    report.add(chart_dir, "Chart.yaml", "file not found")
+                    continue
+                check_values(chart_dir, chart_dir, ["values.yaml"], report)
+                if not args.skip_helm:
+                    run_helm_lint(chart_dir, chart_dir, report)
+        else:
+            schema = load_json(DESCRIPTOR_SCHEMA)
+            Draft202012Validator.check_schema(schema)
+            descriptors = []
+            for pkg_dir in args.dirs:
+                if not os.path.isdir(pkg_dir):
+                    report.add(pkg_dir, ".", "not a directory")
+                    continue
+                check_package(pkg_dir, args, schema, report, descriptors)
+            check_collisions(descriptors, report)
+            check_revocation(args, descriptors, report)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if report.items:
+        print(f"FAIL: {len(report.items)} violation(s)", file=sys.stderr)
+        return 1
+    print(f"OK: {len(args.dirs)} {'chart' if args.chart_only else 'package'}(s) conform")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
