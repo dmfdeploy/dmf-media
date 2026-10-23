@@ -2,16 +2,15 @@
 
 [![CI](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml/badge.svg)](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml)
 
-Media-domain modules for the DMF Platform — NMOS IS-04/05 discovery, AMWA BCP compliance,
-EBU LIST 2110 packet analysis, PTP topology monitoring, flow-level exporters, and the
-NetBox media plugin (sender/receiver/flow schema). That list is this repo's full reserved
-scope, not a status report — most of it is still unimplemented. See
-[Status](#status) below for what actually runs today.
+The media-domain content of the dmfdeploy platform: a function catalog, Helm charts for NMOS and MXL workloads, a SHA-pinned MXL image build and a catalog drift detector.
+Part of [dmfdeploy](https://github.com/dmfdeploy/dmfdeploy), an independent open prototype that explores ideas from the [EBU](https://tech.ebu.ch/) *Dynamic Media Facility* publications. Status: prototype (VERSION 0.1.0), single-node; the media roles are stubs.
+
+**Planned scope, not yet implemented:** NMOS IS-04/05 discovery, AMWA BCP compliance checks, EBU LIST 2110 packet analysis, PTP topology monitoring, flow exporters and a NetBox media plugin. See [Status](#status) for what runs today.
 
 ## Dependencies
 
-- `dmf-infra` — base platform (k3s, networking, storage, observability)
-- `dmf-env` — generic environment provisioning + bootstrap tooling
+- `dmf-infra`: base platform (k3s, networking, storage, observability)
+- `dmf-env`: generic environment provisioning + bootstrap tooling
 
 ## Structure
 
@@ -34,8 +33,8 @@ docs/           — Design docs and runbooks
 `docker/mxl-fabrics/Dockerfile` builds the consolidated MXL demo image
 against an **operator-supplied upstream MXL checkout** as build context.
 
-The Dockerfile `COPY`s five files that live in *this* repo, not upstream —
-so they must be staged into the checkout (the build context) first:
+The Dockerfile `COPY`s five files that live in *this* repo and not in upstream.
+Stage them into the checkout (the build context) first:
 
 ```bash
 cp docker/mxl-fabrics/{MXL_UPSTREAM_SHA,mxl_build_prep.py,patch-sink.py,\
@@ -60,7 +59,7 @@ and fails loudly (both SHAs, expected-SHA file, bump procedure) on
 mismatch.
 
 **Bumping the pinned SHA** (deliberate upstream move): update
-`docker/mxl-fabrics/MXL_UPSTREAM_SHA` to the new SHA, then rebuild —
+`docker/mxl-fabrics/MXL_UPSTREAM_SHA` to the new SHA, then rebuild.
 `patch-sink.py` and `patch-sink-too-early-pacing.py` fail on their own
 anchors if upstream moved the code they patch, which is the content-drift
 guard; the SHA check only guards which commit was built.
@@ -68,35 +67,38 @@ guard; the SHA check only guards which commit was built.
 ## Status
 
 This is not a scaffold-only repo. Real work lives here: the function catalog
-(`catalog/` — four entries plus the `topology_params` schema and a concrete
-J1 instance), the three Helm charts (`charts/`), the compiled-from-source
-upstream MXL image (`docker/mxl-fabrics/`, SHA-pinned via
-`docker/mxl-fabrics/MXL_UPSTREAM_SHA` and verified fail-closed by
-`mxl_build_prep.py` before any patch script touches a source file), and the
+(`catalog/`: one function entry, `mxl-videotest-view`, plus the
+`topology_params` schema and a concrete J1 instance), the three Helm charts (`charts/`),
+the compiled-from-source upstream MXL image (`docker/mxl-fabrics/`, SHA-pinned via
+`docker/mxl-fabrics/MXL_UPSTREAM_SHA`). `mxl_build_prep.py` verifies the pin
+fail-closed before any patch script touches a source file. The fourth piece is the
 catalog drift detector (`playbooks/lifecycle-operate.yml`), which asserts that
 a declared `lifecycle:active`/`lifecycle:bootstrapped` state matches what is
-actually deployed. In v1 that detector checks exactly one entry — `nmos-cpp`,
-hardcoded in the playbook's `_catalog_entries` — and loading the declarations
+actually deployed. In v1 that detector checks exactly one entry, `nmos-cpp`,
+hardcoded in the playbook's `_catalog_entries`. Loading the declarations
 from `catalog/*.yaml` is explicitly deferred (the playbook says so in its own
-comment), so the other catalog entries are not yet covered.
+comment), so the catalog entries are not yet covered.
 
 **Media roles are stubs.** All five `roles/*/tasks/main.yml` entries
 (`ebu-list`, `flow-exporters`, `ptp-monitor`, `netbox-media-plugin`,
 `media-controllers`) are 3-line TODO placeholders, and the eight numbered EBU
 playbooks (`400-mxl-prereq.yml` through `599-media-functions-verify.yml`) are
 each explicitly self-labelled `STUB`. That reserved Layer 4/5 skeleton
-targets DMF Platform Plan Phase 3 and is not implemented yet.
+targets Phase 3 of the platform plan and is not implemented yet.
 
 The real media-domain capability runs through a different surface than that
 reserved skeleton: this repo's catalog, charts, and MXL image feed the
-launch/switch/teardown playbooks that live in `dmf-runbooks`, not here. On
-2026-07-30, the operator console drove a live source switch (source-a →
-source-b) through `dmf-runbooks` 0.4.3's `switch-mxl-fabrics-demo.yml` on the
-deployed `mxl-fabrics-demo` chart — two sources, one viewer, on a single ARM
-node (the standing single-node lane); the Helm release advanced cleanly to
-revision 2 with the target pod running and no restarts. That is the current
-proven scale; nothing broader (multi-node or cross-host) has been
-demonstrated.
+launch/switch/teardown playbooks that live in `dmf-runbooks`.
+The last recorded check is from 2026-07-30. The operator console drove a live
+source switch (source-a to source-b) through the
+`switch-mxl-fabrics-demo.yml` playbook in `dmf-runbooks` on the deployed
+`mxl-fabrics-demo` chart: two sources, one viewer, on a single ARM node. This
+repo does not re-run that check on each release, so treat it as a dated
+observation. Nothing broader (multi-node or cross-host) has been demonstrated.
+
+## Repository layout and contributors
+
+`AGENTS.md`, `CLAUDE.md` and `QWEN.md` hold instructions for AI coding agents that help maintain this repository.
 
 ## License
 
