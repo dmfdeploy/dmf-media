@@ -4,14 +4,12 @@ Media-domain catalog metadata and (future) Layer 5 roles + Helm charts.
 
 This repo is part of the **DMF Platform**. GitHub is the canonical home and the
 single source of truth: all changes land via **Pull Request** against `main`.
-(The full pre-publish history lives in a LAN-only `dmf-media-archive` Forgejo
-repo, reachable as a read-only `archive` git remote — it is **not** an upstream
-and is never a contribution path.)
 
 ## Quick start
 
 1. Read the platform overview in the [dmfdeploy/dmfdeploy](https://github.com/dmfdeploy/dmfdeploy) umbrella repo
-   (`docs/architecture/DMF Platform Plan.md`) and apply any relevant ADRs from
+   (`docs/architecture/DMF Platform Plan.md`, the long-term blueprint; current
+   plans are listed in `docs/plans/INDEX.md`) and apply any relevant ADRs from
    `docs/decisions/INDEX.md`.
 2. Fork or branch, make your change on a topic branch, open a PR against `main`.
 3. Ensure CI is green and your commits are **signed off** (see DCO below).
