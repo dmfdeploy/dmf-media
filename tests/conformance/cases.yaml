@@ -138,3 +138,15 @@ bad:
     twin: video-sender
     dirs: [bad/duplicate-port-name]
     expect: "ports: duplicate port name 'video-out' (indexes 0 and 1)"
+  - name: bad-uri-whitespace
+    twin: video-sender
+    dirs: [bad/bad-uri-whitespace]
+    expect: "/publisher/uri: 'https://exa mple.com/' is not a 'uri' (characters not allowed in a URI: ' ')"
+  - name: bad-uri-percent
+    twin: video-sender
+    dirs: [bad/bad-uri-percent]
+    expect: "/origin/provenance_uri: 'https://example.com/%zz' is not a 'uri' (a percent sign must start a two-digit hex escape)"
+  - name: bad-uri-no-host
+    twin: video-sender
+    dirs: [bad/bad-uri-no-host]
+    expect: "/licence/uri: 'https:/licence.txt' is not a 'uri' (the URI needs a host)"
