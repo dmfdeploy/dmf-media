@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "nmos-crosspoint chart values",
-  "description": "Values accepted by the nmos-crosspoint chart. Unknown keys and unsafe values (mutable image tags, scheme or port in the registry host, missing resource bounds) are rejected.",
+  "description": "Values accepted by the nmos-crosspoint chart. Unknown keys and unsafe values (an image without a digest, scheme or port in the registry host, missing resource bounds) are rejected.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["namespace", "createNamespace", "image", "service", "ingress", "registry", "nmos", "auth", "resources"],
+  "required": ["namespace", "createNamespace", "image", "service", "containerPort", "ingress", "registry", "nmos", "auth", "resources", "initResources"],
   "properties": {
     "namespace": {
       "type": "string",
@@ -18,20 +18,21 @@
     "image": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["repository", "tag", "pullPolicy"],
-      "description": "Crosspoint container image.",
+      "required": ["repository", "digest", "pullPolicy"],
+      "description": "Crosspoint container image, referenced by digest only.",
       "properties": {
         "repository": {
           "type": "string",
           "pattern": "^[a-z0-9.-]+(:[0-9]+)?(/[a-z0-9._-]+)+$",
           "description": "Image repository with registry host and no tag or digest."
         },
-        "tag": {
+        "digest": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$",
-          "not": { "const": "latest" },
-          "description": "Image tag. The tag latest is rejected because it is mutable."
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Image digest. The chart refuses a tag, so the digest is the only reference."
         },
+        "source": { "type": "string", "pattern": "^https://", "description": "Optional. Source repository of the image, recorded for provenance. The templates don't use it." },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "Optional. Full commit hash the image was built from, recorded for provenance. The templates don't use it." },
         "pullPolicy": {
           "enum": ["Always", "IfNotPresent", "Never"],
           "description": "Kubernetes image pull policy."
@@ -47,6 +48,7 @@
         "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Service port." }
       }
     },
+    "containerPort": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Port the server listens on inside the pod. The Service targets it." },
     "ingress": {
       "type": "object",
       "additionalProperties": false,
@@ -125,6 +127,24 @@
       "properties": {
         "requests": { "$ref": "#/$defs/quantities", "description": "Resource requests." },
         "limits": { "$ref": "#/$defs/quantities", "description": "Resource limits." }
+      }
+    },
+    "initResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests"],
+      "description": "Resources of the seed-config init container. Requests are required.",
+      "properties": {
+        "requests": { "$ref": "#/$defs/quantities", "description": "Resource requests." },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional resource limits.",
+          "properties": {
+            "cpu": { "type": "string", "pattern": "^[1-9][0-9]*m?$", "description": "CPU in whole cores or millicores." },
+            "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Ki|Mi|Gi)$", "description": "Memory in binary units." }
+          }
+        }
       }
     }
   },
