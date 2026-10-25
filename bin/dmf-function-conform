@@ -8,8 +8,9 @@ Usage:
 A package directory (packages/<key>/) holds one Helm chart and one
 dmf-function.yaml. For every package the tool:
 
-  1. validates dmf-function.yaml against schemas/dmf-function.schema.json and
-     rejects duplicate port names (a schema cannot express uniqueness by name);
+  1. validates dmf-function.yaml against schemas/dmf-function.schema.json,
+     with format: uri checked by the tool itself, and rejects duplicate port
+     names (a schema cannot express uniqueness by name);
   2. checks the descriptor identity against Chart.yaml (key, version, chart
      name and version, chart apiVersion v2);
   3. validates the chart's values.yaml, and every values file named by a
@@ -43,10 +44,11 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.parse
 
 try:
     import yaml
-    from jsonschema import Draft202012Validator
+    from jsonschema import Draft202012Validator, FormatChecker
     from jsonschema.exceptions import best_match
 except ImportError as exc:  # pragma: no cover - environment problem
     print(f"error: {exc}. Run: pip install pyyaml jsonschema", file=sys.stderr)
@@ -66,6 +68,11 @@ LAYOUT_FILES = {"Chart.yaml", "Chart.lock", "values.yaml", "values.schema.json",
                 "dmf-function.yaml", ".helmignore"}
 LAYOUT_FILE_PREFIXES = ("README", "LICENSE", "NOTICE", "CHANGELOG")
 LAYOUT_DIRS = {"templates", "charts", "crds", "ci", "files"}
+# RFC 3986 characters: unreserved, reserved and the percent sign.
+URI_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                      "-._~:/?#[]@!$&'()*+,;=%")
+URI_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*$")
+PERCENT_RE = re.compile(r"%(?![0-9A-Fa-f]{2})")
 
 
 class Report:
@@ -87,6 +94,39 @@ def load_yaml(path):
         return yaml.safe_load(fh)
 
 
+def check_uri(value):
+    """Raise ValueError unless value is an absolute URI with a scheme and a host.
+
+    jsonschema checks format: uri only when the optional rfc3987 package is
+    installed, and CI does not install it. This check needs only the standard
+    library. A pattern next to the format, such as ^https://, still applies.
+    """
+    if not isinstance(value, str):
+        return True
+    bad = sorted({c for c in value if c not in URI_CHARS})
+    if bad:
+        raise ValueError("characters not allowed in a URI: " + ", ".join(repr(c) for c in bad))
+    if PERCENT_RE.search(value):
+        raise ValueError("a percent sign must start a two-digit hex escape")
+    parts = urllib.parse.urlsplit(value)
+    if not URI_SCHEME_RE.match(parts.scheme):
+        raise ValueError("an absolute URI needs a scheme")
+    if not parts.hostname:
+        raise ValueError("the URI needs a host")
+    parts.port  # noqa: B018 - raises ValueError on a bad port
+    return True
+
+
+def format_checker():
+    """The draft 2020-12 format checker, with format: uri checked by check_uri."""
+    checker = FormatChecker(Draft202012Validator.FORMAT_CHECKER.checkers)
+    checker.checks("uri", raises=ValueError)(check_uri)
+    return checker
+
+
+FORMAT_CHECKER = format_checker()
+
+
 def json_path(error):
     parts = [str(p) for p in error.absolute_path]
     return "/" + "/".join(parts) if parts else "/"
@@ -94,7 +134,7 @@ def json_path(error):
 
 def schema_errors(schema, instance):
     """Yield (path, message) for every schema violation of instance."""
-    validator = Draft202012Validator(schema)
+    validator = Draft202012Validator(schema, format_checker=FORMAT_CHECKER)
     for err in sorted(validator.iter_errors(instance), key=lambda e: list(map(str, e.absolute_path))):
         path = json_path(err)
         leaf = err.absolute_path[-1] if err.absolute_path else None
@@ -107,6 +147,8 @@ def schema_errors(schema, instance):
         message = err.message
         if len(message) > 200:
             message = message[:200] + "..."
+        if err.validator == "format" and err.cause is not None:
+            message += f" ({err.cause})"
         if err.context:
             sub = best_match(err.context)
             if sub is not None:
