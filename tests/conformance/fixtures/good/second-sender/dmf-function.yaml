@@ -1,4 +1,4 @@
-apiVersion: dmf.io/v1
+apiVersion: dmfdeploy.io/v1alpha1
 kind: MediaFunction
 metadata:
   key: example-sender-two

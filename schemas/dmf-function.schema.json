@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.dmfdeploy.invalid/dmf-function/v1.json",
-  "title": "dmf-function.yaml (Media Function descriptor, dmf.io/v1)",
+  "$id": "https://schemas.dmfdeploy.invalid/dmf-function/v1alpha1.json",
+  "title": "dmf-function.yaml (Media Function descriptor, dmfdeploy.io/v1alpha1)",
   "description": "Descriptor that sits next to an ordinary Helm chart in packages/<key>/. It declares what a media function is, what it ships, which ports it exposes and how it behaves. It never declares trust: source class, launcher privilege, promotion state and revocation come from the catalog-source index and the ingestion record, so this schema rejects them.",
   "type": "object",
   "additionalProperties": false,
@@ -27,8 +27,8 @@
   ],
   "properties": {
     "apiVersion": {
-      "const": "dmf.io/v1",
-      "description": "Descriptor schema version. Only dmf.io/v1 exists."
+      "const": "dmfdeploy.io/v1alpha1",
+      "description": "Descriptor schema version. Only dmfdeploy.io/v1alpha1 exists."
     },
     "kind": {
       "const": "MediaFunction",
