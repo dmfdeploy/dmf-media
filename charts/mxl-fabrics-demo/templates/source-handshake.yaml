@@ -53,12 +53,11 @@ data:
     }
 
     # The FULL §4.1 entry/continuous-re-check predicate — is_selected AND
-    # target-info AND epoch present. Fix round 2 (codex P1): the earlier
-    # cut only re-checked is_selected in the running loop, so clearing
-    # target-info/epoch (the §6.2 quiesce step's secondary newcomer-block)
-    # with selection still intact left a RUNNING initiator running — the
-    # spec says "continuously re-checks THAT predicate" (the whole
-    # conjunction), not just the selection half of it.
+    # target-info AND epoch present. The running loop must re-check all of
+    # it, not only is_selected: clearing target-info/epoch (the §6.2
+    # quiesce step's secondary newcomer-block) with selection still intact
+    # must stop a RUNNING initiator — the spec says "continuously re-checks
+    # THAT predicate" (the whole conjunction), not just the selection half.
     predicate_holds() {
       is_selected && [ -s "$target_info_file" ] && [ -s "$epoch_file" ]
     }
@@ -103,23 +102,22 @@ data:
       fi
 
       # Continuous re-check while the initiator runs (§4.1 "stopping the
-      # initiator and parking on mismatch or empty"). Fix round 2 (codex
-      # P1, the hard one): the epoch-restart check runs FIRST as its own
-      # independent statement, re-evaluating is_selected fresh at its own
-      # decision point — NOT nested behind (reliant on) the predicate
-      # re-check below having already fired first. The earlier cut checked
-      # de-selection before the epoch branch every iteration, so a stop
-      # always "won" the race by construction and the epoch-restart's OWN
-      # `&& is_selected` guard was never the thing standing between a
-      # correct and an incorrect outcome — a mutant removing it produced
-      # IDENTICAL observable behaviour, because that branch was simply
-      # unreachable whenever de-selection had already been noticed. With
-      # this ordering, a mutant is observable: if de-select and an epoch
-      # bump land together (see tests/harness/run-demo.sh phase 6, which
-      # freezes the process to construct this deterministically), the
-      # mutant fires an illegitimate extra start (stopped a moment later
-      # by the predicate re-check below) that the guarded version never
-      # produces.
+      # initiator and parking on mismatch or empty"). The epoch-restart
+      # check runs FIRST as its own independent statement, re-evaluating
+      # is_selected fresh at its own decision point — NOT nested behind
+      # (reliant on) the predicate re-check below having already fired
+      # first. If de-selection were checked before the epoch branch every
+      # iteration, a stop would always "win" the race by construction and
+      # the epoch-restart's OWN `&& is_selected` guard would never be the
+      # thing standing between a correct and an incorrect outcome — a
+      # variant without it would behave IDENTICALLY, because that branch
+      # would be unreachable whenever de-selection had already been
+      # noticed. With this ordering, removing the guard is observable: if
+      # de-select and an epoch bump land together (see
+      # tests/harness/run-demo.sh phase 6, which freezes the process to
+      # construct this deterministically), the unguarded variant fires an
+      # illegitimate extra start (stopped a moment later by the predicate
+      # re-check below) that the guarded version never produces.
       while true; do
         if [ -s "$epoch_file" ]; then
           current_epoch="$(cat "$epoch_file")"

@@ -8,7 +8,7 @@ metadata:
     {{- include "nmos-crosspoint.nmosLabels" . | nindent 4 }}
   annotations:
     # Private (Tailscale) lane. The ingressclass annotation — not just the
-    # entrypoint — is what binds this to the private Traefik (codex P2.6).
+    # entrypoint — is what binds this to the private Traefik.
     dmf.exposure: private
     traefik.ingress.kubernetes.io/router.ingressclass: {{ .Values.ingress.ingressClass | quote }}
 spec:

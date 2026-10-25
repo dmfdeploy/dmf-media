@@ -13,7 +13,7 @@
 # references this schema_version. This repo's catalog has no JSON-Schema
 # validator; the convention (matching catalog/README.md's own function-schema
 # doc) is a normative field table + a worked illustrative example, checked by
-# review/codex-gate rather than machine validation. If that changes, this is
+# human review rather than machine validation. If that changes, this is
 # the file a future JSON-Schema/CI check would be generated from.
 #
 # Survives the actuator upgrade unchanged (§3.3): this set describes

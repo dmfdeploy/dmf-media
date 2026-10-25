@@ -31,7 +31,7 @@ This patch:
 Applied to the build context only (mirrors patch-sink.py); the upstream
 clone stays pristine. Run from the MXL source root, after patch-sink.py.
 
-Fix-round 1 (#308, codex gate P2): the ORIGINAL version of this script wrote
+Why the apply is two-phase (#308): an earlier version of this script wrote
 each successful replacement to disk immediately as it validated, across two
 files. A LATE anchor failure (e.g. deep into sink.cpp) then exited non-zero
 having already written utils.hpp and several earlier sink.cpp edits — a
@@ -40,7 +40,7 @@ exit 0 ("already patched") via a broad marker check that didn't verify every
 guard was actually present — a false-green path where a drifted upstream
 plus a rerun could ship an image silently missing the fix.
 
-Fixed with two properties, both load-bearing:
+The script now has two properties, both load-bearing:
   - Two-phase, all-or-nothing apply (apply_all): every anchor across BOTH
     files is validated ENTIRELY IN MEMORY first. Nothing is written to disk
     until every single step has validated. A failure anywhere leaves BOTH
@@ -107,7 +107,7 @@ class TextStep:
          utils.hpp includes step, where NEW is literally two `#include`
          lines followed by the entirety of OLD) exactly 1 per NEW instance.
 
-    Checking only (1) is not enough (#308 fix-round 2, codex gate): a
+    Checking only (1) is not enough (#308): a
     cleanly-patched file with a STRAY extra copy of `old` appended
     elsewhere (e.g. a mutant, or a bad merge) still shows `new` at its
     expected count — a new-count-only check calls that "applied", making
@@ -147,8 +147,7 @@ class TextStep:
         # expected count, PLUS a stray extra old copy) must land in
         # check_state's "ambiguous" bucket, not get mislabeled "pending"
         # just because old's count happens to match self.count by
-        # coincidence (#308 fix-round 2 follow-up: the first version of
-        # this fix used `not is_applied` here, which classified exactly
+        # coincidence (using `not is_applied` here would classify exactly
         # that corrupted-but-already-patched state as "still pending" —
         # functionally still rc=1 overall, but a confusing label an
         # operator could misread as "never touched").
@@ -216,7 +215,7 @@ class EnsureIncludesStep:
 
 def apply_all(steps):
     """Two-phase, all-or-nothing apply across every step and every file
-    (#308 fix-round 1). Validates every step's transform in memory against
+    (#308). Validates every step's transform in memory against
     an accumulating per-path buffer; only once ALL steps have validated
     does it write anything to disk.
     """

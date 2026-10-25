@@ -17,7 +17,7 @@
 #   (0) entry gate holds — nothing selected, no coordinator data -> never starts
 #   (1) positive path — selected + target-info/epoch present -> starts
 #   (2) predicate re-check covers target-info/epoch too, not just selection
-#       (codex fix-round-2 P1): clearing target-info/epoch with selection
+#       clearing target-info/epoch with selection
 #       STILL intact stops+parks a RUNNING initiator, it does NOT restart
 #       while they stay cleared, and once repopulated it starts against
 #       the FRESH values, never a stale cached one
@@ -27,12 +27,12 @@
 #       when the coordinator's epoch bumps (the §6.2 phase-2 re-point)
 #       while still de-selected
 #   (5) re-select — un-parks and starts again once re-selected
-#   (6) epoch-restart gate is independently load-bearing (codex fix-round-2
-#       P1, the hard one): freezes the supervisor process (SIGSTOP),
+#   (6) epoch-restart gate is independently load-bearing:
+#       freezes the supervisor process (SIGSTOP),
 #       applies a de-select AND an epoch bump TOGETHER while frozen, then
 #       resumes (SIGCONT) — a correct implementation must produce ZERO new
-#       initiator starts in this window; codex's exact
-#       epoch-changed-only-mutant (the guard removed) produces an
+#       initiator starts in this window; an
+#       epoch-changed-only variant (the guard removed) produces an
 #       illegitimate extra start+stop pair here, which this phase catches
 #       deterministically (no timing-window sleeps — the race is
 #       constructed via process suspension, not luck)
@@ -185,7 +185,7 @@ printf '%s' "podA:1000" > "$EVIDENCE_DIR/coordinator/epoch"
 wait_until "initiator starts once selected + target-info/epoch present" 15 initiator_running
 
 # ── phase 2: full predicate re-check — clearing target-info/epoch with ───
-# ── selection intact must ALSO stop+park (codex fix-round-2 P1) ──────────
+# ── selection intact must ALSO stop+park ────────────────
 log "--- phase 2: predicate covers target-info/epoch too, not just selection ---"
 rm -f "$EVIDENCE_DIR/coordinator/target-info" "$EVIDENCE_DIR/coordinator/epoch"
 wait_until "supervisor log records target-info cleared while selected" 15 log_shows "target-info cleared while selected"
@@ -226,11 +226,11 @@ wait_until "initiator starts again once re-selected" 15 initiator_running
 log "PROOF: re-selection un-parks the supervisor and it starts against the fresh (phase-4) endpoint."
 
 # ── phase 6: epoch-restart gate is independently load-bearing ────────────
-# Deterministic construction (codex fix-round-2 P1, no timing-window
+# Deterministic construction (no timing-window
 # sleeps): freeze the supervisor process, apply a de-select AND an epoch
 # bump TOGETHER while it cannot observe either individually, then resume.
 # A correct implementation's epoch-restart branch re-checks is_selected
-# fresh and skips (calls start_initiator zero times). A mutant with that
+# fresh and skips (calls start_initiator zero times). A variant with that
 # guard removed calls start_initiator anyway — logged unambiguously by the
 # SUPERVISOR itself ("launching initiator for epoch=...") the instant it
 # decides to restart, which is the discriminator used here rather than the

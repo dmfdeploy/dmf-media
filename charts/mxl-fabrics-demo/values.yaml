@@ -185,45 +185,36 @@ initiator:
 # were REMOVED entirely on 2026-07-29 for a different reason (see the "CPU
 # LIMITS REMOVED" block further down) — the two are independent decisions.
 #
-# ROUND 2 (codex GATE:FAIL on the round-1 cut, both findings fixed here):
-#   P1 — round 1 set every memory LIMIT to the old WP0-era REQUEST value,
-#     reasoning "it ran safely as a floor, so it's safe as a ceiling." A
-#     Kubernetes request is a scheduling reservation, not a proof of
-#     per-container peak usage — the only evidence round 1 actually had was
-#     POD-AGGREGATE memory (80-120Mi source, 88-90Mi view), which says
-#     nothing about any ONE container's own ceiling. Fixed by taking fresh
-#     PER-CONTAINER `kubectl top --containers` measurements (below) and
-#     setting each memory limit from ITS OWN observed value, not a borrowed
-#     pod-aggregate or a repurposed old request.
-#   P2 — round 1 gave every "tiny sidecar" (reader/info/status/
-#     targetInfoPublisher) the same 25m CPU request==limit floor. That was
-#     wrong for the VIEW pod's status container specifically: it runs a
-#     CONTINUOUS GStreamer/JPEG preview pipeline (PREVIEW=1, 5fps —
-#     files/mxl-status-server.py), not a poller — round 1's aggregate view
-#     headroom (198m pod max) couldn't prove this one container stayed
-#     under 25m, and a real 25m cap risked CFS-throttling the preview.
-#     Fixed by giving info/status a genuine PER-ROLE split (see
-#     _helpers.tpl's mxl-fabrics-demo.resourcesFor) since usage differs
-#     wildly by role (status: ~4m source vs ~157m view) — a single shared
-#     value could not describe both honestly.
+# Sizing rules:
+#   - Memory limits come from each container's OWN measured working set, not
+#     from a pod aggregate or a repurposed old request. A Kubernetes request
+#     is a scheduling reservation, not proof of per-container peak usage, and
+#     pod-aggregate memory (80-120Mi source, 88-90Mi view) says nothing about
+#     any ONE container's ceiling. The per-container
+#     `kubectl top --containers` measurements below are the evidence.
+#   - Sidecars do not share one CPU floor. The VIEW pod's status container
+#     runs a CONTINUOUS GStreamer/JPEG preview pipeline (PREVIEW=1, 5fps —
+#     files/mxl-status-server.py), not a poller, so a 25m cap would risk
+#     CFS-throttling the preview. info/status therefore have a genuine
+#     PER-ROLE split (see _helpers.tpl's mxl-fabrics-demo.resourcesFor),
+#     since usage differs wildly by role (status: ~4m source vs ~157m view)
+#     and a single shared value cannot describe both honestly.
 #
 # MEASURED PER-CONTAINER, consumed state, source+view live (2026-07-24,
-# `kubectl top --containers`, 3 samples, dead stable — the round-1 numbers
-# above were POD aggregates; these are the per-container breakdown that
-# was missing):
+# `kubectl top --containers`, 3 samples, dead stable — the per-container
+# breakdown, as opposed to the pod aggregates quoted above):
 #   source: writer 810m/80Mi (the data-plane container — it's ALSO the
 #     plausible owner of most `medium: Memory` domain-emptyDir fill, since
 #     it produces the flow), initiator 50-52m/19Mi, reader 7m/1Mi,
 #     info 1m/0Mi, status 4m/17Mi
 #   view: status 157m/56Mi (the 5fps JPEG preview pipeline is the view
-#     pod's BIGGEST consumer — codex P2), target 35-36m/44Mi, info 1m/0Mi,
+#     pod's BIGGEST consumer), target 35-36m/44Mi, info 1m/0Mi,
 #     target-info-publisher 2m/1Mi
 #
-# Role REQUEST totals are UNCHANGED from round 1 (the L3 fit arithmetic
-# must not move): source 450m/160Mi, view 225m/128Mi. Limits are NOT
-# total-constrained this round (see above) — each is set from its own
-# container's measured value + margin, so role limit totals now differ
-# from round 1's forced-equal-to-contract shape; that's expected, not a bug.
+# Role REQUEST totals are fixed by the L3 fit arithmetic: source 450m/160Mi,
+# view 225m/128Mi. Limits are NOT total-constrained (see above) — each is
+# set from its own container's measured value + margin, so role limit
+# totals need not equal the contract totals; that's expected, not a bug.
 #
 # Domain-fill accounting: the `domain` emptyDir (see domainSizeLimit above,
 # 256Mi) is `medium: Memory` — its fill charges against container memory.
@@ -245,15 +236,15 @@ initiator:
 #     measured sidecar sum ≈ 364m, +margin), initiator 55, reader 10,
 #     info(source) 5, status(source) 10 = 450
 #   view requests: status(view) 160 (the real per-role cost — this is the
-#     container codex flagged), target 45, target-info-publisher 15,
+#     container with the largest per-role cost), target 45, target-info-publisher 15,
 #     info(view) 5 = 225
-#   CPU limits (HISTORICAL, round-2 calibration — REMOVED 2026-07-29, see
+#   CPU limits (HISTORICAL — REMOVED 2026-07-29, see
 #     below): writer had 950m (measured 810 consumed +margin); initiator
 #     had 100m; status(view) had 250m (measured 157 sustained, headroom for
 #     scene complexity); target had 100m; true-idle sidecars (reader,
 #     info(source), info(view), status(source), targetInfoPublisher) had
 #     50m — genuine burst room at the time (not request==limit), cheap
-#     insurance per codex, even though none of them was remotely close to
+#     insurance, even though none of them was remotely close to
 #     it.
 #   Memory requests (role totals still 160Mi/128Mi, redistributed per the
 #     measured values): source — writer 96, initiator 24, reader 8,
