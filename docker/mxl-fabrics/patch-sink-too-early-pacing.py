@@ -52,8 +52,8 @@ The script now has two properties, both load-bearing:
     (exit 1, naming exactly what's present and what's missing) rather than
     silently guessed at.
 
-The OLD/NEW text patched into each file is BYTE-IDENTICAL to the pre-fix-
-round-1 version of this script — only the application mechanics changed.
+The OLD/NEW text patched into each file is BYTE-IDENTICAL to the earlier
+version of this script — only the application mechanics changed.
 """
 import os
 import re
@@ -161,8 +161,8 @@ class EnsureIncludesStep:
     have added <cstdlib> before this patch ever runs, and a blind
     unconditional insert would duplicate it (harmless in C++, but untidy).
 
-    Presence is checked LINE-ANCHORED as an active directive (#308
-    fix-round 3, codex gate): a naive substring check treats
+    Presence is checked LINE-ANCHORED as an active directive (#308):
+    a naive substring check treats
     `// #include <mutex>` (commented out) as evidence the header is
     present — a structural false-green the compiler would catch (a missing
     include fails the build) but this script's own state detection should
@@ -237,7 +237,7 @@ def check_state(steps):
       'fresh'   — every step still pending (safe to apply).
       'partial' — a genuine mix, or an ambiguous individual step (neither
                   cleanly applied nor cleanly pending). detail lists step
-                  labels in each bucket. This is the state the fix-round 1
+                  labels in each bucket. This is the state an earlier
                   bug could produce and silently treat as 'clean' — now
                   refused outright (rc=1) instead.
     """
