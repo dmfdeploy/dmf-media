@@ -566,7 +566,7 @@
         },
         "geometry": {
           "type": "object",
-          "description": "Optional. Format geometry. Field names follow the AMWA IN-003 names where a counterpart exists. Video accepts frame_width, frame_height and frame_rate; audio accepts sample_rate and channel_count; data and mux accept none.",
+          "description": "Optional. Format geometry. Field names follow the AMWA IN-003 names where a counterpart exists. Video accepts frame_width, frame_height and frame_rate; audio accepts sample_rate and channels; data and mux accept none.",
           "properties": {
             "frame_width": { "type": "integer", "minimum": 1, "maximum": 16384, "description": "Video frame width in pixels." },
             "frame_height": { "type": "integer", "minimum": 1, "maximum": 16384, "description": "Video frame height in pixels." },
@@ -581,7 +581,7 @@
               "description": "Video frame rate as a rational number."
             },
             "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 384000, "description": "Audio sample rate in hertz." },
-            "channel_count": { "type": "integer", "minimum": 1, "maximum": 256, "description": "Number of audio channels." }
+            "channels": { "type": "integer", "minimum": 1, "maximum": 256, "description": "Number of audio channels." }
           }
         },
         "caps": {
@@ -650,7 +650,7 @@
         },
         {
           "if": { "properties": { "format": { "const": "urn:x-nmos:format:audio" } }, "required": ["format"] },
-          "then": { "properties": { "geometry": { "propertyNames": { "enum": ["sample_rate", "channel_count"] } } } }
+          "then": { "properties": { "geometry": { "propertyNames": { "enum": ["sample_rate", "channels"] } } } }
         },
         {
           "if": { "properties": { "format": { "enum": ["urn:x-nmos:format:data", "urn:x-nmos:format:mux"] } }, "required": ["format"] },

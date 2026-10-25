@@ -69,6 +69,7 @@ entry in `spec.inputs` when its `direction` is `in`, and to an entry in
 | `ports[].geometry.frame_height` | `spec.<dir>[].format.video.frame_height` | Height in pixels. |
 | `ports[].geometry.frame_rate` | `spec.<dir>[].format.video.frame_rate` | The descriptor holds a numerator and a denominator; IN-003 holds a string. The export converts it. |
 | `ports[].geometry.sample_rate` | `spec.<dir>[].format.audio.sample_rate` | Sample rate in hertz. |
+| `ports[].geometry.channels` | `spec.<dir>[].format.audio.channels` | Number of audio channels. |
 | `placement.host_capabilities.cpu` | `spec.requirements.host_capabilities.cpu.features` | The descriptor lists feature names as placement hints; IN-003 puts them under requirements. |
 | `placement.host_capabilities.network` | `spec.requirements.host_capabilities.network[].features` | Feature names only. IN-003 also describes each network interface. |
 
