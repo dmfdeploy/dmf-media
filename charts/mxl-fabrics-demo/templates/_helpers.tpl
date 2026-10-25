@@ -14,7 +14,7 @@ helm.sh/chart: mxl-fabrics-demo-{{ .Chart.Version }}
 {{- end -}}
 
 {{/*
-umbrella #258 codex round-2 (P2) — resolve a resources.<name> entry that MAY
+Resolve a resources.<name> entry that MAY
 be split per-role. info/status are single values.yaml keys rendered once
 into EACH role's pod (source AND view), but measured usage differs wildly
 by role (status: ~4m/17Mi source vs ~157m/56Mi view — the view side runs a

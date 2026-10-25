@@ -40,17 +40,16 @@ provision:
     # the chart render — bin/check-catalog-demand.py gates equality in CI.
     # Chart values.yaml's own resources block has the full measured
     # rationale (unconsumed-vs-consumed CPU doubling, per-container
-    # measured table, domain-fill note). Role REQUEST totals are unchanged
-    # across #258 round 2 (codex GATE:FAIL fix — per-container limits
-    # only); the per-container split below shifted from round 1 — status
-    # in particular is now the biggest single share (it runs a continuous
-    # GStreamer/JPEG preview pipeline, not a poller — codex P2).
+    # measured table, domain-fill note). Role REQUEST totals do not depend
+    # on the per-container limits; the per-container split below puts
+    # status first as the biggest single share (it runs a continuous
+    # GStreamer/JPEG preview pipeline, not a poller).
     requests:
       cpu: 225m      # videotest-view (view): 160(status)+45(target)+15(targetInfoPublisher)+5(info)
       memory: 128Mi  # 56(status)+56(target)+8(info)+8(targetInfoPublisher)
   # umbrella #201 naming contract (dmf-runbooks
   # roles/l3_run_guard/filter_plugins/l3_topology.py's
-  # l3_topology_release_group, WP3 fix-round D5): a topology launch is
+  # l3_topology_release_group): a topology launch is
   # N+1 releases — the viewer's own service (unchanged) plus one per
   # topology_params.sources[] item, named "{{ l3_release }}-{{ source.id }}".
   # For J1 (catalog/topology-params.j1.yaml, sources source-a/source-b)
