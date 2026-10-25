@@ -92,6 +92,11 @@ The descriptor covers areas that IN-003 doesn't cover yet:
   from a revocation list. Question 6 in
   [IN-003 issue #4](https://github.com/AMWA-TV/in-003/issues/4) asks whether
   artefact identity belongs in IN-003 or in a separate Increment.
+- **Software licence.** The required `software_licence` field holds the SPDX
+  licence of the software the package ships. IN-003 has no licence field; it
+  mentions a licence server only in prose. The word `licence` alone is kept
+  for entitlements, such as licence-server seats, which the descriptor doesn't
+  cover.
 - **Closed content.** The schema rejects unknown keys everywhere. Question 1
   in the same issue asks whether IN-003 intends open content.
 - **Package-level checks.** The conformance tool checks things a schema

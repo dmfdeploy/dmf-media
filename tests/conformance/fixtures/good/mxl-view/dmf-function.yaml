@@ -11,7 +11,7 @@ publisher:
 origin:
   commit_sha: 0123456789abcdef0123456789abcdef01234567
   provenance_uri: https://example.com/builds/1
-licence:
+software_licence:
   identifier: Apache-2.0
   enforcement: declared-unenforced
 ebu:

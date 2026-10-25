@@ -8,7 +8,7 @@ metadata:
 publisher:
   name: example-publisher
   uri: https://example.com/publisher
-licence:
+software_licence:
   identifier: Apache-2.0
   enforcement: declared-unenforced
 ebu:

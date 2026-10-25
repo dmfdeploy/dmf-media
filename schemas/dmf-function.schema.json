@@ -11,7 +11,7 @@
     "metadata",
     "publisher",
     "origin",
-    "licence",
+    "software_licence",
     "ebu",
     "artifacts",
     "resources",
@@ -100,25 +100,25 @@
         }
       }
     },
-    "licence": {
+    "software_licence": {
       "type": "object",
-      "description": "Licence declaration. It may state that the licence is not enforced by the platform, but it may never be absent.",
+      "description": "Licence of the software this package ships, as an SPDX declaration. It may state that the platform does not enforce the licence, but it may never be absent. It does not describe entitlements such as licence-server seats.",
       "additionalProperties": false,
       "required": ["identifier", "enforcement"],
       "properties": {
         "identifier": {
           "type": "string",
           "pattern": "^(LicenseRef-[A-Za-z0-9.-]+|[A-Za-z0-9.+-]+)$",
-          "description": "SPDX licence identifier, or a LicenseRef- identifier for a custom licence."
+          "description": "SPDX identifier of the software licence, or a LicenseRef- identifier for a custom software licence."
         },
         "enforcement": {
           "enum": ["declared-unenforced", "enforced"],
-          "description": "declared-unenforced: the platform records the licence but does not check it. enforced: a licence mechanism gates use."
+          "description": "declared-unenforced: the platform records the software licence but does not check it. enforced: a licence mechanism gates use."
         },
         "uri": {
           "type": "string",
           "format": "uri",
-          "description": "Link to the licence text or terms."
+          "description": "Link to the software licence text or terms."
         }
       }
     },
