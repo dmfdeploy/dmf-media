@@ -93,9 +93,12 @@ last two rows of the table.
 
 ### Compatibility path
 
-An IN-003 manifest is generated from the descriptor. It is the optional
-manifest that `resourceManifest` points to, from
-[dmfdeploy/dmfdeploy#637](https://github.com/dmfdeploy/dmfdeploy/issues/637).
+An IN-003 manifest is generated from the descriptor. That optional manifest
+arrives with
+[dmfdeploy/dmfdeploy#637](https://github.com/dmfdeploy/dmfdeploy/issues/637),
+together with the descriptor field that points to it and the conformance
+check that compares the two. Until then the descriptor has no such field, and
+the schema rejects one.
 Tests check the generated manifest against the IN-003 schema, fetched at the
 pinned commit at test time. The IN-003 schema is never vendored into this
 repository.

@@ -33,6 +33,10 @@ bad:
     twin: video-sender
     dirs: [bad/unknown-field]
     expect: "'colour' was unexpected"
+  - name: resource-manifest-not-yet
+    twin: video-sender
+    dirs: [bad/resource-manifest-not-yet]
+    expect: "'resourceManifest' was unexpected"
   - name: bad-port-direction
     twin: video-sender
     dirs: [bad/bad-port-direction]
