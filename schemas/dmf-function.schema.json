@@ -461,20 +461,6 @@
         }
       }
     },
-    "resourceManifest": {
-      "type": "object",
-      "description": "Optional. Reference to an AMWA IN-003 resource manifest generated from this descriptor. Never write it by hand. The conformance run checks it against the descriptor.",
-      "additionalProperties": false,
-      "required": ["path", "digest"],
-      "properties": {
-        "path": {
-          "type": "string",
-          "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$",
-          "description": "Path of the generated file, relative to the package."
-        },
-        "digest": { "$ref": "#/$defs/digest", "description": "Digest of the generated file." }
-      }
-    },
     "extensions": {
       "type": "object",
       "description": "Optional. Namespaced, versioned extension blocks. An extension adds data; it cannot weaken or override generic policy, so keys that name policy, privilege, trust or launcher settings are rejected at any depth.",
