@@ -14,7 +14,12 @@ dmf-function.yaml. For every package the tool:
      name and version, chart apiVersion v2);
   3. validates the chart's values.yaml, and every values file named by a
      resource fixture, against the chart's values.schema.json;
-  4. rejects launcher code inside the package;
+  4. rejects launcher code inside the package: the package top level holds
+     only the chart layout (Chart.yaml, Chart.lock, values.yaml,
+     values.schema.json, dmf-function.yaml, .helmignore, README*, LICENSE*,
+     NOTICE*, CHANGELOG*, and the templates/, charts/, crds/, ci/ and files/
+     directories), and launcher-named files and directories are rejected
+     anywhere outside templates/;
   5. rejects reserved key prefixes (dmf-, project-) for other publishers;
   6. runs `helm lint --strict` (skip with --skip-helm);
   7. checks revocation state when --revocation or --require-revocation is set.
@@ -56,6 +61,11 @@ RESERVED_PREFIXES = ("dmf-", "project-")
 PROJECT_PUBLISHER = "dmfdeploy"
 LAUNCHER_DIR_NAMES = {"launcher", "launchers", "playbooks", "roles"}
 LAUNCHER_FILE_RE = re.compile(r"(^|[-_.])(launch|launcher|playbook)([-_.]|$)", re.I)
+# The chart layout. files/ holds workload content that templates mount.
+LAYOUT_FILES = {"Chart.yaml", "Chart.lock", "values.yaml", "values.schema.json",
+                "dmf-function.yaml", ".helmignore"}
+LAYOUT_FILE_PREFIXES = ("README", "LICENSE", "NOTICE", "CHANGELOG")
+LAYOUT_DIRS = {"templates", "charts", "crds", "ci", "files"}
 
 
 class Report:
@@ -166,6 +176,19 @@ def run_helm_lint(where, chart_dir, report):
             if "[ERROR]" in line or "[WARNING]" in line or "Error" in line
         ) or "helm lint failed"
         report.add(where, "helm lint --strict", detail)
+
+
+def find_outside_layout(pkg_dir):
+    """Return the sorted top-level entries that are not part of the chart layout."""
+    outside = []
+    for entry in os.listdir(pkg_dir):
+        path = os.path.join(pkg_dir, entry)
+        if os.path.isdir(path) and not os.path.islink(path):
+            if entry not in LAYOUT_DIRS:
+                outside.append(entry + "/")
+        elif entry not in LAYOUT_FILES and not entry.startswith(LAYOUT_FILE_PREFIXES):
+            outside.append(entry)
+    return sorted(outside)
 
 
 def find_launcher_assets(pkg_dir):
@@ -312,7 +335,10 @@ def check_package(pkg_dir, args, schema, report, descriptors):
                    f"key prefix {key.split('-')[0]}- is reserved for the project source; "
                    f"publisher is {publisher!r}")
 
-    # No launcher code.
+    # No launcher code: first the chart layout, then launcher names inside it.
+    outside = find_outside_layout(pkg_dir)
+    if outside:
+        report.add(where, ".", "package contains files outside the chart layout: " + ", ".join(outside))
     for hit in find_launcher_assets(pkg_dir):
         report.add(where, hit, "package contains launcher code or a launcher directory; "
                                "packages carry no launcher, only the project source may add one")

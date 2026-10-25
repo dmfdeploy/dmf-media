@@ -30,6 +30,15 @@ bin/dmf-function-conform packages/<key>
 bin/dmf-function-conform --chart-only charts/nmos-crosspoint
 ```
 
+A package carries no launcher code. Its top level may hold only the chart
+layout: `Chart.yaml`, `Chart.lock`, `values.yaml`, `values.schema.json`,
+`dmf-function.yaml`, `.helmignore`, files named `README*`, `LICENSE*`,
+`NOTICE*` or `CHANGELOG*`, and the `templates/`, `charts/`, `crds/`, `ci/`
+and `files/` directories. `files/` is for workload content that templates
+mount, such as a script delivered through a ConfigMap. The tool also rejects
+launcher-named files and directories, such as `playbooks/`, anywhere outside
+`templates/`.
+
 The tool prints one `VIOLATION` line per problem and exits with 1 if it finds
 any. It also runs `helm lint --strict`; pass `--skip-helm` to leave that out.
 
