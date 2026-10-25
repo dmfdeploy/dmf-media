@@ -13,7 +13,6 @@ origin:
   provenance_uri: https://example.com/builds/1
 software_licence:
   identifier: Apache-2.0
-  enforcement: declared-unenforced
 ebu:
   layer: 5
   media_function_type: view

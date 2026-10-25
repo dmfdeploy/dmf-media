@@ -31,6 +31,10 @@ bad:
     twin: video-sender
     dirs: [bad/old-licence-name]
     expect: "Additional properties are not allowed ('licence' was unexpected)"
+  - name: software-licence-enforcement
+    twin: video-sender
+    dirs: [bad/software-licence-enforcement]
+    expect: "/software_licence: Additional properties are not allowed ('enforcement' was unexpected)"
   - name: wrong-type
     twin: video-sender
     dirs: [bad/wrong-type]

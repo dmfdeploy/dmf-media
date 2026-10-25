@@ -102,18 +102,14 @@
     },
     "software_licence": {
       "type": "object",
-      "description": "Licence of the software this package ships, as an SPDX declaration. It may state that the platform does not enforce the licence, but it may never be absent. It does not describe entitlements such as licence-server seats.",
+      "description": "SPDX declaration of the licence of the software this package ships. It may never be absent. It does not describe entitlements such as licence-server seats (see ADR-0045).",
       "additionalProperties": false,
-      "required": ["identifier", "enforcement"],
+      "required": ["identifier"],
       "properties": {
         "identifier": {
           "type": "string",
           "pattern": "^(LicenseRef-[A-Za-z0-9.-]+|[A-Za-z0-9.+-]+)$",
           "description": "SPDX identifier of the software licence, or a LicenseRef- identifier for a custom software licence."
-        },
-        "enforcement": {
-          "enum": ["declared-unenforced", "enforced"],
-          "description": "declared-unenforced: the platform records the software licence but does not check it. enforced: a licence mechanism gates use."
         },
         "uri": {
           "type": "string",
