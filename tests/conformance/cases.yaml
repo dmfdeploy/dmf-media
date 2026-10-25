@@ -17,6 +17,8 @@ good:
     dirs: [good/reserved-project-publisher]
   - name: distinct-keys
     dirs: [good/video-sender, good/second-sender]
+  - name: files-content
+    dirs: [good/files-content]
   - name: revocation-fresh
     dirs: [good/video-sender]
     args: [--revocation, good/revocation-fresh.yaml, --require-revocation, --now, "2026-10-21T12:00:00Z"]
@@ -101,6 +103,14 @@ bad:
     twin: video-sender
     dirs: [bad/bespoke-launcher]
     expect: "package contains launcher code"
+  - name: launcher-outside-layout-script
+    twin: video-sender
+    dirs: [bad/launcher-outside-layout-script]
+    expect: "package contains files outside the chart layout: scripts/"
+  - name: launcher-outside-layout-tool
+    twin: video-sender
+    dirs: [bad/launcher-outside-layout-tool]
+    expect: "package contains files outside the chart layout: tools/"
   - name: values-unsafe
     twin: video-sender
     dirs: [bad/values-unsafe]
