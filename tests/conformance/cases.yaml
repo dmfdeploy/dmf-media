@@ -111,6 +111,22 @@ bad:
     twin: video-sender
     dirs: [bad/launcher-outside-layout-tool]
     expect: "package contains files outside the chart layout: tools/"
+  - name: readme-script-at-root
+    twin: files-content
+    dirs: [bad/readme-script-at-root]
+    expect: "package contains files outside the chart layout: README.sh"
+  - name: license-python-at-root
+    twin: files-content
+    dirs: [bad/license-python-at-root]
+    expect: "package contains files outside the chart layout: LICENSE.py"
+  - name: ci-script
+    twin: files-content
+    dirs: [bad/ci-script]
+    expect: "package contains files outside the chart layout: ci/run-tests.sh"
+  - name: ci-subdirectory
+    twin: files-content
+    dirs: [bad/ci-subdirectory]
+    expect: "package contains files outside the chart layout: ci/hooks/"
   - name: values-unsafe
     twin: video-sender
     dirs: [bad/values-unsafe]

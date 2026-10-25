@@ -66,7 +66,12 @@ LAUNCHER_FILE_RE = re.compile(r"(^|[-_.])(launch|launcher|playbook)([-_.]|$)", r
 # The chart layout. files/ holds workload content that templates mount.
 LAYOUT_FILES = {"Chart.yaml", "Chart.lock", "values.yaml", "values.schema.json",
                 "dmf-function.yaml", ".helmignore"}
-LAYOUT_FILE_PREFIXES = ("README", "LICENSE", "NOTICE", "CHANGELOG")
+# Documentation files by exact name: a stem, bare or with one text extension.
+# A prefix match would also accept README.sh or LICENSE.py.
+LAYOUT_DOC_STEMS = ("README", "LICENSE", "LICENCE", "NOTICE", "CHANGELOG")
+LAYOUT_DOC_EXTS = (".md", ".txt", ".rst")
+# Helm uses ci/ only for values files.
+CI_VALUES_EXTS = (".yaml", ".yml")
 LAYOUT_DIRS = {"templates", "charts", "crds", "ci", "files"}
 # RFC 3986 characters: unreserved, reserved and the percent sign.
 URI_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -220,16 +225,37 @@ def run_helm_lint(where, chart_dir, report):
         report.add(where, "helm lint --strict", detail)
 
 
+def is_doc_file(name):
+    stem, ext = os.path.splitext(name)
+    if ext == "":
+        return name in LAYOUT_DOC_STEMS
+    return stem in LAYOUT_DOC_STEMS and ext.lower() in LAYOUT_DOC_EXTS
+
+
 def find_outside_layout(pkg_dir):
-    """Return the sorted top-level entries that are not part of the chart layout."""
+    """Return the sorted entries that are not part of the chart layout.
+
+    Top-level entries must be layout files, documentation files or layout
+    directories. Inside ci/ only values files (*.yaml, *.yml) are allowed.
+    """
     outside = []
     for entry in os.listdir(pkg_dir):
         path = os.path.join(pkg_dir, entry)
         if os.path.isdir(path) and not os.path.islink(path):
             if entry not in LAYOUT_DIRS:
                 outside.append(entry + "/")
-        elif entry not in LAYOUT_FILES and not entry.startswith(LAYOUT_FILE_PREFIXES):
+        elif entry not in LAYOUT_FILES and not is_doc_file(entry):
             outside.append(entry)
+    ci_dir = os.path.join(pkg_dir, "ci")
+    if os.path.isdir(ci_dir) and not os.path.islink(ci_dir):
+        for dirpath, dirnames, filenames in os.walk(ci_dir):
+            rel = os.path.relpath(dirpath, pkg_dir)
+            for d in dirnames:
+                outside.append(os.path.join(rel, d) + "/")
+            dirnames[:] = []  # a subdirectory is reported whole
+            for f in filenames:
+                if not f.endswith(CI_VALUES_EXTS):
+                    outside.append(os.path.join(rel, f))
     return sorted(outside)
 
 
