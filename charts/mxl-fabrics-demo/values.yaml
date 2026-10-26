@@ -66,7 +66,7 @@ domainPath: /home/mxl/domain      # matches the demo images' workingDir (mxl use
 domainSizeLimit: 256Mi
 
 # Flow shared by target (-f json) and initiator (-f id). Same 1080p29 test flow
-# shape; flow.id is now a per-release value (umbrella #201 WP2, spec §3/§4) —
+# shape; flow.id is now a per-release value (spec §3/§4) —
 # each Helm release (one per topology_params.sources[] entry, plus the
 # viewer's own release) sets its own flow.id via --set, replacing F1's single
 # fixed UUID shared by both catalog entries. flow.json's own "id" field is a
@@ -104,7 +104,7 @@ flow:
     }
 
 # Test pattern for the source-role writer (mxl-gst-testsrc, a GStreamer
-# element wrapper — umbrella #201 WP2, spec §4: "distinct test pattern, so
+# element wrapper — spec §4: "distinct test pattern, so
 # the switch is visually unambiguous"). Standard GStreamer videotestsrc
 # named patterns (e.g. smpte, checkers-8); J1's two catalog sources use smpte
 # and checkers-8 respectively (dmf-media catalog/topology-params.j1.yaml).
@@ -145,7 +145,7 @@ flow:
 # deadline drifts silently behind real time.
 pattern: smpte
 
-# This release's own source identity slug (umbrella #201 WP2, spec §4.1) —
+# This release's own source identity slug (spec §4.1) —
 # the source-supervisor compares this against the coordinator's
 # active-source field (data.active-source, keyed by sources[].id) to decide
 # whether THIS release's initiator should run. Matches
@@ -169,9 +169,9 @@ initiator:
   targetInfo: ""      # opaque libfabric target-info string from the target's stdout
 
 # Per-container resource requests AND limits — umbrella dmfdeploy/dmfdeploy#258
-# measured calibration (2026-07-24, chart 0.3.1), replacing the WP0-era
+# measured calibration (2026-07-24, chart 0.3.1), replacing the earlier
 # request-only placeholders above. Consumed by the L3 capacity preflight
-# (dmfdeploy/dmfdeploy#202 WP0) to budget CPU/memory across media nodes, and
+# (dmfdeploy/dmfdeploy#202) to budget CPU/memory across media nodes, and
 # by the catalog demand profiles — catalog/mxl-videotest-view.yaml's own
 # provision.resources.requests (role=view) plus the topology-owned
 # topology_params.source_profile in catalog/topology-params.j1.yaml

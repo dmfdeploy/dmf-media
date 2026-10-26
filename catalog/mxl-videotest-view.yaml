@@ -4,12 +4,12 @@ summary: |
   Media eXchange Layer test-pattern demo: two pattern sources and one receiver
   that shows the received picture, with a live preview.
 
-# umbrella #201 WP2 (association decision, issue #201 comment): this entry
+# Association decision (see issue #201): this entry
 # deploys a topology instance defined by the named topology_params contract
-# (catalog/topology-params.schema.yaml, WP1) — a filename in this same
-# catalog dir. dmf-cms's launch seam (WP3a) resolves+validates it and
+# (catalog/topology-params.schema.yaml) — a filename in this same
+# catalog dir. dmf-cms's launch seam resolves+validates it and
 # injects the object into the AWX launch extra_vars; the dmf-runbooks
-# playbook (WP3) projects viewer.source_selection to this chart's
+# playbook projects viewer.source_selection to this chart's
 # coordinator active-source + the viewer's own flow.id.
 topology_ref: topology-params.j1.yaml
 
@@ -34,7 +34,7 @@ provision:
     version: 0.4.0
     source: oci://registry.dmf.example.com/charts/mxl-fabrics-demo
   resources:
-    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202 WP0, recalibrated
+    # L3 demand profile (umbrella dmfdeploy/dmfdeploy#202, recalibrated
     # from measured usage in umbrella dmfdeploy/dmfdeploy#258, chart 0.3.1):
     # sum of the rendered <role>-role pod's container requests. MUST equal
     # the chart render — bin/check-catalog-demand.py gates equality in CI.

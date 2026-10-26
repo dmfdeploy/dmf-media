@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""check-catalog-demand.py - L3 demand profile equality gate (umbrella #202 WP0).
+"""check-catalog-demand.py - L3 demand profile equality check.
 
 For every catalog/*.yaml entry whose provision.chart.name is mxl-fabrics-demo,
 render the chart for that entry's role (ebu.media_function_type) and compute
@@ -260,7 +260,7 @@ def _validate_topology_ref_path(ref, origin):
 def _load_topology_object(key, topology_ref):
     """Load a topology_ref target and return its topology_params object.
 
-    Validates just enough of the umbrella #201 WP1 topology_params contract
+    Validates just enough of the topology_params contract
     for role-coverage and demand-validation purposes: the target file must
     exist, parse as a mapping, carry a top-level topology_params object with
     a non-empty sources[] list and a viewer mapping. Full contract
@@ -348,7 +348,7 @@ def _covered_roles(entry_path, entry):
     """Return (covered_roles, topology_object_or_None) for one catalog entry.
 
     An entry always covers its own ebu.media_function_type. A 'view' entry
-    may additionally carry a topology_ref (umbrella #201 WP3a) naming a
+    may additionally carry a topology_ref naming a
     topology_params instance in this same catalog dir; per
     mxl-videotest-view.yaml's own netbox_service comment ("the source-*
     records ... are created by the viewer JT's own release-group loop only

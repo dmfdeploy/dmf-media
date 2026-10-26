@@ -1,7 +1,7 @@
 # === dmfdeploy platform .gitignore ===
 # Repo-specific rules go above the baseline block at the bottom.
 
-# umbrella #201 WP2 acceptance-gate demo harness — evidence/render output is
+# Acceptance demo harness: evidence and render output is
 # regenerated per run (tests/harness/run-demo.sh, render-matrix.sh), never
 # committed.
 tests/harness/evidence/

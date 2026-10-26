@@ -4,3 +4,4 @@
 # that is not review history.
 bin/working-model-digest.sh:codex/qwen don't run hooks  # names the agents this hook cannot reach; not review history
 tests/harness/run-demo.sh:discriminates codex's epoch-changed-only mutant  # runtime log text, not a comment; this change touches comments only
+tests/harness/run-demo.sh:umbrella #201 WP2 acceptance demo  # log message string in code, not a comment; changing it changes run output

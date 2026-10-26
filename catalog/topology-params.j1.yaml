@@ -1,12 +1,11 @@
-# J1 two-source topology instance — umbrella dmfdeploy/dmfdeploy#201 WP1.
+# J1 two-source topology instance — umbrella dmfdeploy/dmfdeploy#201.
 #
 # A concrete `topology_params` object satisfying
 # catalog/topology-params.schema.yaml (schema_version 1): J1's build target
 # per spec §4 — 2 × mxl-videotestsrc (distinct flow ids and test patterns,
 # so the switch is visually unambiguous) + 1 × mxl-videotest-view, on the
-# standing single-node lane. Doc/schema only (WP1) — WP2/WP3/WP3a wire the
-# actual chart parameterisation, playbook projection, and console launch
-# seam this instance is the frozen input for.
+# standing single-node lane. Doc/schema only — the chart parameterisation, playbook
+# projection and console launch seam use this instance as their frozen input.
 
 topology_params:
   schema_version: 1
@@ -42,11 +41,11 @@ topology_params:
   source_noun: "MXL Test-Pattern Source"
 
   # ILLUSTRATIVE — never a literal env slug in git. Per this schema's
-  # target_facility.resolution: the console launch seam (WP3a) resolves the
+  # target_facility.resolution: the console launch seam resolves the
   # current env's NetBox site slug at launch time and injects the real
-  # value; the launcher (WP3) validates it against that env's own site.
+  # value; the launcher validates it against that env's own site.
   # This placeholder exists only so the instance is a complete, well-formed
-  # example of the shape WP3/WP3a project against.
+  # example of the shape the launcher and launch seam project against.
   target_facility: dmf-example-site
 
   sources:
@@ -58,7 +57,7 @@ topology_params:
       flow_id: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
       # Standard GStreamer videotestsrc named pattern (mxl-gst-testsrc is a
       # GStreamer component) — no pattern enum exists yet anywhere in this
-      # repo (WP2 introduces per-source patterns for the first time); smpte
+      # repo (per-source patterns are new here); smpte
       # (colour bars) and checkers-8 (the second source's pattern, below) are
       # maximally visually distinct, satisfying §4's "visually unambiguous"
       # requirement.
@@ -95,6 +94,6 @@ topology_params:
   viewer:
     id: viewer-a
     # Initial launch selection — source-a is active at launch. The switch
-    # (WP4/WP5, §5-6) re-sets this same field at reconfigure time; it is
+    # (§5-6) re-sets this same field at reconfigure time; it is
     # not re-authored per layer, it rides unchanged from the catalog value.
     source_selection: source-a

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Stub for the real mxl-fabrics-demo binary (umbrella #201 WP2 acceptance
+# Stub for the real mxl-fabrics-demo binary (acceptance
 # harness). Only implements the ONE invocation shape source-supervisor.sh
 # actually issues: `mxl-fabrics-demo -i -d <domain> -f <flow_id> -n <ip>
 # --service <port> -p <provider> --target-info <info>`.
