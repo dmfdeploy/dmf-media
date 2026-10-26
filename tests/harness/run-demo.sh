@@ -1,5 +1,5 @@
 #!/bin/sh
-# umbrella #201 WP2 acceptance-gate demo harness (spec §10 hard gate: "an
+# Acceptance demo harness (spec §10 hard requirement: "an
 # entry-time-selector-only implementation FAILS").
 #
 # Renders the REAL source-supervisor.sh out of the chart (helm template,

@@ -44,7 +44,7 @@ data:
       echo "[supervisor] flow present."
     }
 
-    # Selection predicate (umbrella #201 WP2, spec §4.1) — true iff
+    # Selection predicate (spec §4.1) — true iff
     # active-source names THIS source. A missing/empty coordinator key
     # is NOT selected: fail-closed default, never transmit without an
     # explicit selection naming this source.

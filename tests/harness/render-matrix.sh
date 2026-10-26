@@ -1,8 +1,8 @@
 #!/bin/sh
-# umbrella #201 WP2 — helm template render matrix + diffs.
+# helm template render matrix + diffs.
 #
-# Renders the chart across the shapes the WO2 acceptance criteria name:
-#   default   — bare `helm template` with chart defaults (nothing WP2 added
+# Renders the chart across the shapes the acceptance criteria name:
+#   default   — bare `helm template` with chart defaults (nothing the per-source work added
 #               overridden), a regression sanity check on its own
 #   source-a  — J1's first source instance (catalog/topology-params.j1.yaml)
 #   source-b  — J1's second source instance
@@ -22,7 +22,7 @@ HARNESS_DIR="$(cd "$(dirname "$0")" && pwd)"
 CHART_DIR="$HARNESS_DIR/../../charts/mxl-fabrics-demo"
 OUT_DIR="$HARNESS_DIR/render-matrix"
 
-# J1's real instance values (catalog/topology-params.j1.yaml, WP1 frozen).
+# J1's real instance values (catalog/topology-params.j1.yaml, frozen).
 SOURCE_A_FLOW="5fbec3b1-1b0f-417d-9059-8b94a47197ed"
 SOURCE_A_PATTERN="smpte"
 SOURCE_B_FLOW="b0ae9cba-a989-4568-ac96-8bd19272c966"

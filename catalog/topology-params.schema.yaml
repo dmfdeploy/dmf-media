@@ -28,7 +28,7 @@
 # the seam in §3.2. #231 authors INSTANCES of this contract (the way
 # catalog/topology-params.j1.yaml does for J1) — it does not define a new
 # schema. J1 stays honest for that future only if this set is exposed
-# cleanly now, which is why WP1 (this file) exists ahead of any Design
+# cleanly now, which is why this file exists ahead of any Design
 # surface being built.
 
 schema_version: 1
