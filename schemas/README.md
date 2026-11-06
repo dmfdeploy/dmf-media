@@ -113,14 +113,18 @@ The descriptor covers areas that IN-003 doesn't cover yet:
   mentions a licence server only in prose. The word `licence` alone is kept
   for entitlements, such as licence-server seats, which the descriptor doesn't
   cover.
-- **Closed content.** The schema rejects unknown keys everywhere. In
+- **Closed content.** The schema rejects unknown keys in its fixed objects.
+  Two places accept keys the schema doesn't list: the bodies under
+  `extensions`, which hold namespaced data of any shape except keys that name
+  policy, privilege, trust or launcher settings, and maps whose keys follow a
+  pattern. A misspelled key inside an extension body isn't caught. In
   the same issue, an AMWA contributor replied to question 1 on 2026-10-28
   that the IN-003 schema is as permissive as possible about fields and units
   at this phase, because implementations vary. The contributor said they
   didn't understand the question about unknown keys. We clarified that unknown
   field names were the point and asked again on 2026-10-29. That specific
-  question is unanswered. The descriptor stays closed, so it catches a
-  misspelled field name early.
+  question is unanswered. The descriptor's fixed objects stay closed, so they
+  catch a misspelled field name early.
 - **Package-level checks.** The conformance tool checks things a schema
   can't, such as version identity with `Chart.yaml`, package-key collisions
   and revocation freshness. No question in issue #4 covers these yet.
@@ -134,8 +138,11 @@ placement may move.
 Neither the IN-003 export nor the pinned-schema test exists yet. Both are
 planned.
 
-The plan is to generate an IN-003 manifest from the descriptor, including the
-frame-rate conversion that the table notes. That optional manifest is to
+The plan is to generate an IN-003 manifest from the descriptor. Fields that
+differ in shape today, such as the frame rate, are to take the IN-003 shape
+first, under
+[dmfdeploy/dmfdeploy#746](https://github.com/dmfdeploy/dmfdeploy/issues/746),
+so the export needs no conversion for them. That optional manifest is to
 arrive with
 [dmfdeploy/dmfdeploy#637](https://github.com/dmfdeploy/dmfdeploy/issues/637),
 together with the descriptor field that points to it and the conformance
