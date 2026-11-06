@@ -60,11 +60,19 @@ must contain.
 [IN-003](https://github.com/AMWA-TV/in-003) is an AMWA draft, at `v1alpha1`,
 for a media function resource manifest. The repository publishes no tags or
 releases yet, so dmfdeploy tracks it at a pinned commit, currently
-[`acfa2b9`](https://github.com/AMWA-TV/in-003/tree/acfa2b9f7cb71874df2df264c746a6b72b208cab).
+[`fd5f036`](https://github.com/AMWA-TV/in-003/tree/fd5f0363b0e6a634e9d98e2c64e2d89157d74cef).
+The move from the earlier pin changed only the examples layout. The schema
+and the spec text are the same.
 
 The descriptor stays dmfdeploy's own format. It aligns with IN-003 by field
 name and through a generated export. This repository links to IN-003 and uses
 its field names, and it copies none of its schema or prose.
+
+IN-003 field names are authoritative. The descriptor is a superset: where a
+descriptor field means the same thing as an IN-003 field, it takes the IN-003
+name and shape, and fields that only the descriptor needs are additions. For
+the decision, see
+[dmfdeploy/dmfdeploy#746](https://github.com/dmfdeploy/dmfdeploy/issues/746).
 
 ### Shared field names
 
@@ -90,21 +98,28 @@ The descriptor covers areas that IN-003 doesn't cover yet:
 - **Artefact identity.** The chart and every image are pinned by digest, each
   release names its source commit and provenance record, and revocation comes
   from a revocation list. Question 6 in
-  [IN-003 issue #4](https://github.com/AMWA-TV/in-003/issues/4) asks whether
-  artefact identity belongs in IN-003 or in a separate Increment.
+  [IN-003 issue #4](https://github.com/AMWA-TV/in-003/issues/4) asked whether
+  artefact identity belongs in IN-003 or in a separate Increment. An AMWA
+  contributor replied on 2026-10-28 that identity is to be defined by the
+  ledger first. The descriptor keeps its own identity fields until that
+  definition exists.
 - **Software licence.** The required `software_licence` field holds the SPDX
   licence of the software the package ships. IN-003 has no licence field; it
   mentions a licence server only in prose. The word `licence` alone is kept
   for entitlements, such as licence-server seats, which the descriptor doesn't
   cover.
-- **Closed content.** The schema rejects unknown keys everywhere. Question 1
-  in the same issue asks whether IN-003 intends open content.
+- **Closed content.** The schema rejects unknown keys everywhere. In
+  the same issue, an AMWA contributor answered question 1 on 2026-10-28: the
+  IN-003 schema is intentionally permissive at this phase, because
+  implementations vary. The descriptor stays closed, so it catches a
+  misspelled field name early.
 - **Package-level checks.** The conformance tool checks things a schema
   can't, such as version identity with `Chart.yaml`, package-key collisions
   and revocation freshness. No question in issue #4 covers these yet.
 
 Question 2 in that issue, on where `host_capabilities` belongs, affects the
-last two rows of the table.
+last two rows of the table. AMWA is still investigating it upstream, so the
+placement may move.
 
 ### Compatibility path
 
