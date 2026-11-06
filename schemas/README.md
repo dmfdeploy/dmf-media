@@ -114,10 +114,9 @@ The descriptor covers areas that IN-003 doesn't cover yet:
   for entitlements, such as licence-server seats, which the descriptor doesn't
   cover.
 - **Closed content.** The schema rejects unknown keys in its fixed objects.
-  Two places accept keys the schema doesn't list: the bodies under
-  `extensions`, which hold namespaced data of any shape except keys that name
-  policy, privilege, trust or launcher settings, and maps whose keys follow a
-  pattern. A misspelled key inside an extension body isn't caught. In
+  Some values are deliberately open and accept keys the schema doesn't list,
+  such as extension bodies, so a misspelled key inside one of them isn't
+  caught. The schema file defines exactly which values are open. In
   the same issue, an AMWA contributor replied to question 1 on 2026-10-28
   that the IN-003 schema is as permissive as possible about fields and units
   at this phase, because implementations vary. The contributor said they
