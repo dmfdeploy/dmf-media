@@ -61,23 +61,28 @@ must contain.
 for a media function resource manifest. The repository publishes no tags or
 releases yet, so dmfdeploy tracks it at a pinned commit, currently
 [`fd5f036`](https://github.com/AMWA-TV/in-003/tree/fd5f0363b0e6a634e9d98e2c64e2d89157d74cef).
-The move from the earlier pin changed only the examples layout. The schema
-and the spec text are the same.
+The move from the earlier pin leaves the manifest schema and
+`docs/Overview.md` unchanged. Upstream reorganised its examples and added a
+`lib/mxl` submodule (with `.gitmodules`), a high-level JT-DMF PDF and edits to
+its root `README.md`.
 
-The descriptor stays dmfdeploy's own format. It aligns with IN-003 by field
-name and through a generated export. This repository links to IN-003 and uses
-its field names, and it copies none of its schema or prose.
+The descriptor stays dmfdeploy's own format. The plan is to align it with
+IN-003 by field name and shape, and to offer a generated export. This
+repository links to IN-003 and uses its field names, and it copies none of its
+schema or prose.
 
-IN-003 field names are authoritative. The descriptor is a superset: where a
-descriptor field means the same thing as an IN-003 field, it takes the IN-003
-name and shape, and fields that only the descriptor needs are additions. For
-the decision, see
+The decision is that IN-003 field names are authoritative. The descriptor is
+to be a superset: where a descriptor field means the same thing as an IN-003
+field, it takes the IN-003 name and shape, and fields that only the descriptor
+needs are additions. The descriptor doesn't meet this yet. Some names already
+match, and some shapes differ, as the table shows. The alignment is still to
+be implemented under
 [dmfdeploy/dmfdeploy#746](https://github.com/dmfdeploy/dmfdeploy/issues/746).
 
 ### Shared field names
 
-Where a descriptor field means the same thing as an IN-003 field, it uses the
-IN-003 name. The IN-003 paths below are manifest paths. A port maps to an
+The descriptor fields below already use the IN-003 name for the same meaning.
+The Note column says where the shape still differs today. The IN-003 paths below are manifest paths. A port maps to an
 entry in `spec.inputs` when its `direction` is `in`, and to an entry in
 `spec.outputs` when it's `out`; the table writes either list as `spec.<dir>`.
 
@@ -85,11 +90,11 @@ entry in `spec.inputs` when its `direction` is `in`, and to an entry in
 |---|---|---|
 | `ports[].geometry.frame_width` | `spec.<dir>[].format.video.frame_width` | Width in pixels. |
 | `ports[].geometry.frame_height` | `spec.<dir>[].format.video.frame_height` | Height in pixels. |
-| `ports[].geometry.frame_rate` | `spec.<dir>[].format.video.frame_rate` | The descriptor holds a numerator and a denominator; IN-003 holds a string. The export converts it. |
+| `ports[].geometry.frame_rate` | `spec.<dir>[].format.video.frame_rate` | Differs in shape today: the descriptor holds a numerator and a denominator, and IN-003 holds a string. To align under #746. |
 | `ports[].geometry.sample_rate` | `spec.<dir>[].format.audio.sample_rate` | Sample rate in hertz. |
 | `ports[].geometry.channels` | `spec.<dir>[].format.audio.channels` | Number of audio channels. |
-| `placement.host_capabilities.cpu` | `spec.requirements.host_capabilities.cpu.features` | The descriptor lists feature names as placement hints; IN-003 puts them under requirements. |
-| `placement.host_capabilities.network` | `spec.requirements.host_capabilities.network[].features` | Feature names only. IN-003 also describes each network interface. |
+| `placement.host_capabilities.cpu` | `spec.requirements.host_capabilities.cpu.features` | Differs in shape today: the descriptor lists feature names as placement hints, and IN-003 puts them under requirements. To align under #746. |
+| `placement.host_capabilities.network` | `spec.requirements.host_capabilities.network[].features` | Differs in shape today: the descriptor holds feature names only, and IN-003 also describes each network interface. To align under #746. |
 
 ### Where the descriptor goes further
 
@@ -109,9 +114,12 @@ The descriptor covers areas that IN-003 doesn't cover yet:
   for entitlements, such as licence-server seats, which the descriptor doesn't
   cover.
 - **Closed content.** The schema rejects unknown keys everywhere. In
-  the same issue, an AMWA contributor answered question 1 on 2026-10-28: the
-  IN-003 schema is intentionally permissive at this phase, because
-  implementations vary. The descriptor stays closed, so it catches a
+  the same issue, an AMWA contributor replied to question 1 on 2026-10-28
+  that the IN-003 schema is as permissive as possible about fields and units
+  at this phase, because implementations vary. The contributor said they
+  didn't understand the question about unknown keys. We clarified that unknown
+  field names were the point and asked again on 2026-10-29. That specific
+  question is unanswered. The descriptor stays closed, so it catches a
   misspelled field name early.
 - **Package-level checks.** The conformance tool checks things a schema
   can't, such as version identity with `Chart.yaml`, package-key collisions
@@ -123,16 +131,22 @@ placement may move.
 
 ### Compatibility path
 
-An IN-003 manifest is generated from the descriptor. That optional manifest
-arrives with
+Neither the IN-003 export nor the pinned-schema test exists yet. Both are
+planned.
+
+The plan is to generate an IN-003 manifest from the descriptor, including the
+frame-rate conversion that the table notes. That optional manifest is to
+arrive with
 [dmfdeploy/dmfdeploy#637](https://github.com/dmfdeploy/dmfdeploy/issues/637),
 together with the descriptor field that points to it and the conformance
 check that compares the two. Until then the descriptor has no such field, and
 the schema rejects one.
-Tests check the generated manifest against the IN-003 schema, fetched at the
-pinned commit at test time. The IN-003 schema is never vendored into this
-repository.
+
+A planned test is to check the generated manifest against the IN-003 schema,
+fetched at the pinned commit at test time. The IN-003 schema is never to be
+vendored into this repository.
 
 When IN-003 publishes a new revision, the pin moves in a pull request that
-updates the mapping table and the export together. [dmfdeploy/dmfdeploy#746](https://github.com/dmfdeploy/dmfdeploy/issues/746)
+updates the mapping table and, once it exists, the export together.
+[dmfdeploy/dmfdeploy#746](https://github.com/dmfdeploy/dmfdeploy/issues/746)
 tracks this work.
