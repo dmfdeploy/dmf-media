@@ -8,6 +8,7 @@ ignore: |
   **/charts/**/templates/**
   tests/harness/evidence/**
   tests/harness/render-matrix/**
+  .venv/
 rules:
   line-length: disable
   comments: disable

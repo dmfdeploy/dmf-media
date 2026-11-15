@@ -21,7 +21,8 @@ docker/         — Dockerfiles: the compiled upstream MXL image (mxl-fabrics)
 bin/            — CI gates + publish scripts (catalog-demand check, GHCR chart/image publish)
 tests/          — Harness scripts (tests/harness/): the acceptance-gate proof
                   (run-demo.sh) and the render matrix (render-matrix.sh), plus
-                  their PATH stubs; both write generated, untracked output
+                  their PATH stubs; both write generated, untracked output.
+                  The conformance tests and the IS-05 fixture live here too
 playbooks/      — lifecycle-operate.yml (catalog drift detector); the eight numbered
                   EBU playbooks (400-599) are stubs
 roles/          — Media-domain Ansible roles (all stubs until Phase 3)
@@ -96,9 +97,9 @@ source switch (source-a to source-b) through the
 repo does not re-run that check on each release, so treat it as a dated
 observation. Nothing broader (multi-node or cross-host) has been demonstrated.
 
-## Repository layout and contributors
+## For contributors
 
-`AGENTS.md`, `CLAUDE.md` and `QWEN.md` hold instructions for AI coding agents that help maintain this repository.
+For setup, the test commands and their run times, the git hooks and what a pull request needs, see [CONTRIBUTING.md](CONTRIBUTING.md). `AGENTS.md`, `CLAUDE.md` and `QWEN.md` hold instructions for AI coding agents that help maintain this repository.
 
 ## License
 

@@ -7,6 +7,9 @@
 tests/harness/evidence/
 tests/harness/render-matrix/
 
+# Local Python virtual environment (see CONTRIBUTING.md).
+.venv/
+
 # macOS metadata
 .DS_Store
 .DS_Store?

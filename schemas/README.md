@@ -17,18 +17,9 @@ compiles patterns with RE2, so chart schemas can't use lookahead.
 
 ## Run the conformance tool
 
-Install the dependencies once:
-
-```bash
-python3 -m pip install pyyaml jsonschema
-```
-
-Check a package, or a chart that has no descriptor yet:
-
-```bash
-bin/dmf-function-conform packages/<key>
-bin/dmf-function-conform --chart-only charts/nmos-crosspoint
-```
+The `bin/dmf-function-conform` tool checks a package, or a chart that has no
+descriptor yet. For the setup and the commands, see
+[Develop and test](../CONTRIBUTING.md#develop-and-test) in CONTRIBUTING.
 
 A package carries no launcher code. Its top level may hold only the chart
 layout: `Chart.yaml`, `Chart.lock`, `values.yaml`, `values.schema.json`,
@@ -45,12 +36,10 @@ any. It also runs `helm lint --strict`; pass `--skip-helm` to leave that out.
 
 To check revocation state, pass `--revocation FILE` or `--require-revocation`.
 
-## Run the tool's tests
+## The tool's tests
 
-```bash
-python3 -m unittest discover -s tests/conformance -v
-```
-
+For the command that runs them, see
+[Develop and test](../CONTRIBUTING.md#develop-and-test) in CONTRIBUTING.
 `tests/conformance/cases.yaml` lists every good and bad fixture. Each bad
 fixture names the good twin it was derived from and the text its violation
 must contain.

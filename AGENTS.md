@@ -14,10 +14,10 @@ stub roles one at a time: they land together (ADR-0004).
 
 ## Build and test
 
-Run `ansible-galaxy collection install -r requirements.yml`, then `yamllint .`,
-`ansible-lint . -p`, `ansible-playbook playbooks/<name>.yml --syntax-check`,
-`helm lint charts/<chart>` and `python3 bin/check-catalog-demand.py` (needs
-`helm` and PyYAML). `tests/harness/run-demo.sh` needs `helm` and Docker.
+Setup, the checks and their run times, the cluster and container checks, the
+hooks and the pull request gates are in
+[CONTRIBUTING.md](CONTRIBUTING.md#develop-and-test). That section is the one
+copy of the commands.
 
 ## Rules that are easy to miss
 
