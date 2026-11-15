@@ -9,11 +9,12 @@ and AWX are out of scope.
 
 ## Run it
 
-```sh
-tests/is05-ab-fixture/run.sh [OUT_DIR]
-```
+The `tests/is05-ab-fixture/run.sh` script takes an optional `OUT_DIR`. For the
+commands, including the crosspoint variants, see
+[Run the cluster and container checks](../../CONTRIBUTING.md#run-the-cluster-and-container-checks)
+in CONTRIBUTING.
 
-The command creates a single-node kind cluster, runs every check, writes the
+The script creates a single-node kind cluster, runs every check, writes the
 observations to `OUT_DIR` (default `tests/is05-ab-fixture/out/<UTC time>`) and
 deletes the cluster. It exits 0 only when every acceptance item passes. A full
 run takes about eight minutes on a 4-CPU ARM64 Docker host, most of it in the
@@ -89,12 +90,8 @@ the results land in the observations and never change the exit status.
 The crosspoint slice ([dmfdeploy/dmfdeploy#629](https://github.com/dmfdeploy/dmfdeploy/issues/629))
 runs the same seven checks with the same bounds, but every switch is the
 crosspoint controller's own connection call. The driver never sends a PATCH.
-
-```sh
-SWITCH_VIA=crosspoint tests/is05-ab-fixture/run.sh [OUT_DIR]
-SWITCH_VIA=crosspoint CONTROLLER_LINE=qvest tests/is05-ab-fixture/run.sh [OUT_DIR]
-SWITCH_VIA=crosspoint CONTROLLER_FROM_CHART=1 tests/is05-ab-fixture/run.sh [OUT_DIR]
-```
+You choose the slice with the `SWITCH_VIA`, `CONTROLLER_LINE` and
+`CONTROLLER_FROM_CHART` environment variables. CONTRIBUTING lists the commands.
 
 With `CONTROLLER_FROM_CHART=1` (needs `helm`), the slice deploys the controller
 by rendering [`charts/nmos-crosspoint`](../../charts/nmos-crosspoint) as it

@@ -35,8 +35,9 @@ check happens to run first — see "Phases" below.
   view-b so a reviewer can see exactly which values differ per
   instance/selection.
 
-Requires: `helm`, `docker` (daemon running), `python3` (or the ansible venv
-python — the script falls back automatically) with PyYAML.
+For what each script needs and the commands that run them, see
+[Run the cluster and container checks](../../CONTRIBUTING.md#run-the-cluster-and-container-checks)
+in CONTRIBUTING.
 
 ## Phases (`run-demo.sh`)
 
@@ -66,12 +67,11 @@ python — the script falls back automatically) with PyYAML.
 
 ## Running it
 
-```sh
-tests/harness/run-demo.sh
-tests/harness/render-matrix.sh
-```
+The commands are in
+[Run the cluster and container checks](../../CONTRIBUTING.md#run-the-cluster-and-container-checks)
+in CONTRIBUTING.
 
-Both are idempotent — each run wipes and regenerates its own output
+Both scripts are idempotent. Each run wipes and regenerates its own output
 directory (`evidence/`, `render-matrix/`; both gitignored). `run-demo.sh`
 exits non-zero with `ACCEPTANCE GATE FAILED: ...` on the first violated
 assertion; a clean run prints `=== ALL ACCEPTANCE CRITERIA PASSED ===`.
