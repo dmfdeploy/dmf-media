@@ -124,8 +124,8 @@ the code they cover.
 | --- | --- | --- | --- |
 | `python3 tests/is05-ab-fixture/crosspoint/check_pins.py` | Python only | Under a second | Yes, on pull requests that change `tests/is05-ab-fixture/`, `charts/nmos-crosspoint/` or the workflow |
 | `tests/is05-ab-fixture/run.sh [OUT_DIR]` | Docker, kind, kubectl, Python 3.11 or later, network access | About 8 minutes on a 4-CPU ARM64 Docker host | Yes, on the same pull requests, on an ARM64 runner |
-| `tests/harness/render-matrix.sh` | Helm | Under a second | No |
-| `tests/harness/run-demo.sh` | Docker with a running daemon, Helm, `python3` with PyYAML | Not measured | No |
+| `tests/harness/render-matrix.sh` | Helm | Under a second | Yes |
+| `tests/harness/run-demo.sh` | Docker with a running daemon, Helm, `python3` with PyYAML | Not measured | Yes |
 
 `tests/is05-ab-fixture/run.sh` creates a single-node kind cluster, runs the
 checks, writes the observations to `OUT_DIR` and deletes the cluster. The
@@ -153,9 +153,15 @@ The `ci` workflow has these jobs:
 
 - **`ansible`** installs the newest `ansible` package, Helm and PyYAML, then
   runs `yamllint`, `ansible-lint`, the syntax check, `helm lint` and the
-  catalog check from the fast checks.
-- **`conformance`** installs the pinned `pyyaml` and `jsonschema`, then runs the
-  conformance tests and the `--chart-only` check.
+  catalog check from the fast checks. The syntax check and `helm lint` fail
+  when they find no playbooks or charts.
+- **`conformance`** installs the pinned `pyyaml` and `jsonschema`, then checks
+  that every test file contributes a test and every harness script is run. It
+  then runs the conformance tests and the `--chart-only` check, which fails when
+  no chart has a values schema. It also fails if `packages/` gains content,
+  because no step checks packages yet.
+- **`harness`** runs `tests/harness/render-matrix.sh` and
+  `tests/harness/run-demo.sh`.
 - **`review-comments`** runs `bin/check-review-comments.sh` and its
   `--self-test`.
 - **`working-model`** confirms that the working-model block in `AGENTS.md`,
