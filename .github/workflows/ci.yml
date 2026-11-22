@@ -32,7 +32,9 @@ jobs:
       - name: ansible syntax-check
         run: |
           shopt -s nullglob
-          for pb in playbooks/*.yml; do
+          playbooks=(playbooks/*.yml)
+          [ ${#playbooks[@]} -gt 0 ] || { echo "No playbooks found"; exit 1; }
+          for pb in "${playbooks[@]}"; do
             echo "=== syntax-check: $pb ==="
             ansible-playbook "$pb" --syntax-check
           done
@@ -45,8 +47,8 @@ jobs:
             chart_dirs+=("$(dirname "$chart_yaml")")
           done < <(find charts -name 'Chart.yaml' -print0 2>/dev/null)
           if [ ${#chart_dirs[@]} -eq 0 ]; then
-            echo "SKIP: no charts found"
-            exit 0
+            echo "No charts found"
+            exit 1
           fi
           for chart_dir in "${chart_dirs[@]}"; do
             echo "=== helm-lint: $chart_dir ==="
@@ -71,25 +73,79 @@ jobs:
       - uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814  # v4.2.0
       - name: Install conformance tool dependencies
         run: python3 -m pip install --user pyyaml==6.0.3 jsonschema==4.26.0
+      - name: Every test file and harness script is run
+        # A test nobody runs gives false confidence. Each test_*.py file must
+        # contribute tests to the unittest run below, which a pytest-style file
+        # does not. Each harness script must be on a command line of this
+        # workflow, not in a comment or step name.
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import pathlib, sys, unittest
+          suite = unittest.defaultTestLoader.discover("tests/conformance")
+          def cases(s):
+              for t in s:
+                  yield from cases(t) if isinstance(t, unittest.TestSuite) else [t]
+          # Compare full paths: two files can share a name in different directories.
+          collected = {}
+          for t in cases(suite):
+              f = getattr(sys.modules.get(type(t).__module__), "__file__", None)
+              if f:
+                  path = pathlib.Path(f).resolve()
+                  collected[path] = collected.get(path, 0) + 1
+          files = sorted(p.resolve() for p in pathlib.Path("tests").rglob("test_*.py"))
+          print("test files:", len(files), "tests collected:", sum(collected.values()))
+          if not files:
+              sys.exit("No test files found")
+          bad = [str(f.relative_to(pathlib.Path.cwd())) for f in files if not collected.get(f)]
+          if bad:
+              sys.exit("No test collected from: " + ", ".join(bad))
+          PY
+          active=$(sed -e 's/[[:space:]]#.*$//' -e '/^[[:space:]]*#/d' \
+            -e '/^[[:space:]]*-\{0,1\}[[:space:]]*name:/d' .github/workflows/ci.yml)
+          missing=""
+          for f in tests/harness/*.sh; do
+            printf '%s\n' "$active" | grep -qF -- "$f" || missing="$missing$f"$'\n'
+          done
+          [ -z "$missing" ] || { printf 'No command runs:\n%s' "$missing"; exit 1; }
       - name: Conformance tool tests (good and bad fixtures)
         run: python3 -m unittest discover -s tests/conformance -v
       - name: Chart values schema and helm lint --strict (charts with a values schema)
         run: |
           set -eu
+          checked=0
           for chart in charts/*/; do
             if [ -f "${chart}values.schema.json" ]; then
               echo "=== chart-only: $chart ==="
               python3 bin/dmf-function-conform --chart-only "$chart"
+              checked=$((checked + 1))
             fi
           done
-      - name: Conformance of every package
+          [ "$checked" -gt 0 ] || { echo "No chart has a values schema"; exit 1; }
+      - name: No package goes unchecked
+        # There is no packages/ directory, so there is no package conformance
+        # step. Add one when the first package lands; this fails until then.
         run: |
-          set -eu
-          if [ -d packages ] && [ -n "$(ls -A packages)" ]; then
-            python3 bin/dmf-function-conform packages/*/
-          else
-            echo "SKIP: no packages yet"
-          fi
+          [ -z "$(ls -A packages 2>/dev/null)" ] ||
+            { echo "packages/ has content but no step checks it"; exit 1; }
+
+  harness:
+    # The render matrix and the supervisor acceptance demo assert on their own
+    # output. The demo runs the rendered supervisor in a container, so it needs
+    # Docker, which the runner has.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814  # v4.2.0
+      - name: Install PyYAML
+        run: python3 -m pip install --user pyyaml==6.0.3
+      - name: Render matrix
+        run: tests/harness/render-matrix.sh
+      - name: Supervisor acceptance demo
+        run: tests/harness/run-demo.sh
 
   review-comments:
     # Comments state why, not which review prompted them
