@@ -1,0 +1,54 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "no-issue"
+    commit-message:
+      prefix: "ci(deps)"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "no-issue"
+    commit-message:
+      prefix: "build(deps)"
+  - package-ecosystem: "pip"
+    directory: "/tests/is05-ab-fixture"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "no-issue"
+    commit-message:
+      prefix: "build(deps)"
+  - package-ecosystem: "docker"
+    directory: "/docker/mxl-fabrics"
+    schedule:
+      interval: "weekly"
+    groups:
+      docker-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "no-issue"
+    commit-message:
+      prefix: "build(deps)"

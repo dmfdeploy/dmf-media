@@ -1,6 +1,11 @@
 ---
+# Dependabot does not update Galaxy collections; bump these by hand.
 collections:
   - name: ansible.posix
+    version: 2.2.2
   - name: ansible.utils
+    version: 6.1.1
   - name: community.hashi_vault
+    version: 7.1.0
   - name: kubernetes.core
+    version: 6.6.0
