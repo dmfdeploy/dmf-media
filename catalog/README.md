@@ -112,8 +112,8 @@ or Finalise playbook did not complete — it is an alert, not a normal state.
 2. Update all fields per the schema above — `key`, `display_name`, image,
    chart, NetBox service, playbook paths, and AWX job template names.
 3. Create the referenced playbooks under `playbooks/configure-media/`.
-4. Register the entry in `lifecycle-provision.yml` and
-   `lifecycle-configure.yml` (in dmf-infra).
+4. Register the entry in `lifecycle-provision.yml` (in dmf-infra). Configure
+   runs through the AWX job templates in step 5.
 5. Create AWX job templates via the `awx-integration` role.
 6. Run `lifecycle-provision.yml` to bootstrap the entry.
 
