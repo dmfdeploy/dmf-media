@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml/badge.svg)](https://github.com/dmfdeploy/dmf-media/actions/workflows/ci.yml)
 
-The media-domain content of the dmfdeploy platform: a function catalog, Helm charts for NMOS and MXL workloads, a SHA-pinned MXL image build and a catalog drift detector.
+The media-domain content of the dmfdeploy platform: a function catalog, Helm charts for NMOS and MXL workloads and a SHA-pinned MXL image build.
 Part of [dmfdeploy](https://github.com/dmfdeploy/dmfdeploy), an independent open prototype that explores ideas from the [EBU](https://tech.ebu.ch/) *Dynamic Media Facility* publications. Status: prototype (VERSION 0.1.0), single-node; the media roles are stubs.
 
 **Planned scope, not yet implemented:** NMOS IS-04/05 discovery, AMWA BCP compliance checks, EBU LIST 2110 packet analysis, PTP topology monitoring, flow exporters and a NetBox media plugin. See [Status](#status) for what runs today.
@@ -23,8 +23,7 @@ tests/          — Harness scripts (tests/harness/): the acceptance-gate proof
                   (run-demo.sh) and the render matrix (render-matrix.sh), plus
                   their PATH stubs; both write generated, untracked output.
                   The conformance tests and the IS-05 fixture live here too
-playbooks/      — lifecycle-operate.yml (catalog drift detector); the eight numbered
-                  EBU playbooks (400-599) are stubs
+playbooks/      — the eight numbered EBU playbooks (400-599), all stubs
 roles/          — Media-domain Ansible roles (all stubs until Phase 3)
 docs/           — Design docs and runbooks
 ```
@@ -72,13 +71,10 @@ This is not a scaffold-only repo. Real work lives here: the function catalog
 `topology_params` schema and a concrete J1 instance), the three Helm charts (`charts/`),
 the compiled-from-source upstream MXL image (`docker/mxl-fabrics/`, SHA-pinned via
 `docker/mxl-fabrics/MXL_UPSTREAM_SHA`). `mxl_build_prep.py` verifies the pin
-fail-closed before any patch script touches a source file. The fourth piece is the
-catalog drift detector (`playbooks/lifecycle-operate.yml`), which asserts that
-a declared `lifecycle:active`/`lifecycle:bootstrapped` state matches what is
-actually deployed. In v1 that detector checks exactly one entry, `nmos-cpp`,
-hardcoded in the playbook's `_catalog_entries`. Loading the declarations
-from `catalog/*.yaml` is explicitly deferred (the playbook says so in its own
-comment), so the catalog entries are not yet covered.
+fail-closed before any patch script touches a source file. The catalog drift
+check, which compares each catalog entry's lifecycle state with what is
+deployed, lives in dmf-infra as
+`k3s-lab-bootstrap/playbooks/lifecycle/operate-catalog-drift.yml`.
 
 **Media roles are stubs.** All five `roles/*/tasks/main.yml` entries
 (`ebu-list`, `flow-exporters`, `ptp-monitor`, `netbox-media-plugin`,
