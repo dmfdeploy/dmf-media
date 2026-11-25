@@ -24,7 +24,7 @@ jobs:
       - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e  # v5.1.0
         with:
           # Dependabot does not track this input; bump it by hand.
-          version: v3.18.4
+          version: v3.22.1
       - name: Install collections
         run: ansible-galaxy collection install -r requirements.yml
       - name: yamllint
@@ -76,7 +76,7 @@ jobs:
       - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e  # v5.1.0
         with:
           # Dependabot does not track this input; bump it by hand.
-          version: v3.18.4
+          version: v3.22.1
       - name: Install conformance tool dependencies
         run: python3 -m pip install --user pyyaml==6.0.4 jsonschema==4.26.0
       - name: Every test file and harness script is run
@@ -148,7 +148,7 @@ jobs:
       - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e  # v5.1.0
         with:
           # Dependabot does not track this input; bump it by hand.
-          version: v3.18.4
+          version: v3.22.1
       - name: Install PyYAML
         run: python3 -m pip install --user pyyaml==6.0.4
       - name: Render matrix
