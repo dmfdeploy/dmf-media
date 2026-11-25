@@ -59,7 +59,7 @@ jobs:
       - name: catalog demand equality (L3 WP0)
         run: |
           # Dependabot does not track this inline pin; bump it by hand.
-          python3 -m pip install --user pyyaml==6.0.3
+          python3 -m pip install --user pyyaml==6.0.4
           python3 bin/check-catalog-demand.py
 
   conformance:
@@ -78,7 +78,7 @@ jobs:
           # Dependabot does not track this input; bump it by hand.
           version: v3.18.4
       - name: Install conformance tool dependencies
-        run: python3 -m pip install --user pyyaml==6.0.3 jsonschema==4.26.0
+        run: python3 -m pip install --user pyyaml==6.0.4 jsonschema==4.26.0
       - name: Every test file and harness script is run
         # A test nobody runs gives false confidence. Each test_*.py file must
         # contribute tests to the unittest run below, which a pytest-style file
@@ -150,7 +150,7 @@ jobs:
           # Dependabot does not track this input; bump it by hand.
           version: v3.18.4
       - name: Install PyYAML
-        run: python3 -m pip install --user pyyaml==6.0.3
+        run: python3 -m pip install --user pyyaml==6.0.4
       - name: Render matrix
         run: tests/harness/render-matrix.sh
       - name: Supervisor acceptance demo
